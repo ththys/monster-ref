@@ -1,10 +1,19 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /monsters/{id} {
-      // 관리자 계정만 읽기·쓰기 (방문자는 포트폴리오만 봄)
-      allow read, write: if request.auth != null
-                   && request.auth.token.email in ['본인 구글 이메일', '회사용 로그인 이메일'];
+    // 관리자 계정 (구글 로그인 이메일, 이메일·비밀번호 로그인 이메일)
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in ['관리자 이메일 1', '관리자 이메일 2'];
     }
+    // 몬스터 레퍼런스: 관리자만
+    match /monsters/{id}  { allow read, write: if isAdmin(); }
+    // 포트폴리오 작업물: '공개'로 표시한 것만 누구나 읽기
+    match /portfolio/{id} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow write: if isAdmin();
+    }
+    // 이름·자기소개서·경력기술서: 누구나 읽기
+    match /site/{id}      { allow read: if true; allow write: if isAdmin(); }
   }
 }

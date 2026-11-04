@@ -18,6 +18,7 @@
   --t-pc:#1864ab;    --t-pc-bg:#e3eefb;
   --t-game:#343a40;  --t-game-bg:#e9ecef;
   --shadow:0 12px 32px rgba(20,24,33,.16);
+  --ok:#1e7a34; --ok-bg:#e6f4ea;
   --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
 }
@@ -30,7 +31,7 @@
   --t-sys:#ffb35c;   --t-sys-bg:#3a2a14;
   --t-pc:#74b4ff;    --t-pc-bg:#172a42;
   --t-game:#ced4da;  --t-game-bg:#2a2e35;
-  --shadow:0 12px 32px rgba(0,0,0,.5); color-scheme:dark}}
+  --shadow:0 12px 32px rgba(0,0,0,.5); --ok:#6ad08a; --ok-bg:#15301f; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121418; --panel:#1a1d23; --ink:#e8eaee; --muted:#9aa1ae; --line:#2b3039; --hover:#22262e;
   --accent:#ff7a3d; --accent-ink:#1a0d05;
@@ -40,7 +41,7 @@
   --t-sys:#ffb35c;   --t-sys-bg:#3a2a14;
   --t-pc:#74b4ff;    --t-pc-bg:#172a42;
   --t-game:#ced4da;  --t-game-bg:#2a2e35;
-  --shadow:0 12px 32px rgba(0,0,0,.5); color-scheme:dark}
+  --shadow:0 12px 32px rgba(0,0,0,.5); --ok:#6ad08a; --ok-bg:#15301f; color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -149,7 +150,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .pop .foot .hint{margin-right:auto;font-size:11.5px;color:var(--muted);align-self:center}
 
 /* 모달 */
-.scrim{position:fixed;inset:0;z-index:60;background:rgba(10,12,16,.45);display:grid;place-items:center;padding:16px}
+.scrim{position:fixed;inset:0;z-index:68;background:rgba(10,12,16,.45);display:grid;place-items:center;padding:16px}
 .modal{background:var(--panel);border-radius:12px;width:min(640px,100%);max-height:calc(100vh - 32px);overflow:auto;box-shadow:var(--shadow);display:flex;flex-direction:column}
 .modal header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
 .modal header h2{margin:0;font-size:16px}
@@ -178,17 +179,134 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .lightbox .lbbar a,.lightbox .lbbar button{color:#fff;background:none;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:5px 10px;text-decoration:none;font-size:13px}
 
 /* 방문자용 포트폴리오 화면 */
-.pub{min-height:calc(100vh - 40px);display:flex;flex-direction:column;gap:14px;max-width:1480px;margin:0 auto}
-.pub header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.pub header h1{margin:0;font-size:20px;font-weight:700}
-.pub header .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.pub .acts{display:flex;gap:8px;align-items:center}
-.pub .frame{position:relative;width:100%;aspect-ratio:16/9;max-height:calc(100vh - 120px);background:#111;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
-.pub .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.pub .empty{padding:60px 20px;text-align:center;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:10px}
-.pub .link{font-size:13px}
-.boot{padding:60px 0;text-align:center;color:var(--muted)}
-/* 상단 탭 */
+.pub{display:flex;flex-direction:column;gap:20px;max-width:1240px;margin:0 auto;padding-bottom:40px}
+.pvbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--t-sys-bg);color:var(--t-sys);border:1px solid var(--t-sys);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:500}
+.phead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:12px}
+.phead .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.phead h1{margin:6px 0 0;font-size:clamp(28px,4.4vw,44px);font-weight:700;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+.phead .headline{margin:8px 0 0;font-size:16px;color:var(--muted);max-width:60ch}
+.pub .intro{margin:0;white-space:pre-wrap;line-height:1.75;font-size:15px;max-width:68ch}
+.contacts{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13.5px}
+.contacts span b{font-weight:600;color:var(--muted);margin-right:6px;font-size:12px;font-family:var(--f-mono)}
+.contacts a{color:var(--ink)}
+.ptags{display:flex;flex-wrap:wrap;gap:6px}
+.ptags button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;font-size:13px}
+.ptags button.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px}
+.pcard{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:left;padding:0;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+.pcard:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.pcover{aspect-ratio:16/9;background:var(--hover);overflow:hidden;display:grid;place-items:center;max-width:100%}
+.pcover img,.pcover video{width:100%;height:100%;object-fit:cover;display:block}
+.pcover .ph{font-size:40px;font-weight:700;color:var(--line)}
+.pcard .pb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.pmeta{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.pcard h3{margin:0;font-size:17px;line-height:1.35;text-wrap:balance}
+.pcard p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pcard .cell{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.ttag{font-size:11.5px;border-radius:4px;padding:1px 7px;background:var(--hover);color:var(--muted)}
+.pub .empty{padding:60px 20px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--line);border-radius:12px}
+/* 방문자 화면: 섹션 */
+.psnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:0 max(16px,env(safe-area-inset-left,0px))}
+.psnav button{border:0;background:none;padding:12px 12px;font-weight:600;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.psnav button:hover{color:var(--ink)}
+.psnav button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.psec{display:flex;flex-direction:column;gap:16px;scroll-margin-top:56px;padding-top:8px}
+.sh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sh h2{margin:0;font-size:22px;letter-spacing:-.01em}
+.sh .num{font-family:var(--f-mono);font-size:12px;color:var(--accent)}
+.sh .sp{flex:1}
+.pv-only{display:none!important}
+.pv-admin .pv-only{display:inline-flex!important}
+.about{max-width:72ch;display:flex;flex-direction:column;gap:12px;font-size:15px;line-height:1.85}
+.about h3{margin:14px 0 0;font-size:17px}
+.about h3:first-child{margin-top:0}
+.about p{margin:0;white-space:pre-wrap}
+.ph-note{color:var(--muted);font-style:italic}
+.careers{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.car{display:grid;grid-template-columns:180px minmax(0,1fr);gap:18px;padding:18px 0;border-bottom:1px solid var(--line)}
+@media (max-width:640px){.car{grid-template-columns:minmax(0,1fr);gap:6px}}
+.car .when{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);padding-top:3px;font-variant-numeric:tabular-nums}
+.car h3{margin:0;font-size:17px}
+.car h3 span{font-weight:500;color:var(--muted);font-size:14px;margin-left:6px}
+.car .sum{margin:6px 0 0;color:var(--muted);font-size:14px}
+.car ul{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14.5px;line-height:1.65}
+.car .txt{margin:8px 0 0;white-space:pre-wrap;font-size:14.5px;line-height:1.7}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--panel);padding:6px 12px;font-size:13px;font-weight:500;color:var(--muted)}
+.seg button.on{background:var(--ink);color:var(--panel)}
+.pcard{position:relative}
+.pcard .pedit{position:absolute;top:8px;right:8px;z-index:2}
+/* 슬라이드 보기 */
+.slider{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.slide{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);min-height:440px}
+@media (max-width:860px){.slide{grid-template-columns:minmax(0,1fr)}}
+.smedia{background:#0d0f13;display:flex;flex-direction:column;min-width:0}
+.smain{flex:1;display:grid;place-items:center;min-height:300px;aspect-ratio:16/10;max-width:100%}
+.smain img,.smain video{width:100%;height:100%;object-fit:contain;display:block;max-height:62vh}
+.smain .ph{font-size:64px;font-weight:700;color:#3a3f48}
+.sgal{display:flex;gap:6px;padding:8px;overflow-x:auto;background:#0d0f13}
+.sgal button{flex:none;width:72px;height:48px;padding:0;border:2px solid transparent;border-radius:5px;overflow:hidden;background:#222;opacity:.6}
+.sgal button.on{border-color:var(--accent);opacity:1}
+.sgal img,.sgal video{width:100%;height:100%;object-fit:cover;display:block}
+.stext{padding:22px 24px;display:flex;flex-direction:column;gap:10px;min-width:0;overflow:auto;max-height:70vh}
+.stext h3{margin:0;font-size:22px;line-height:1.3;text-wrap:balance}
+.stext .lead{margin:0;color:var(--muted);font-size:15px;line-height:1.6}
+.stext .body{white-space:pre-wrap;font-size:14px;line-height:1.75}
+.stext .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:8px}
+.sctl{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line)}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.dots button{width:9px;height:9px;border-radius:50%;border:0;padding:0;background:var(--line)}
+.dots button.on{background:var(--accent);width:22px;border-radius:5px}
+.sctl .pos{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* 상세 화면 추가 이미지 */
+.wgal{display:flex;flex-direction:column;gap:12px}
+.wgal img,.wgal video{width:100%;border-radius:10px;display:block;background:#000}
+/* 추가 이미지 편집 */
+.galedit{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.galedit .gi{position:relative;width:84px;height:60px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:var(--hover)}
+.galedit .gi img,.galedit .gi video{width:100%;height:100%;object-fit:cover;display:block}
+.galedit .gi button{position:absolute;top:2px;right:2px;border:0;border-radius:4px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:1px 5px}
+.galedit .gi span{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;color:var(--muted)}
+.carrow{border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--bg)}
+.carrow .full{grid-column:1/-1}
+.carrow input,.carrow textarea{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:7px 9px;width:100%}
+.carrow textarea{min-height:90px;resize:vertical;line-height:1.6}
+.carrow .ops{grid-column:1/-1;display:flex;gap:4px;justify-content:flex-end}
+@media (max-width:560px){.carrow{grid-template-columns:1fr}}
+/* 작업물 상세 */
+.wv{position:fixed;inset:0;z-index:66;background:var(--bg);overflow:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:env(safe-area-inset-top,0px) 60px}
+.wvin{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.wvbar{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+.wvbar .nav{display:flex;gap:6px}
+.wvmedia{border-radius:12px;overflow:hidden;background:#000;display:grid;place-items:center}
+.wvmedia img,.wvmedia video{width:100%;max-height:70vh;object-fit:contain;display:block}
+.wv h1{margin:0;font-size:clamp(24px,3.6vw,34px);letter-spacing:-.015em;line-height:1.2;text-wrap:balance}
+.wv .lead{margin:0;font-size:16.5px;color:var(--muted);line-height:1.6}
+.wv .body{white-space:pre-wrap;line-height:1.8;font-size:15px;max-width:72ch}
+.yt16{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;max-width:100%}
+.yt16 iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.wlinks{display:flex;flex-wrap:wrap;gap:8px}
+.wlinks a{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:8px 12px;color:var(--ink);text-decoration:none;font-weight:500;font-size:13.5px}
+.wlinks a:hover{border-color:var(--accent);color:var(--accent)}
+/* 관리자 포트폴리오 관리 */
+.padmin{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ptool{display:flex;gap:8px;flex-wrap:wrap}
+.pprof{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.pprof b{font-size:15px}
+.pprof span{color:var(--muted);font-size:13px}
+.wlist{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.wrow{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:14px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:center}
+.wrow:last-child{border-bottom:0}
+.wrow .info{display:flex;flex-direction:column;gap:4px;min-width:0}
+.wrow .info b{font-size:15px}
+.wrow .acts{display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:640px){.wrow{grid-template-columns:64px minmax(0,1fr)}.wrow .thumb{width:64px;height:64px}.wrow .acts{grid-column:1/-1;justify-content:flex-start}}
+.pubchip{border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--hover);color:var(--muted)}
+.pubchip.on{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.v-port .rail,.v-port .searchbar,.v-port #active,.v-port #addBtn{display:none!important}
+.field textarea{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 10px;width:100%;min-height:110px;resize:vertical;line-height:1.6}
+.field .chk{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500;padding:8px 0}
+/* 상단 탭 *//* 상단 탭 */
 .tabs{display:flex;flex-direction:column;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px}
 .tabs a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;border-radius:6px;white-space:nowrap}
 .tabs a:hover{color:var(--ink);background:var(--hover)}
@@ -236,16 +354,34 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 
 <div class="boot" id="bootMsg">불러오는 중…</div>
 <section class="pub" id="publicView" hidden>
-  <header>
-    <div><div class="eyebrow">Portfolio</div><h1 id="pubTitle">포트폴리오</h1></div>
-    <div class="acts">
-      <a class="link" id="pubOpen" href="#" target="_blank" rel="noopener" hidden>새 탭에서 크게 보기 ↗</a>
-      <button class="btn sm" id="pubLogin" type="button">관리자 로그인</button>
-    </div>
+  <div class="pvbar" id="pvBar" hidden><span>방문자 화면 미리보기 · 공개로 표시한 작업물만 보여요</span><button class="btn sm" id="pvBack" type="button">관리 화면으로</button></div>
+  <header class="phead">
+    <div><div class="eyebrow">Portfolio</div><h1 id="pName">포트폴리오</h1><p class="headline" id="pHeadline" hidden></p></div>
+    <button class="btn sm" id="pubLogin" type="button">관리자 로그인</button>
   </header>
-  <div class="frame" id="pubFrame" hidden></div>
-  <div class="empty" id="pubEmpty" hidden>포트폴리오를 준비 중이에요.</div>
+  <p class="intro" id="pIntro" hidden></p>
+  <div class="contacts" id="pContacts" hidden></div>
+  <button type="button" class="btn sm pv-only" data-pedit="profile" style="align-self:flex-start">이름·연락처 수정</button>
+  <nav class="psnav" id="pSecNav" aria-label="섹션"></nav>
+  <section class="psec" id="secAbout">
+    <div class="sh"><span class="num">01</span><h2>자기소개서</h2><span class="sp"></span><button type="button" class="btn sm pv-only" data-pedit="about">수정</button></div>
+    <div class="about" id="pAbout"></div>
+  </section>
+  <section class="psec" id="secCareer">
+    <div class="sh"><span class="num">02</span><h2>경력기술서</h2><span class="sp"></span><button type="button" class="btn sm pv-only" data-pedit="career">수정</button></div>
+    <div class="careers" id="pCareer"></div>
+  </section>
+  <section class="psec" id="secWorks">
+    <div class="sh"><span class="num" id="worksNum">03</span><h2>포트폴리오</h2><span class="sp"></span>
+      <div class="seg" id="pLayout"><button type="button" data-layout="grid">목록</button><button type="button" data-layout="slides">슬라이드</button></div>
+      <button type="button" class="btn sm primary pv-only" data-pedit="addwork">+ 작업물</button></div>
+    <div class="ptags" id="pTags" hidden></div>
+    <div class="pgrid" id="pGrid"></div>
+    <div id="pSlides" hidden></div>
+    <div class="empty" id="pubEmpty" hidden></div>
+  </section>
 </section>
+<div class="wv" id="workView" hidden></div>
 <div class="wrap" id="archive" hidden>
   <header class="top">
     <div class="ttl">
@@ -268,6 +404,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <a href="#monsters" data-view="monsters"><span>몬스터</span><span class="n" id="nMon"></span></a>
         <a href="#systems" data-view="systems"><span>전투 확장 시스템</span><span class="n" id="nSys"></span></a>
         <a href="#pcs" data-view="pcs"><span>대응 PC 도구</span><span class="n" id="nPc"></span></a>
+        <a href="#portfolio" data-view="portfolio"><span>포트폴리오</span><span class="n" id="nWork"></span></a>
       </nav>
       <div class="rail" id="rail" aria-label="태그 필터"></div>
     </aside>
@@ -291,6 +428,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
       </table>
     </section>
     <section class="groupbox" id="groupbox" hidden></section>
+    <section class="padmin" id="portAdmin" hidden></section>
     </div>
   </div>
 </div>
@@ -468,8 +606,14 @@ function checkYt(id, force){
   im.onerror=()=>{ linkState.set(id,"dead"); paintYt(id); };
   im.src=`https://i.ytimg.com/vi/${encodeURIComponent(id)}/mqdefault.jpg?t=${force?Date.now():0}`;
 }
-function wireVideos(root){
-  root.querySelectorAll("video.lazyv").forEach(v=>{ if(io) io.observe(v); else { v.src=v.dataset.src; v.muted=true; v.play().catch(()=>{}); } });
+const pio = "IntersectionObserver" in window ? new IntersectionObserver(es=>es.forEach(en=>{
+  const v=en.target;
+  if (en.isIntersecting){ if(!v.getAttribute("src")) v.src=v.dataset.src; v.muted=true; const p=v.play(); if(p) p.catch(()=>{}); }
+  else v.pause();
+}),{rootMargin:"200px"}) : null;
+function wireVideos(root, ob){
+  const o=ob||io;
+  root.querySelectorAll("video.lazyv").forEach(v=>{ if(o) o.observe(v); else { v.src=v.dataset.src; v.muted=true; v.play().catch(()=>{}); } });
 }
 
 /* ---------- filtering ---------- */
@@ -496,6 +640,9 @@ function render(){
   $("#count").textContent = loaded ? `${list.length} / ${monsters.length}건` : "";
   const st=$("#state"), tbl=$("#tbl"), tb=$("#tablebox"), gb=$("#groupbox");
   tb.hidden=false; gb.hidden=true;
+  const pa=$("#portAdmin"); document.body.classList.toggle("v-port", view==="portfolio");
+  if (view==="portfolio"){ tb.hidden=true; pa.hidden=false; renderPortAdmin(); return; }
+  pa.hidden=true;
   if (!loaded) return;
   if (view!=="monsters" && monsters.length && list.length){
     if(io) io.disconnect();
@@ -527,13 +674,13 @@ function deepChip(m, cat, i){
   return `<button type="button" class="tag deep ${CAT[cat].cls} ${e.note?"has":""}" data-deep="${esc(m.id)}|${cat}|${i}" aria-label="${esc(e.name)} 상세 보기">${esc(e.name)}</button>`;
 }
 /* ---------- 보기 전환 (#monsters / #systems / #pcs) ---------- */
-const VIEWS=["monsters","systems","pcs"];
+const VIEWS=["monsters","systems","pcs","portfolio"];
 let view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "monsters";
 let groupEdit = null;   /* "monsterId|cat|index" */
 function renderTabs(){
   document.querySelectorAll(".tabs a").forEach(a=>a.setAttribute("aria-current", a.dataset.view===view?"page":"false"));
   const distinct=k=>new Set(monsters.flatMap(m=>(m[k]||[]).map(e=>e.name))).size;
-  $("#nMon").textContent=monsters.length; $("#nSys").textContent=distinct("systems"); $("#nPc").textContent=distinct("pcs");
+  $("#nMon").textContent=monsters.length; $("#nSys").textContent=distinct("systems"); $("#nPc").textContent=distinct("pcs"); $("#nWork").textContent=works.length;
 }
 addEventListener("hashchange", ()=>{
   const v=location.hash.slice(1); if(!VIEWS.includes(v)) return;
@@ -599,11 +746,12 @@ $("#groupbox").addEventListener("click", async e=>{
 });
 
 /* ---------- 자동완성: 이미 등록된 게임·태그를 드롭다운으로 ---------- */
-const AC_SRC={f_game:"game", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
+const AC_SRC={w_tags:"worktags", f_game:"game", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
 let acBox=null, acInput=null, acItems=[], acIdx=-1;
 function acValues(cat){
   const cnt=new Map();
-  monsters.forEach(m=>new Set(vals(m,cat)).forEach(v=>cnt.set(v,(cnt.get(v)||0)+1)));
+  if(cat==="worktags") works.forEach(w=>new Set(w.tags||[]).forEach(v=>cnt.set(v,(cnt.get(v)||0)+1)));
+  else monsters.forEach(m=>new Set(vals(m,cat)).forEach(v=>cnt.set(v,(cnt.get(v)||0)+1)));
   return [...cnt].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
 }
 function acParts(input){ return AC_SRC[input.id]==="game" ? [input.value] : input.value.split("/"); }
@@ -617,7 +765,7 @@ function acOpen(input){
     acBox.addEventListener("mousedown",e=>{ const b=e.target.closest("button[data-i]"); if(!b) return; e.preventDefault(); acPick(+b.dataset.i); }); }
   acInput=input; acIdx=lc?0:-1;
   const hl=v=>{ if(!lc) return esc(v); const k=v.toLowerCase().indexOf(lc); return esc(v.slice(0,k))+"<mark>"+esc(v.slice(k,k+cur.length))+"</mark>"+esc(v.slice(k+cur.length)); };
-  acBox.innerHTML=`<div class="hint">${cat==="game"?"등록된 게임":"등록된 "+CAT[cat].label+" · Enter로 추가"}</div>`+acItems.map(([v,n],k)=>`<button type="button" role="option" data-i="${k}" class="${k===acIdx?"on":""}"><span>${hl(v)}</span><span class="n">${n}</span></button>`).join("");
+  acBox.innerHTML=`<div class="hint">${cat==="game"?"등록된 게임":cat==="worktags"?"등록된 태그 · Enter로 추가":"등록된 "+CAT[cat].label+" · Enter로 추가"}</div>`+acItems.map(([v,n],k)=>`<button type="button" role="option" data-i="${k}" class="${k===acIdx?"on":""}"><span>${hl(v)}</span><span class="n">${n}</span></button>`).join("");
   const rc=input.getBoundingClientRect();
   acBox.style.left=rc.left+"px"; acBox.style.width=Math.max(200,rc.width)+"px";
   const below=innerHeight-rc.bottom;
@@ -829,12 +977,7 @@ function openForm(m, copyFrom){
     <form id="form" novalidate>
       <div class="field"><label for="f_game">게임 이름</label><input id="f_game" type="text" value="${esc(v?.game)}" placeholder="젠레스 존 제로" required></div>
       <div class="field"><label for="f_name">몬스터 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="태초의 악몽" required></div>
-      <div class="field full"><label>이미지</label>
-        <div class="drop" id="drop"><div class="thumb" id="fThumb"><span>없음</span></div>
-          <div class="txt"><span>파일을 끌어 놓거나, 이 창에서 Ctrl+V로 붙여 넣으세요. ${upTarget()?"GIF·WEBP·MP4 모두 그대로 올라가요 (이미지 10MB, 영상 100MB까지 · 10MB 넘는 GIF는 영상으로 바꿔서 올려요).":`움직이는 GIF·WEBP는 ${MAX_ANIM_KB}KB까지 원본 그대로 저장돼요.`}</span>
-          <span style="display:flex;gap:6px;flex-wrap:wrap"><label class="btn sm" for="f_file" style="font-weight:500">파일 선택</label><input id="f_file" type="file" accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm,video/quicktime" hidden><button type="button" class="btn sm" id="fImgClear" hidden>이미지 빼기</button></span></div></div>
-        <input id="f_imgurl" class="imgurl" type="url" value="${formImage&&!formImage.startsWith("data:")?esc(formImage):""}" placeholder="또는 이미지 주소 붙여넣기" aria-label="이미지 주소"></div>
-      <div class="notice" id="fNotice" hidden></div>
+      ${mediaFieldHTML("이미지")}
       <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마 태그</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
       <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
       <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(v?.weapons))}" placeholder="에너지 / 검"></div>
@@ -848,6 +991,19 @@ function openForm(m, copyFrom){
   $("#f_game").focus();
   $("#fClose").onclick=$("#fCancel").onclick=closeForm;
   sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  wireMediaField();
+  
+  $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m, v); };
+}
+function mediaFieldHTML(label){
+  return `<div class="field full"><label>${label}</label>
+        <div class="drop" id="drop"><div class="thumb" id="fThumb"><span>없음</span></div>
+          <div class="txt"><span>파일을 끌어 놓거나, 이 창에서 Ctrl+V로 붙여 넣으세요. ${upTarget()?"GIF·WEBP·MP4 모두 그대로 올라가요 (이미지 10MB, 영상 100MB까지 · 10MB 넘는 GIF는 영상으로 바꿔서 올려요).":`움직이는 GIF·WEBP는 ${MAX_ANIM_KB}KB까지 원본 그대로 저장돼요.`}</span>
+          <span style="display:flex;gap:6px;flex-wrap:wrap"><label class="btn sm" for="f_file" style="font-weight:500">파일 선택</label><input id="f_file" type="file" accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm,video/quicktime" hidden><button type="button" class="btn sm" id="fImgClear" hidden>이미지 빼기</button></span></div></div>
+        <input id="f_imgurl" class="imgurl" type="url" value="${formImage&&!formImage.startsWith("data:")?esc(formImage):""}" placeholder="또는 이미지 주소 붙여넣기" aria-label="이미지 주소"></div>
+      <div class="notice" id="fNotice" hidden></div>`;
+}
+function wireMediaField(){
   $("#fImgClear").onclick=()=>{ if(uploading) return; formImage=null; formMedia=null; $("#f_imgurl").value=""; $("#fNotice").hidden=true; setThumb(); };
   $("#f_imgurl").oninput=e=>{
     const v=e.target.value.trim();
@@ -860,7 +1016,6 @@ function openForm(m, copyFrom){
   d.ondragover=e=>{e.preventDefault(); d.classList.add("over");};
   d.ondragleave=()=>d.classList.remove("over");
   d.ondrop=e=>{e.preventDefault(); d.classList.remove("over"); const f=[...e.dataTransfer.files].find(f=>/^(image|video)\//.test(f.type)); if(f) upload(f);};
-  $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m, v); };
 }
 function closeForm(){ acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
 document.addEventListener("paste", e=>{
@@ -877,7 +1032,7 @@ function setThumb(msg){
     t.querySelector("img").onerror=()=>{ t.innerHTML="<span>주소 확인</span>"; };
   } else t.innerHTML="<span>없음</span>";
   if(c) c.hidden=!(formImage||formMedia);
-  const sv=$("#fSave"); if(sv) sv.disabled=uploading;
+  const sv=$("#fSave"); if(sv) sv.disabled=uploading || (typeof galBusy!=="undefined" && galBusy>0);
 }
 const readURL = file => new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); });
 /* 움직이는 GIF·WEBP인지 파일 헤더로 판별 */
@@ -1019,6 +1174,469 @@ function confirmDelete(id){
   $("#dYes").onclick=async()=>{ try{ await store.remove(id); closeForm(); toast("삭제했어요"); }catch(ex){ closeForm(); toast(errMsg(ex)); } };
 }
 
+/* =====================================================================
+   포트폴리오: 방문자에게 보이는 작업물 (Firestore "portfolio", 소개는 "site/profile")
+   ===================================================================== */
+let works=[], profile={}, worksLoaded=false, pubTag="", previewing=false;
+const WORK_KEY="monster-ref-works", PROF_KEY="monster-ref-profile";
+const sortWorks=a=>a.sort((x,y)=>((x.order??0)-(y.order??0))||((y.createdAt||0)-(x.createdAt||0)));
+const COLW=()=>fs.collection("portfolio"), PROF=()=>fs.collection("site").doc("profile");
+function persistLocalPort(){
+  try{ localStorage.setItem(WORK_KEY,JSON.stringify(works)); localStorage.setItem(PROF_KEY,JSON.stringify(profile)); }
+  catch{ toast("브라우저 저장 공간이 가득 찼어요"); throw new Error("quota"); }
+}
+function afterPort(){ render(); renderPublic(); const h=location.hash; if(h.startsWith("#work-") && !$("#workView").hidden) renderWorkView(h.slice(6)); }
+const wstore={
+  async set(id,data){ if(mode==="cloud") return COLW().doc(id).set(clean(data)); works=sortWorks(works.filter(w=>w.id!==id).concat({...data,id})); persistLocalPort(); afterPort(); },
+  async update(id,patch){ if(mode==="cloud") return COLW().doc(id).update(patch); works=sortWorks(works.map(w=>w.id===id?{...w,...patch}:w)); persistLocalPort(); afterPort(); },
+  async remove(id){ if(mode==="cloud") return COLW().doc(id).delete(); works=works.filter(w=>w.id!==id); persistLocalPort(); afterPort(); },
+  async saveProfile(data){ if(mode==="cloud") return PROF().set(data); profile=data; persistLocalPort(); afterPort(); },
+};
+let wUnsub=null, pUnsub=null;
+function startPortfolio(admin){
+  if(wUnsub){ wUnsub(); wUnsub=null; } if(pUnsub){ pUnsub(); pUnsub=null; }
+  worksLoaded=false;
+  const q = admin ? COLW() : COLW().where("published","==",true);
+  wUnsub=q.onSnapshot(snap=>{ works=sortWorks(snap.docs.map(d=>({id:d.id,...d.data()}))); worksLoaded=true; afterPort(); openWorkFromHash(); },
+                      ()=>{ works=[]; worksLoaded=true; afterPort(); });
+  pUnsub=PROF().onSnapshot(d=>{ profile=(d.exists&&d.data())||{}; afterPort(); }, ()=>{});
+}
+/* "이름 | 주소" 줄 목록 → [{label,url}] */
+function parseLinks(t){
+  return String(t||"").split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{
+    const k=x.indexOf("|"); if(k<0) return {label:"",url:x};
+    return {label:x.slice(0,k).trim(), url:x.slice(k+1).trim()};
+  }).filter(l=>l.url);
+}
+const linksText = ls => (ls||[]).map(l=>l.label?`${l.label} | ${l.url}`:l.url).join("\n");
+function linkLabel(l){
+  if(l.label) return l.label;
+  if(ytId(l.url)) return "플레이 영상";
+  try{ return new URL(l.url).hostname.replace(/^www\./,""); }catch{ return l.url; }
+}
+function contactHTML(l){
+  const v=l.url, lab=l.label?`<b>${esc(l.label)}</b>`:"";
+  if(/^https?:\/\//i.test(v)) return `<span>${lab}<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,""))}</a></span>`;
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return `<span>${lab}<a href="mailto:${esc(v)}">${esc(v)}</a></span>`;
+  return `<span>${lab}${esc(v)}</span>`;
+}
+function workYt(w){ const l=(w.links||[]).find(l=>ytId(l.url)); return l?ytId(l.url):""; }
+function coverHTML(w){
+  if(w.media||w.image) return mediaHTML(w,720);
+  const y=workYt(w); if(y) return `<img src="https://i.ytimg.com/vi/${esc(y)}/hqdefault.jpg" alt="" loading="lazy">`;
+  return `<span class="ph">${esc((w.title||"?").trim().charAt(0))}</span>`;
+}
+const metaLine = w => [w.project,w.role,w.period].filter(Boolean).map(esc).join(" · ");
+const pubWorks = () => works.filter(w=>w.published);
+
+/* ---------- 방문자 화면 ---------- */
+function showPublic(preview){
+  previewing=!!preview;
+  $("#bootMsg").hidden=true; $("#archive").hidden=true; $("#publicView").hidden=false;
+  $("#pvBar").hidden=!previewing;
+  $("#pubLogin").hidden=previewing || !auth;
+  slideIdx=0; galIdx=0;
+  renderPublic(); scrollTo({top:0});
+}
+function showArchive(){
+  previewing=false; closeWorkView(true); document.body.classList.remove("pv-admin");
+  $("#bootMsg").hidden=true; $("#publicView").hidden=true; $("#archive").hidden=false;
+  document.title="몬스터 레퍼런스 아카이브";
+}
+let pubLayout=null, slideIdx=0, galIdx=0;
+function workImages(w){
+  const a=[]; if(w.media||w.image) a.push({media:w.media||null,image:w.image||""});
+  (w.gallery||[]).forEach(g=>a.push(g)); return a;
+}
+function aboutHTML(t){
+  const out=[]; let para=[];
+  const flush=()=>{ if(para.length){ out.push(`<p>${esc(para.join("\n"))}</p>`); para=[]; } };
+  String(t||"").split("\n").forEach(line=>{
+    if(/^#{1,3}\s+/.test(line)){ flush(); out.push(`<h3>${esc(line.replace(/^#{1,3}\s+/,""))}</h3>`); }
+    else if(!line.trim()){ flush(); }
+    else para.push(line);
+  });
+  flush(); return out.join("");
+}
+function careerHTML(c){
+  const lines=String(c.body||"").split("\n").filter(x=>x.trim());
+  const bullets=lines.length && lines.every(x=>/^\s*[-•·*]\s+/.test(x));
+  return `<div class="car"><div class="when">${esc(c.period||"")}</div><div>
+    <h3>${esc(c.company||"")}${c.role?`<span>${esc(c.role)}</span>`:""}</h3>
+    ${c.summary?`<p class="sum">${esc(c.summary)}</p>`:""}
+    ${lines.length?(bullets?`<ul>${lines.map(x=>`<li>${esc(x.replace(/^\s*[-•·*]\s+/,""))}</li>`).join("")}</ul>`:`<div class="txt">${esc(c.body)}</div>`):""}
+  </div></div>`;
+}
+function renderPublic(){
+  if($("#publicView").hidden) return;
+  const P=profile||{}, name=P.name||(CFG.portfolio&&CFG.portfolio.title)||"포트폴리오";
+  const admin = previewing && canEdit();
+  document.body.classList.toggle("pv-admin", admin);
+  if($("#workView").hidden) document.title = P.name ? `${P.name} · 포트폴리오` : name;
+  $("#pName").textContent=name;
+  const hl=$("#pHeadline"); hl.textContent=P.headline||""; hl.hidden=!P.headline;
+  const it=$("#pIntro"); it.textContent=P.intro||""; it.hidden=!P.intro;
+  const cs=parseLinks(P.contacts), ce=$("#pContacts"); ce.innerHTML=cs.map(contactHTML).join(""); ce.hidden=!cs.length;
+
+  /* 01 자기소개서 */
+  const hasAbout=!!(P.about||"").trim();
+  $("#secAbout").hidden = !hasAbout && !admin;
+  $("#pAbout").innerHTML = hasAbout ? aboutHTML(P.about) : `<p class="ph-note">자기소개서가 비어 있어요. ‘수정’을 눌러 적어 주세요. ‘## 제목’으로 시작하는 줄은 소제목이 돼요.</p>`;
+  /* 02 경력기술서 */
+  const cars=(P.careers||[]).filter(c=>c.company||c.body);
+  $("#secCareer").hidden = !cars.length && !admin;
+  $("#pCareer").innerHTML = cars.length ? cars.map(careerHTML).join("") : `<p class="ph-note" style="padding-top:12px">경력기술서가 비어 있어요. ‘수정’을 눌러 회사·프로젝트별로 추가해 주세요.</p>`;
+  /* 섹션 번호와 내비 */
+  const secs=[["secAbout","자기소개서"],["secCareer","경력기술서"],["secWorks","포트폴리오"]].filter(([id])=>!$("#"+id).hidden);
+  secs.forEach(([id],k)=>{ const n=$("#"+id+" .num"); if(n) n.textContent=String(k+1).padStart(2,"0"); });
+  $("#pSecNav").innerHTML = secs.length>1 ? secs.map(([id,lab])=>`<button type="button" data-goto-sec="${id}">${lab}</button>`).join("") : "";
+  $("#pSecNav").hidden = secs.length<2;
+
+  /* 03 포트폴리오 */
+  const list=pubWorks();
+  const layout = pubLayout || P.workLayout || "grid";
+  $("#pLayout").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.layout===layout));
+  $("#pLayout").hidden = list.length<2;
+  const cnt=new Map(); list.forEach(w=>(w.tags||[]).forEach(t=>cnt.set(t,(cnt.get(t)||0)+1)));
+  if(pubTag && !cnt.has(pubTag)) pubTag="";
+  const tg=$("#pTags");
+  tg.hidden=cnt.size<2;
+  tg.innerHTML=`<button type="button" data-ptag="" class="${pubTag?"":"on"}">전체 ${list.length}</button>`+[...cnt].sort((a,b)=>b[1]-a[1]).map(([t,n])=>`<button type="button" data-ptag="${esc(t)}" class="${pubTag===t?"on":""}">${esc(t)} ${n}</button>`).join("");
+  const shown=pubTag?list.filter(w=>(w.tags||[]).includes(pubTag)):list;
+  if(pio) pio.disconnect();
+  const g=$("#pGrid"), sl=$("#pSlides"), em=$("#pubEmpty");
+  if(layout==="slides" && shown.length){
+    g.hidden=true; g.innerHTML=""; sl.hidden=false;
+    if(slideIdx>=shown.length) slideIdx=0;
+    renderSlide(shown);
+  } else {
+    sl.hidden=true; sl.innerHTML=""; g.hidden=false;
+    g.innerHTML=shown.map(w=>`<article class="pcard" data-work="${esc(w.id)}" tabindex="0" role="button" aria-label="${esc(w.title)} 자세히 보기">
+        <button type="button" class="btn sm pv-only pedit" data-wedit2="${esc(w.id)}">편집</button>
+        <div class="pcover">${coverHTML(w)}</div>
+        <div class="pb">${metaLine(w)?`<div class="pmeta">${metaLine(w)}</div>`:""}<h3>${esc(w.title)}</h3>${w.summary?`<p>${esc(w.summary)}</p>`:""}
+          ${(w.tags||[]).length?`<div class="cell">${w.tags.map(t=>`<span class="ttag">${esc(t)}</span>`).join("")}</div>`:""}</div>
+      </article>`).join("");
+    wireVideos(g,pio);
+  }
+  em.hidden=!!shown.length;
+  em.textContent = (worksLoaded||mode==="local") ? (admin?"공개로 표시한 작업물이 아직 없어요. ‘+ 작업물’로 추가하거나, 관리 화면에서 ‘공개’를 켜 주세요.":"포트폴리오를 준비 중이에요.") : "불러오는 중…";
+}
+function slideMediaHTML(it, big){
+  if(!it) return "";
+  const fake={media:it.media, image:it.image};
+  return mediaHTML(fake, big?1600:240, big);
+}
+function renderSlide(shown){
+  const sl=$("#pSlides"), w=shown[slideIdx], imgs=workImages(w);
+  if(galIdx>=imgs.length) galIdx=0;
+  const main = imgs.length ? slideMediaHTML(imgs[galIdx], true) : (workYt(w)?`<img src="https://i.ytimg.com/vi/${esc(workYt(w))}/hqdefault.jpg" alt="">`:`<span class="ph">${esc((w.title||"?").charAt(0))}</span>`);
+  sl.innerHTML=`<div class="slider">
+    <div class="slide">
+      <div class="smedia"><div class="smain">${main}</div>
+        ${imgs.length>1?`<div class="sgal">${imgs.map((it,k)=>`<button type="button" data-gal="${k}" class="${k===galIdx?"on":""}" aria-label="이미지 ${k+1}">${slideMediaHTML(it,false)}</button>`).join("")}</div>`:""}</div>
+      <div class="stext">
+        ${metaLine(w)?`<div class="pmeta">${metaLine(w)}</div>`:""}
+        <h3>${esc(w.title)}</h3>
+        ${w.summary?`<p class="lead">${esc(w.summary)}</p>`:""}
+        ${(w.tags||[]).length?`<div class="cell" style="display:flex;flex-wrap:wrap;gap:4px">${w.tags.map(t=>`<span class="ttag">${esc(t)}</span>`).join("")}</div>`:""}
+        ${w.body?`<div class="body">${esc(w.body)}</div>`:""}
+        <div class="row"><button type="button" class="btn sm" data-work="${esc(w.id)}">자세히 보기</button><button type="button" class="btn sm pv-only" data-wedit2="${esc(w.id)}">편집</button></div>
+      </div>
+    </div>
+    <div class="sctl"><button type="button" class="btn sm" data-slide="-1" aria-label="이전 작업물">← 이전</button>
+      <div class="dots">${shown.map((_,k)=>`<button type="button" data-slideto="${k}" class="${k===slideIdx?"on":""}" aria-label="${k+1}번째"></button>`).join("")}</div>
+      <span class="pos">${slideIdx+1} / ${shown.length}</span>
+      <button type="button" class="btn sm" data-slide="1" aria-label="다음 작업물">다음 →</button></div>
+  </div>`;
+  sl.querySelectorAll("video").forEach(v=>{ v.muted=true; if(v.dataset.src && !v.getAttribute("src")) v.src=v.dataset.src; const p=v.play&&v.play(); if(p) p.catch(()=>{}); });
+}
+function shownWorks(){ const list=pubWorks(); return pubTag?list.filter(w=>(w.tags||[]).includes(pubTag)):list; }
+$("#publicView").addEventListener("click",e=>{
+  const t=e.target.closest("[data-wedit2],[data-pedit],[data-goto-sec],[data-layout],[data-slide],[data-slideto],[data-gal],[data-ptag],[data-work]"); if(!t) return;
+  if(t.dataset.wedit2){ e.stopPropagation(); openWorkForm(works.find(w=>w.id===t.dataset.wedit2)); return; }
+  if(t.dataset.pedit){ const k=t.dataset.pedit; if(k==="about") openAboutForm(); else if(k==="career") openCareerForm(); else if(k==="profile") openProfileForm(); else if(k==="addwork") openWorkForm(null); return; }
+  if(t.dataset.gotoSec){ const el=$("#"+t.dataset.gotoSec); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); return; }
+  if(t.dataset.layout){ pubLayout=t.dataset.layout; slideIdx=0; galIdx=0; renderPublic(); return; }
+  if(t.dataset.slide){ const n=shownWorks().length; slideIdx=(slideIdx+Number(t.dataset.slide)+n)%n; galIdx=0; renderSlide(shownWorks()); return; }
+  if(t.dataset.slideto){ slideIdx=Number(t.dataset.slideto); galIdx=0; renderSlide(shownWorks()); return; }
+  if(t.dataset.gal){ galIdx=Number(t.dataset.gal); renderSlide(shownWorks()); return; }
+  if(t.hasAttribute("data-ptag")){ pubTag=t.dataset.ptag; slideIdx=0; renderPublic(); return; }
+  if(t.dataset.work) location.hash="work-"+t.dataset.work;
+});
+$("#publicView").addEventListener("keydown",e=>{ const c=e.target.closest&&e.target.closest("article.pcard"); if(c && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); location.hash="work-"+c.dataset.work; } });
+document.addEventListener("keydown",e=>{
+  if($("#publicView").hidden || !$("#workView").hidden || !$("#scrim").hidden || $("#pSlides").hidden) return;
+  if(/^(INPUT|TEXTAREA)$/.test(document.activeElement&&document.activeElement.tagName)) return;
+  if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const n=shownWorks().length; if(!n) return; slideIdx=(slideIdx+(e.key==="ArrowRight"?1:-1)+n)%n; galIdx=0; renderSlide(shownWorks()); }
+});
+$("#pubLogin").addEventListener("click",()=>{ if(auth) openLogin(); });
+$("#pvBack").addEventListener("click",()=>{ showArchive(); render(); });
+
+/* ---------- 작업물 상세 (#work-ID) ---------- */
+function renderWorkView(id){
+  const list=pubWorks(), k=list.findIndex(w=>w.id===id), wv=$("#workView");
+  if(k<0){ if(worksLoaded||mode==="local") closeWorkView(); return; }
+  const w=list[k], prev=list[k-1], next=list[k+1], y=workYt(w);
+  const links=(w.links||[]).filter(l=>!(y && ytId(l.url)===y && !l.label));
+  wv.innerHTML=`<div class="wvin">
+    <div class="wvbar"><button type="button" class="btn sm" data-wclose>← 목록</button>
+      <div class="nav">${(previewing&&canEdit())?`<button type="button" class="btn sm" data-wedit3="${esc(w.id)}">편집</button>`:""}<button type="button" class="btn sm" data-wgo="${prev?esc(prev.id):""}" ${prev?"":"disabled"}>이전</button><button type="button" class="btn sm" data-wgo="${next?esc(next.id):""}" ${next?"":"disabled"}>다음</button></div></div>
+    ${(w.media||w.image)?`<div class="wvmedia">${mediaHTML(w,1600,true)}</div>`:""}
+    <div>${metaLine(w)?`<div class="pmeta" style="margin-bottom:8px">${metaLine(w)}</div>`:""}<h1>${esc(w.title)}</h1></div>
+    ${w.summary?`<p class="lead">${esc(w.summary)}</p>`:""}
+    ${(w.tags||[]).length?`<div class="cell" style="display:flex;flex-wrap:wrap;gap:6px">${w.tags.map(t=>`<span class="ttag">${esc(t)}</span>`).join("")}</div>`:""}
+    ${y?`<div class="yt16"><iframe src="https://www.youtube-nocookie.com/embed/${esc(y)}" title="${esc(w.title)} 영상" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`:""}
+    ${w.body?`<div class="body">${esc(w.body)}</div>`:""}
+    ${(w.gallery||[]).length?`<div class="wgal">${w.gallery.map(g=>slideMediaHTML(g,true)).join("")}</div>`:""}
+    ${links.length?`<div class="wlinks">${links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(linkLabel(l))} ↗</a>`).join("")}</div>`:""}
+  </div>`;
+  wv.hidden=false; document.body.style.overflow="hidden"; wv.scrollTop=0;
+  document.title=`${w.title} · ${(profile&&profile.name)||"포트폴리오"}`;
+}
+function closeWorkView(silent){
+  const wv=$("#workView"); if(wv.hidden) return;
+  wv.hidden=true; wv.innerHTML=""; document.body.style.overflow="";
+  if(!silent && location.hash.startsWith("#work-")) history.replaceState(null,"",location.pathname+location.search);
+  renderPublic();
+}
+function openWorkFromHash(){ const h=location.hash; if(h.startsWith("#work-") && !$("#publicView").hidden) renderWorkView(h.slice(6)); }
+addEventListener("hashchange",()=>{ if(location.hash.startsWith("#work-")) openWorkFromHash(); else closeWorkView(true); });
+$("#workView").addEventListener("click",e=>{
+  const t=e.target.closest("[data-wclose],[data-wgo],[data-wedit3]"); if(!t) return;
+  if(t.dataset.wedit3){ openWorkForm(works.find(w=>w.id===t.dataset.wedit3)); return; }
+  if(t.hasAttribute("data-wclose")) closeWorkView();
+  else if(t.dataset.wgo) location.hash="work-"+t.dataset.wgo;
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#workView").hidden && $("#scrim").hidden) closeWorkView(); });
+
+/* ---------- 관리자: 포트폴리오 관리 (#portfolio) ---------- */
+function renderPortAdmin(){
+  const P=profile||{}, n=works.filter(w=>w.published).length;
+  $("#count").textContent=`작업물 ${works.length}개 · 공개 ${n}개`;
+  if(io) io.disconnect();
+  $("#portAdmin").innerHTML=`
+    <div class="ptool"><button type="button" class="btn primary edit-only" data-wadd>+ 작업물 추가</button><button type="button" class="btn edit-only" data-wprof>이름·연락처</button><button type="button" class="btn edit-only" data-wabout>자기소개서</button><button type="button" class="btn edit-only" data-wcareer>경력기술서</button><button type="button" class="btn" data-wpreview>방문자 화면 보기 · 바로 수정</button></div>
+    <div class="pprof"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>${esc(P.name||"이름 없음")}</b><span>${esc(P.headline||"방문자 화면 맨 위에 보일 이름·한 줄 소개·연락처를 ‘이름·연락처’에서 적어 주세요.")}</span>
+      <span class="pmeta" style="margin-top:4px">자기소개서 ${(P.about||"").trim()?"작성됨":"비어 있음"} · 경력 ${(P.careers||[]).length}건 · 작업물 ${works.length}건 · 보기 방식 ${(P.workLayout||"grid")==="slides"?"슬라이드":"목록"}</span></div></div>
+    ${works.length?`<div class="wlist">${works.map((w,k)=>`<div class="wrow">
+        ${(w.media||w.image)?`<button type="button" class="thumb" data-zoomw="${esc(w.id)}">${mediaHTML(w,240)}</button>`:`<div class="thumb">${workYt(w)?`<img src="https://i.ytimg.com/vi/${esc(workYt(w))}/mqdefault.jpg" alt="">`:"<span>없음</span>"}</div>`}
+        <div class="info"><b>${esc(w.title)}</b>${metaLine(w)?`<span class="pmeta">${metaLine(w)}</span>`:""}
+          ${(w.tags||[]).length?`<div class="cell">${w.tags.map(t=>`<span class="ttag">${esc(t)}</span>`).join("")}</div>`:""}</div>
+        <div class="acts">
+          <button type="button" class="pubchip ${w.published?"on":""}" data-wpub="${esc(w.id)}" title="눌러서 공개/비공개 전환">${w.published?"● 공개":"○ 비공개"}</button>
+          <button type="button" class="iconbtn edit-only" data-wmove="${k}|-1" ${k?"":"disabled"} aria-label="위로">↑</button>
+          <button type="button" class="iconbtn edit-only" data-wmove="${k}|1" ${k<works.length-1?"":"disabled"} aria-label="아래로">↓</button>
+          <button type="button" class="iconbtn edit-only" data-wedit="${esc(w.id)}">편집</button>
+          <button type="button" class="iconbtn edit-only" data-wdel="${esc(w.id)}">삭제</button>
+        </div></div>`).join("")}</div>`
+      :`<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>아직 작업물이 없어요</strong><span>‘+ 작업물 추가’로 첫 포트폴리오를 등록하세요. ‘공개’로 표시한 것만 방문자에게 보여요.</span></div>`}`;
+  wireVideos($("#portAdmin"));
+}
+$("#portAdmin").addEventListener("click", async e=>{
+  const t=e.target.closest("[data-wabout],[data-wcareer],[data-wadd],[data-wprof],[data-wpreview],[data-wpub],[data-wmove],[data-wedit],[data-wdel],[data-zoomw]"); if(!t) return;
+  if(t.hasAttribute("data-wabout")) openAboutForm();
+  else if(t.hasAttribute("data-wcareer")) openCareerForm();
+  else if(t.hasAttribute("data-wadd")) openWorkForm(null);
+  else if(t.hasAttribute("data-wprof")) openProfileForm();
+  else if(t.hasAttribute("data-wpreview")) showPublic(true);
+  else if(t.dataset.wedit) openWorkForm(works.find(w=>w.id===t.dataset.wedit));
+  else if(t.dataset.wdel) confirmWorkDelete(t.dataset.wdel);
+  else if(t.dataset.zoomw){ const w=works.find(x=>x.id===t.dataset.zoomw); if(w){ const lb=$("#lightbox"); lb.innerHTML=`<div class="lb">${mediaHTML(w,1280,true)}<div class="lbbar"><span>${esc(w.title)}</span><button type="button" id="lbClose">닫기</button></div></div>`; lb.hidden=false; } }
+  else if(t.dataset.wpub){
+    if(!canEdit()) return;
+    const w=works.find(x=>x.id===t.dataset.wpub); if(!w) return;
+    try{ await wstore.update(w.id,{published:!w.published, updatedAt:Date.now()}); toast(w.published?"비공개로 바꿨어요":"공개했어요"); }catch(ex){ toast(errMsg(ex)); }
+  }
+  else if(t.dataset.wmove){
+    const [k,d]=t.dataset.wmove.split("|").map(Number), arr=works.slice(), j=k+d;
+    if(j<0||j>=arr.length) return;
+    [arr[k],arr[j]]=[arr[j],arr[k]];
+    try{ for(let i=0;i<arr.length;i++) if(arr[i].order!==i) await wstore.update(arr[i].id,{order:i}); }catch(ex){ toast(errMsg(ex)); }
+  }
+});
+function openWorkForm(w){
+  if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
+  formImage=w&&w.image?w.image:null; formMedia=w&&w.media?w.media:null; uploading=false;
+  const sc=$("#scrim");
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+    <header><h2 id="fTitle">${w?"작업물 편집":"작업물 추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <form id="wform" novalidate>
+      <div class="field full"><label for="w_title">제목</label><input id="w_title" type="text" value="${esc(w?.title)}" placeholder="보스 ‘태초의 악몽’ 전투 기획" required></div>
+      <div class="field"><label for="w_project">프로젝트 / 게임</label><input id="w_project" type="text" value="${esc(w?.project)}" placeholder="개인 프로젝트"></div>
+      <div class="field"><label for="w_role">역할</label><input id="w_role" type="text" value="${esc(w?.role)}" placeholder="전투 기획 (보스 패턴·밸런스)"></div>
+      <div class="field"><label for="w_period">기간</label><input id="w_period" type="text" value="${esc(w?.period)}" placeholder="2026.03 – 2026.06"></div>
+      <div class="field"><label>공개</label><label class="chk" for="w_pub"><input id="w_pub" type="checkbox" ${w?(w.published?"checked":""):"checked"}> 방문자에게 보이기</label></div>
+      <div class="field full"><label for="w_summary">한 줄 소개</label><input id="w_summary" type="text" value="${esc(w?.summary)}" placeholder="카드와 상세 화면 맨 위에 보이는 요약"></div>
+      <div class="field full"><label for="w_tags">태그</label><input id="w_tags" type="text" value="${esc((w?.tags||[]).join(" / "))}" placeholder="보스 / 패턴 설계 / 밸런스"><small>/ 로 구분 · 방문자 화면에서 태그별로 골라 볼 수 있어요</small></div>
+      ${mediaFieldHTML("대표 이미지·영상")}
+      ${galleryFieldHTML()}
+      <div class="field full"><label for="w_body">상세 설명</label><textarea id="w_body" placeholder="기획 의도, 핵심 규칙, 결과와 회고 등" style="min-height:180px">${esc(w?.body||"")}</textarea></div>
+      <div class="field full"><label for="w_links">링크</label><textarea id="w_links" placeholder="기획서 | https://docs.google.com/…&#10;플레이 영상 | https://youtu.be/…" style="min-height:80px">${esc(linksText(w?.links))}</textarea><small>한 줄에 하나씩, ‘이름 | 주소’ 형식 · 유튜브 링크는 상세 화면에 영상으로 바로 보여요</small></div>
+      <div class="err" id="fErr" hidden></div>
+      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${w?"저장":"추가"}</button></div>
+    </form></div>`;
+  formGallery=((w&&w.gallery)||[]).map(g=>({...g})); galBusy=0;
+  sc.hidden=false; setThumb(); wireMediaField(); wireGallery(); wireAC();
+  $("#w_title").focus();
+  $("#fClose").onclick=$("#fCancel").onclick=closeForm;
+  sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  $("#wform").onsubmit=async e=>{
+    e.preventDefault();
+    const err=$("#fErr"), title=$("#w_title").value.trim();
+    if(!title){ err.hidden=false; err.textContent="제목은 꼭 적어 주세요."; return; }
+    if(uploading||galBusy){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
+    const minOrder=works.reduce((a,x)=>Math.min(a,x.order??0),0);
+    const data={ title, project:$("#w_project").value.trim(), role:$("#w_role").value.trim(), period:$("#w_period").value.trim(),
+      summary:$("#w_summary").value.trim(), tags:splitTags($("#w_tags").value), body:$("#w_body").value,
+      links:parseLinks($("#w_links").value), image:formImage||"", media:formMedia||null, gallery:formGallery.filter(g=>!g.busy).map(g=>({media:g.media||null,image:g.image||""})), published:$("#w_pub").checked,
+      order: w ? (w.order??0) : minOrder-1, createdAt: w?.createdAt||Date.now(), updatedAt:Date.now() };
+    const b=$("#fSave"); b.disabled=true;
+    try{ await wstore.set(w?w.id:uid(), data); closeForm(); toast(w?"저장했어요":"추가했어요"); }
+    catch(ex){ b.disabled=false; err.hidden=false; err.textContent=errMsg(ex); }
+  };
+}
+function openProfileForm(){
+  if(!canEdit()) return;
+  const P=profile||{}, sc=$("#scrim");
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+    <header><h2 id="fTitle">소개 수정</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <form id="pform" novalidate>
+      <div class="field"><label for="p_name">이름</label><input id="p_name" type="text" value="${esc(P.name)}" placeholder="홍길동"></div>
+      <div class="field"><label for="p_head">한 줄 소개</label><input id="p_head" type="text" value="${esc(P.headline)}" placeholder="전투 기획자 · 보스 패턴과 전투 시스템"></div>
+      <div class="field full"><label for="p_intro">짧은 소개 (이름 아래, 선택)</label><textarea id="p_intro" style="min-height:70px" placeholder="한두 문장. 긴 글은 자기소개서에 적어 주세요">${esc(P.intro||"")}</textarea></div>
+      <div class="field"><label for="p_layout">포트폴리오 기본 보기</label><select id="p_layout" style="border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 10px"><option value="grid" ${(P.workLayout||"grid")==="grid"?"selected":""}>목록 (카드)</option><option value="slides" ${P.workLayout==="slides"?"selected":""}>슬라이드</option></select><small>방문자가 직접 바꿔 볼 수도 있어요</small></div>
+      <div class="field full"><label for="p_contacts">연락처</label><textarea id="p_contacts" style="min-height:80px" placeholder="이메일 | name@example.com&#10;GitHub | https://github.com/…">${esc(P.contacts||"")}</textarea><small>한 줄에 하나씩, ‘이름 | 값’ 형식 · 방문자 화면에 그대로 공개돼요</small></div>
+      <div class="err" id="fErr" hidden></div>
+      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">저장</button></div>
+    </form></div>`;
+  sc.hidden=false; $("#p_name").focus();
+  $("#fClose").onclick=$("#fCancel").onclick=closeForm;
+  sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  $("#pform").onsubmit=async e=>{
+    e.preventDefault();
+    const b=$("#fSave"); b.disabled=true;
+    try{ await wstore.saveProfile({ ...profile, name:$("#p_name").value.trim(), headline:$("#p_head").value.trim(), intro:$("#p_intro").value, contacts:$("#p_contacts").value, workLayout:$("#p_layout").value, updatedAt:Date.now() }); closeForm(); toast("저장했어요"); }
+    catch(ex){ b.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); }
+  };
+}
+function openAboutForm(){
+  if(!canEdit()) return;
+  const P=profile||{}, sc=$("#scrim");
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle" style="width:min(820px,100%)">
+    <header><h2 id="fTitle">자기소개서</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <form id="aform" novalidate style="grid-template-columns:1fr">
+      <div class="field full"><textarea id="a_body" style="min-height:52vh;font-size:14.5px" placeholder="## 지원 동기&#10;전투 기획에 관심을 갖게 된 계기…&#10;&#10;## 강점&#10;…">${esc(P.about||"")}</textarea>
+        <small>‘## 제목’으로 시작하는 줄은 소제목이 되고, 빈 줄로 문단이 나뉘어요.</small></div>
+      <div class="err" id="fErr" hidden></div>
+      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">저장</button></div>
+    </form></div>`;
+  sc.hidden=false; $("#a_body").focus();
+  $("#fClose").onclick=$("#fCancel").onclick=closeForm;
+  sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  $("#aform").onsubmit=async e=>{ e.preventDefault(); const b=$("#fSave"); b.disabled=true;
+    try{ await wstore.saveProfile({ ...profile, about:$("#a_body").value, updatedAt:Date.now() }); closeForm(); toast("저장했어요"); }
+    catch(ex){ b.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); } };
+}
+function openCareerForm(){
+  if(!canEdit()) return;
+  let rows=((profile||{}).careers||[]).map(c=>({...c}));
+  if(!rows.length) rows=[{company:"",role:"",period:"",summary:"",body:""}];
+  const sc=$("#scrim");
+  const draw=()=>{
+    $("#cRows").innerHTML=rows.map((c,k)=>`<div class="carrow" data-k="${k}">
+      <input data-f="company" value="${esc(c.company)}" placeholder="회사 / 프로젝트명" aria-label="회사">
+      <input data-f="period" value="${esc(c.period)}" placeholder="2024.03 – 현재" aria-label="기간">
+      <input data-f="role" value="${esc(c.role)}" placeholder="직무·역할 (예: 전투 기획)" aria-label="역할">
+      <input data-f="summary" value="${esc(c.summary)}" placeholder="한 줄 요약 (선택)" aria-label="요약">
+      <textarea class="full" data-f="body" placeholder="- 보스 3종 패턴 설계 및 밸런스&#10;- 전투 확장 시스템 ‘제어기’ 기획 … (줄마다 - 로 시작하면 목록)" aria-label="상세">${esc(c.body)}</textarea>
+      <div class="ops"><button type="button" class="iconbtn" data-cm="${k}|-1" ${k?"":"disabled"}>↑ 위로</button><button type="button" class="iconbtn" data-cm="${k}|1" ${k<rows.length-1?"":"disabled"}>↓ 아래로</button><button type="button" class="iconbtn" data-cdel="${k}">삭제</button></div>
+    </div>`).join("");
+  };
+  const sync=()=>{ $("#cRows").querySelectorAll(".carrow").forEach(el=>{ const k=+el.dataset.k; el.querySelectorAll("[data-f]").forEach(i=>rows[k][i.dataset.f]=i.value); }); };
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle" style="width:min(820px,100%)">
+    <header><h2 id="fTitle">경력기술서</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <form id="cform" novalidate style="grid-template-columns:1fr">
+      <div id="cRows" style="display:flex;flex-direction:column;gap:10px"></div>
+      <button type="button" class="btn" id="cAdd">+ 경력 추가</button>
+      <small style="color:var(--muted);font-size:11.5px">위에 있는 것부터 보여요. 최근 경력을 맨 위에 두세요.</small>
+      <div class="err" id="fErr" hidden></div>
+      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">저장</button></div>
+    </form></div>`;
+  sc.hidden=false; draw();
+  $("#fClose").onclick=$("#fCancel").onclick=closeForm;
+  sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  $("#cAdd").onclick=()=>{ sync(); rows.push({company:"",role:"",period:"",summary:"",body:""}); draw(); $("#cRows").lastElementChild.querySelector("input").focus(); };
+  $("#cRows").onclick=e=>{
+    const t=e.target.closest("[data-cm],[data-cdel]"); if(!t) return; sync();
+    if(t.dataset.cdel){ rows.splice(+t.dataset.cdel,1); }
+    else { const [k,d]=t.dataset.cm.split("|").map(Number); const j=k+d; if(j>=0&&j<rows.length) [rows[k],rows[j]]=[rows[j],rows[k]]; }
+    draw();
+  };
+  $("#cform").onsubmit=async e=>{ e.preventDefault(); sync(); const b=$("#fSave"); b.disabled=true;
+    const clean2=rows.map(c=>({company:(c.company||"").trim(),role:(c.role||"").trim(),period:(c.period||"").trim(),summary:(c.summary||"").trim(),body:c.body||""})).filter(c=>c.company||c.body.trim());
+    try{ await wstore.saveProfile({ ...profile, careers:clean2, updatedAt:Date.now() }); closeForm(); toast("저장했어요"); }
+    catch(ex){ b.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); } };
+}
+/* 작업물 추가 이미지 (슬라이드·상세 화면에 함께 보임) */
+let formGallery=[], galBusy=0;
+async function uploadAny(file, onp){
+  const target=upTarget();
+  if(!target){
+    if(await isAnimated(file) && file.size<=MAX_ANIM_KB*1024) return {image:await readURL(file)};
+    return {image:await shrink(file,1280)};
+  }
+  const isVid=/^video\//.test(file.type||"");
+  let rt="image", send=file, anim=false;
+  if(isVid){ rt="video"; if(file.size>VID_MAX) throw {msg:`영상이 ${MB(file.size)}MB예요. 100MB까지 올릴 수 있어요`}; }
+  else {
+    anim=await isAnimated(file);
+    if(file.size>IMG_MAX){
+      if(anim){ send=await animToVideo(file,onp); rt="video"; anim=false; }
+      else { const blob=await (await fetch(await shrink(file,2400))).blob(); send=new File([blob],"image.jpg",{type:"image/jpeg"}); }
+    }
+  }
+  const res=await cloudUpload(target, send, rt, onp);
+  return {media:{cloud:target.cloudName, rt:res.resource_type||rt, id:res.public_id, fmt:res.format||"", anim:(res.resource_type||rt)==="image"&&anim, bytes:res.bytes||send.size}};
+}
+function galleryFieldHTML(){
+  return `<div class="field full"><label>추가 이미지 <small style="font-weight:400">· 슬라이드에서 넘겨 보고, 상세 화면에 차례로 보여요</small></label>
+    <div class="galedit" id="galEdit"></div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><label class="btn sm" for="g_files" style="font-weight:500">이미지 여러 장 추가</label><input id="g_files" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm" hidden><small>또는 이 칸 위로 끌어 놓기</small></div></div>`;
+}
+function drawGallery(){
+  const el=$("#galEdit"); if(!el) return;
+  el.innerHTML=formGallery.map((g,k)=>`<div class="gi">${g.busy?`<span>${esc(g.busy)}</span>`:slideMediaHTML(g,false)}${g.busy?"":`<button type="button" data-grm="${k}" aria-label="빼기">✕</button>`}</div>`).join("") || `<small style="color:var(--muted)">없음</small>`;
+  el.querySelectorAll("video").forEach(v=>{ if(v.dataset.src) v.src=v.dataset.src; v.muted=true; v.play().catch(()=>{}); });
+  const sv=$("#fSave"); if(sv) sv.disabled = uploading || galBusy>0;
+}
+async function addGalleryFiles(files){
+  for(const f of [...files].filter(f=>/^(image|video)\//.test(f.type))){
+    const slot={busy:"올리는 중"}; formGallery.push(slot); galBusy++; drawGallery();
+    try{ const it=await uploadAny(f, p=>{ slot.busy=`${p}%`; drawGallery(); }); delete slot.busy; Object.assign(slot,it); }
+    catch(ex){ formGallery.splice(formGallery.indexOf(slot),1); toast(cloudErr(ex)); }
+    galBusy--; drawGallery();
+  }
+}
+function wireGallery(){
+  drawGallery();
+  $("#g_files").onchange=e=>{ addGalleryFiles(e.target.files); e.target.value=""; };
+  const z=$("#galEdit").parentElement;
+  z.ondragover=e=>{ e.preventDefault(); };
+  z.ondrop=e=>{ e.preventDefault(); e.stopPropagation(); addGalleryFiles(e.dataTransfer.files); };
+  $("#galEdit").onclick=e=>{ const b=e.target.closest("[data-grm]"); if(b){ formGallery.splice(+b.dataset.grm,1); drawGallery(); } };
+}
+function confirmWorkDelete(id){
+  const w=works.find(x=>x.id===id); if(!w) return;
+  const sc=$("#scrim");
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" style="width:min(380px,100%)"><header><h2>작업물 삭제</h2></header>
+    <div style="padding:16px 18px"><b>${esc(w.title)}</b>을(를) 삭제할까요?</div>
+    <div class="foot" style="display:flex;justify-content:flex-end;gap:8px;padding:0 18px 16px"><button type="button" class="btn" id="dNo">취소</button><button type="button" class="btn primary" id="dYes">삭제</button></div></div>`;
+  sc.hidden=false; sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  $("#dNo").onclick=closeForm;
+  $("#dYes").onclick=async()=>{ try{ await wstore.remove(id); closeForm(); toast("삭제했어요"); }catch(ex){ closeForm(); toast(errMsg(ex)); } };
+}
+
 /* ---------- 백업 (ZIP 한 번에) / 복원 ---------- */
 const ZIPLIB="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
 const safeName = s => String(s||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);
@@ -1026,8 +1644,9 @@ function saveBlob(blob, name){
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
-function jsonBackup(list){
-  return {version:2, exportedAt:new Date().toISOString(), monsters:list.map(m=>({...m, originalUrl:origUrl(m).startsWith("data:")?"":origUrl(m)}))};
+function jsonBackup(list, wl){
+  const ou=o=>({...o, originalUrl:origUrl(o).startsWith("data:")?"":origUrl(o)});
+  return {version:3, exportedAt:new Date().toISOString(), monsters:list.map(ou), works:(wl||works).map(ou), profile};
 }
 let busy=false;
 $("#exportBtn").addEventListener("click", async ()=>{
@@ -1037,23 +1656,27 @@ $("#exportBtn").addEventListener("click", async ()=>{
     if(!window.JSZip) await loadScript(ZIPLIB);
     const zip=new JSZip(), failed=[];
     const list=monsters.map(m=>({...m}));
-    let done=0; const targets=list.filter(m=>m.media||(m.image&&!m.image.startsWith("data:")));
-    for(const m of targets){
-      const url=origUrl(m);
+    const wl=works.map(w=>({...w}));
+    const hasFile=o=>o.media||(o.image&&!o.image.startsWith("data:"));
+    const targets=[...list.filter(hasFile).map(o=>({o,name:`${safeName(o.game)}_${safeName(o.name)}`,label:`${o.game} · ${o.name}`})),
+                   ...wl.filter(hasFile).map(o=>({o,name:`portfolio_${safeName(o.title)}`,label:`포트폴리오 · ${o.title}`}))];
+    let done=0;
+    for(const {o,name,label} of targets){
+      const url=origUrl(o);
       try{
         const r=await fetch(url,{mode:"cors"}); if(!r.ok) throw 0;
         const b=await r.blob();
-        const ext=(m.media&&m.media.fmt)||((b.type.split("/")[1]||"bin").replace("jpeg","jpg"));
-        const path=`media/${safeName(m.game)}_${safeName(m.name)}_${m.id}.${ext}`;
-        zip.file(path,b); m.mediaFile=path;
-      }catch{ failed.push(`${m.game} · ${m.name}\t${url}`); }
+        const ext=(o.media&&o.media.fmt)||((b.type.split("/")[1]||"bin").replace("jpeg","jpg"));
+        const path=`media/${name}_${o.id}.${ext}`;
+        zip.file(path,b); o.mediaFile=path;
+      }catch{ failed.push(`${label}\t${url}`); }
       toast(`백업 중… 파일 ${++done}/${targets.length}`);
     }
-    zip.file("data.json", JSON.stringify(jsonBackup(list),null,2));
+    zip.file("data.json", JSON.stringify(jsonBackup(list,wl),null,2));
     if(failed.length) zip.file("가져오지_못한_파일.txt", "아래 파일은 원본 사이트에서 받지 못했어요. 주소로 직접 열어 저장해 주세요.\n\n"+failed.join("\n"));
     toast("압축하는 중…");
     saveBlob(await zip.generateAsync({type:"blob"}), `monster-ref-backup-${stamp}.zip`);
-    toast(`백업을 내려받았어요 · ${list.length}건${failed.length?` (파일 ${failed.length}개는 주소만 저장)`:""}`);
+    toast(`백업을 내려받았어요 · 레퍼런스 ${list.length}건 · 작업물 ${wl.length}건${failed.length?` (파일 ${failed.length}개는 주소만 저장)`:""}`);
   }catch{
     saveBlob(new Blob([JSON.stringify(jsonBackup(monsters),null,2)],{type:"application/json"}), `monster-ref-${stamp}.json`);
     toast("압축 도구를 불러오지 못해 데이터(JSON)만 받았어요");
@@ -1071,14 +1694,15 @@ $("#importFile").addEventListener("change", async e=>{
       const dj=zip.file("data.json"); if(!dj) throw 0;
       j=JSON.parse(await dj.async("string"));
     } else j=JSON.parse(await f.text());
-    const arr=Array.isArray(j)?j:j.monsters;
+    const arr=Array.isArray(j)?j:(j.monsters||[]);
     if(!Array.isArray(arr)) throw 0;
     const list=arr.filter(m=>m&&m.name).map(m=>{ const o={...m,id:m.id||uid()}; delete o.originalUrl; return o; });
-    if(!list.length) throw 0;
+    const wl=(Array.isArray(j.works)?j.works:[]).filter(w=>w&&w.title).map(w=>{ const o={...w,id:w.id||uid()}; delete o.originalUrl; return o; });
+    if(!list.length && !wl.length) throw 0;
     /* ZIP 복원: 원본 파일을 지금 연결된 Cloudinary 계정에 다시 올림 */
     const target=upTarget(); let re=0, reFail=0;
     if(zip && target){
-      const withFile=list.filter(m=>m.mediaFile&&zip.file(m.mediaFile));
+      const withFile=[...list,...wl].filter(m=>m.mediaFile&&zip.file(m.mediaFile));
       for(const m of withFile){
         try{
           const b=await zip.file(m.mediaFile).async("blob");
@@ -1094,10 +1718,14 @@ $("#importFile").addEventListener("change", async e=>{
         toast(`복원 중… 파일 ${re+reFail}/${withFile.length}`);
       }
     }
-    list.forEach(m=>{ delete m.mediaFile; });
+    [...list,...wl].forEach(m=>{ delete m.mediaFile; });
     toast("데이터를 저장하는 중…");
-    try{ await store.bulk(list); toast(`${list.length}건을 불러왔어요${re?` · 파일 ${re}개 다시 올림`:""}${reFail?` · ${reFail}개 실패`:""}`); }
-    catch(ex){ toast(errMsg(ex)); }
+    try{
+      if(list.length) await store.bulk(list);
+      for(const w of wl) await wstore.set(w.id, clean(w));
+      if(j.profile && typeof j.profile==="object" && Object.keys(j.profile).length) await wstore.saveProfile(j.profile);
+      toast(`레퍼런스 ${list.length}건 · 작업물 ${wl.length}건을 불러왔어요${re?` · 파일 ${re}개 다시 올림`:""}${reFail?` · ${reFail}개 실패`:""}`);
+    }catch(ex){ toast(errMsg(ex)); }
   }catch{ toast("불러올 수 없는 파일이에요. 백업으로 받은 ZIP이나 JSON인지 확인해 주세요"); }
   finally{ busy=false; }
 });
@@ -1167,27 +1795,6 @@ function openLogin(){
 }
 
 /* ---------- 화면 전환: 방문자 = 포트폴리오 / 관리자 = 레퍼런스 아카이브 ---------- */
-function slidesEmbed(u){
-  const m=String(u||"").match(/docs\.google\.com\/presentation\/d\/(?:e\/)?([\w-]+)/);
-  if(!m) return u||"";
-  return /\/d\/e\//.test(u) ? `https://docs.google.com/presentation/d/e/${m[1]}/embed?start=false&loop=false&delayms=5000`
-                            : `https://docs.google.com/presentation/d/${m[1]}/embed?start=false&loop=false&delayms=5000`;
-}
-function showPublic(){
-  $("#bootMsg").hidden=true; $("#archive").hidden=true; $("#publicView").hidden=false;
-  document.title=(CFG.portfolio&&CFG.portfolio.title)||"포트폴리오";
-  const P=CFG.portfolio||{}, fr=$("#pubFrame");
-  $("#pubTitle").textContent=P.title||"포트폴리오";
-  if(P.slides){
-    if(!fr.firstChild){ fr.innerHTML=`<iframe src="${esc(slidesEmbed(P.slides))}" allowfullscreen loading="lazy" title="${esc(P.title||"포트폴리오")}"></iframe>`; }
-    fr.hidden=false; $("#pubEmpty").hidden=true;
-    const o=$("#pubOpen"); o.href=P.slides; o.hidden=false;
-  } else { fr.hidden=true; $("#pubEmpty").hidden=false; }
-}
-function showArchive(){
-  $("#bootMsg").hidden=true; $("#publicView").hidden=true; $("#archive").hidden=false;
-  document.title="몬스터 레퍼런스 아카이브";
-}
 $("#pubLogin").addEventListener("click",()=>{ if(auth) openLogin(); });
 
 let unsub=null;
@@ -1224,8 +1831,8 @@ async function bootCloud(){
   mode="cloud"; applyMode();
   auth.onAuthStateChanged(u=>{
     user=u; applyMode();
-    if(u){ startData(); }
-    else { stopData(); showPublic(); }
+    if(u){ startData(); startPortfolio(true); }
+    else { stopData(); startPortfolio(false); showPublic(); }
   });
 }
 async function bootLocal(){
@@ -1236,6 +1843,8 @@ async function bootLocal(){
     try{ const r=await fetch("data.json",{cache:"no-store"}); if(r.ok){ const j=await r.json(); saved=Array.isArray(j)?j:j.monsters; } }catch{}
   }
   monsters=(Array.isArray(saved)?saved:SEED).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  try{ works=sortWorks(JSON.parse(localStorage.getItem(WORK_KEY)||"[]")||[]); profile=JSON.parse(localStorage.getItem(PROF_KEY)||"{}")||{}; }catch{ works=[]; profile={}; }
+  worksLoaded=true;
   loaded=true; persist(); showArchive(); render();
 }
 (async()=>{
