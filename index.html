@@ -175,6 +175,41 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .lightbox .lbbar{display:flex;gap:14px;align-items:center;color:#d6d9df;font-size:13px}
 .lightbox .lbbar a,.lightbox .lbbar button{color:#fff;background:none;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:5px 10px;text-decoration:none;font-size:13px}
 
+/* 상단 탭 */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs a{display:flex;align-items:center;gap:6px;padding:10px 14px;color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs a:hover{color:var(--ink)}
+.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs a .n{font-family:var(--f-mono);font-size:11px;font-weight:500;background:var(--hover);border-radius:10px;padding:0 7px;font-variant-numeric:tabular-nums}
+/* 시스템·PC 묶음 보기 */
+.groupbox{display:flex;flex-direction:column;gap:14px;min-width:0}
+.gindex{display:flex;flex-wrap:wrap;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.gsec{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;scroll-margin-top:12px}
+.gsec>header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--line)}
+.gsec>header h2{margin:0;font-size:16px;display:flex;align-items:center;gap:8px}
+.gsec>header h2 .tag{font-size:14px;padding:2px 10px}
+.gsec>header .cnt{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.gsec>header .sp{flex:1}
+.gitem{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:14px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:start}
+.gitem:last-child{border-bottom:0}
+@media (max-width:560px){.gitem{grid-template-columns:64px minmax(0,1fr)}.gitem .gact{grid-column:2}.gitem .thumb{width:64px;height:64px}}
+.gbody{display:flex;flex-direction:column;gap:6px;min-width:0}
+.gcrumb{display:flex;flex-wrap:wrap;align-items:center;gap:5px;font-size:13px;color:var(--muted)}
+.gcrumb b{color:var(--ink);font-size:14px}
+.gcrumb .lbl{font-family:var(--f-mono);font-size:11.5px;border:1px solid var(--line);border-radius:4px;padding:0 6px}
+.gnote{white-space:pre-wrap;font-size:13.5px;line-height:1.65}
+.gnote.blank{color:var(--muted);font-style:italic}
+.gedit{display:flex;flex-direction:column;gap:8px}
+.gedit input,.gedit textarea{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 10px;width:100%}
+.gedit textarea{min-height:130px;resize:vertical;line-height:1.6}
+.gedit .row{display:flex;gap:6px;justify-content:flex-end}
+/* 자동완성 */
+.ac{position:fixed;z-index:65;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:4px;max-height:260px;overflow:auto;display:flex;flex-direction:column}
+.ac button{display:flex;justify-content:space-between;gap:12px;align-items:center;text-align:left;border:0;background:transparent;border-radius:5px;padding:7px 10px;font-size:13.5px}
+.ac button.on,.ac button:hover{background:var(--hover)}
+.ac button mark{background:transparent;color:var(--accent);font-weight:700}
+.ac button .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.ac .hint{font-size:11px;color:var(--muted);padding:4px 10px 2px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;font-size:13px;z-index:80}
 @media (prefers-reduced-motion:no-preference){.pop,.modal{animation:in .14s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}}}
 </style>
@@ -197,6 +232,12 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
     </div>
   </header>
 
+  <nav class="tabs" aria-label="보기">
+    <a href="#monsters" data-view="monsters">몬스터 <span class="n" id="nMon"></span></a>
+    <a href="#systems" data-view="systems">전투 확장 시스템 <span class="n" id="nSys"></span></a>
+    <a href="#pcs" data-view="pcs">대응 PC 도구 <span class="n" id="nPc"></span></a>
+  </nav>
+
   <div class="searchbar">
     <label class="search" for="q">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -218,6 +259,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <tbody id="rows"></tbody>
       </table>
     </section>
+    <section class="groupbox" id="groupbox" hidden></section>
   </div>
 </div>
 
@@ -417,11 +459,17 @@ function visible(){
 
 /* ---------- render ---------- */
 function render(){
-  renderRail(); renderActive();
+  renderRail(); renderActive(); renderTabs();
   const list = visible();
   $("#count").textContent = loaded ? `${list.length} / ${monsters.length}건` : "";
-  const st=$("#state"), tbl=$("#tbl");
+  const st=$("#state"), tbl=$("#tbl"), tb=$("#tablebox"), gb=$("#groupbox");
+  tb.hidden=false; gb.hidden=true;
   if (!loaded) return;
+  if (view!=="monsters" && monsters.length && list.length){
+    if(io) io.disconnect();
+    renderGroups(list);
+    return;
+  }
   if (!monsters.length){
     tbl.hidden=true; st.hidden=false;
     st.innerHTML = `<strong>아직 레퍼런스가 없어요</strong><span>${canEdit()?"‘+ 레퍼런스 추가’로 첫 몬스터를 등록하거나, 백업해 둔 data.json을 불러오기로 넣으세요.":"편집하려면 오른쪽 위에서 구글 로그인을 해 주세요."} 태그는 <b>변이/비행기/빠름</b>처럼 / 로 구분해 적으면 됩니다.</span>`;
@@ -446,6 +494,140 @@ function deepChip(m, cat, i){
   const e=m[cat][i];
   return `<button type="button" class="tag deep ${CAT[cat].cls} ${e.note?"has":""}" data-deep="${esc(m.id)}|${cat}|${i}" aria-label="${esc(e.name)} 상세 보기">${esc(e.name)}</button>`;
 }
+/* ---------- 보기 전환 (#monsters / #systems / #pcs) ---------- */
+const VIEWS=["monsters","systems","pcs"];
+let view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "monsters";
+let groupEdit = null;   /* "monsterId|cat|index" */
+function renderTabs(){
+  document.querySelectorAll(".tabs a").forEach(a=>a.setAttribute("aria-current", a.dataset.view===view?"page":"false"));
+  const distinct=k=>new Set(monsters.flatMap(m=>(m[k]||[]).map(e=>e.name))).size;
+  $("#nMon").textContent=monsters.length; $("#nSys").textContent=distinct("systems"); $("#nPc").textContent=distinct("pcs");
+}
+addEventListener("hashchange", ()=>{
+  const v=location.hash.slice(1); if(!VIEWS.includes(v)) return;
+  view=v; groupEdit=null; hidePop(true); render(); scrollTo({top:0});
+});
+function renderGroups(list){
+  const cat=view, c=CAT[cat], gb=$("#groupbox"), tb=$("#tablebox");
+  const groups=new Map();
+  list.forEach(m=>(m[cat]||[]).forEach((e,i)=>{ if(!groups.has(e.name)) groups.set(e.name,[]); groups.get(e.name).push({m,i,e}); }));
+  const arr=[...groups].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0],"ko"));
+  $("#count").textContent=`${arr.length}개 ${c.label} · 몬스터 ${list.length}건`;
+  if(!arr.length){
+    gb.hidden=true; tb.hidden=false; $("#tbl").hidden=true; $("#state").hidden=false;
+    $("#state").innerHTML=`<strong>${c.label}이(가) 들어간 몬스터가 없어요</strong><span>몬스터를 추가하거나 편집할 때 ‘${c.label}’ 칸에 적으면 여기에 이름별로 모여요.</span>`;
+    return;
+  }
+  /* 편집 중인 내용은 다시 그려도 유지 */
+  let draft=null;
+  if(groupEdit && $("#gNote")) draft={label:$("#gLabel").value, note:$("#gNote").value};
+  tb.hidden=true; gb.hidden=false;
+  const item=({m,i,e})=>{
+    const key=`${m.id}|${cat}|${i}`, ed=groupEdit===key;
+    return `<article class="gitem">
+      ${thumbHTML(m,240)}
+      <div class="gbody">
+        <div class="gcrumb">${m.game?tagBtn("game",m.game):""}<span>›</span><b>${esc(m.name)}</b><span>›</span>${ed?"":`<span class="lbl">${esc(e.label||"공략")}</span>`}</div>
+        ${ed ? `<div class="gedit"><input id="gLabel" type="text" value="${esc(e.label||"공략")}" aria-label="섹션 이름"><textarea id="gNote" aria-label="${esc(e.name)} 공략">${esc(e.note||"")}</textarea>
+            <div class="row"><span class="count" style="margin-right:auto;align-self:center">⌘/Ctrl+Enter 저장</span><button type="button" class="btn sm" data-gcancel>취소</button><button type="button" class="btn sm primary" data-gsave="${esc(key)}">저장</button></div></div>`
+             : `<div class="gnote ${e.note?"":"blank"}">${e.note?esc(e.note):"아직 공략 내용이 없어요."}</div>`}
+      </div>
+      <div class="gact edit-only">${ed?"":`<button type="button" class="btn sm" data-gedit="${esc(key)}">수정</button>`}</div>
+    </article>`;
+  };
+  gb.innerHTML = `<div class="gindex">${arr.map(([name,its],k)=>`<button type="button" class="tag ${c.cls}" data-gjump="${k}">${esc(name)} <span class="n">${its.length}</span></button>`).join("")}</div>`
+    + arr.map(([name,its],k)=>`<section class="gsec" id="gsec-${k}">
+        <header><h2><span class="tag ${c.cls}">${esc(name)}</span></h2><span class="cnt">${its.length}건</span><span class="sp"></span>
+          <button type="button" class="btn sm" data-goto="${esc(cat)}|${esc(name)}">몬스터 표에서 보기</button></header>
+        ${its.map(item).join("")}
+      </section>`).join("");
+  wireVideos(gb);
+  if(groupEdit && $("#gNote")){
+    if(draft){ $("#gLabel").value=draft.label; $("#gNote").value=draft.note; }
+    $("#gNote").addEventListener("keydown",e=>{ if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)) $("[data-gsave]").click(); });
+  }
+}
+async function saveNote(mid, cat, i, label, note){
+  const m=monsters.find(x=>x.id===mid); if(!m) throw new Error("gone");
+  const arr=m[cat].map(e=>({...e}));
+  arr[i]={...arr[i], label:(label.trim()||"공략"), note};
+  await store.update(mid,{[cat]:arr, updatedAt:Date.now()}); m[cat]=arr;
+}
+$("#groupbox").addEventListener("click", async e=>{
+  const t=e.target.closest("[data-gedit],[data-gcancel],[data-gsave],[data-gjump],[data-goto]"); if(!t) return;
+  if(t.dataset.gedit){ groupEdit=t.dataset.gedit; render(); const n=$("#gNote"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } }
+  else if(t.hasAttribute("data-gcancel")){ groupEdit=null; render(); }
+  else if(t.dataset.gsave){
+    const [mid,cat,i]=t.dataset.gsave.split("|"); t.disabled=true; t.textContent="저장 중…";
+    try{ await saveNote(mid,cat,+i,$("#gLabel").value,$("#gNote").value); groupEdit=null; render(); toast("저장했어요"); }
+    catch(ex){ t.disabled=false; t.textContent="저장"; toast(errMsg(ex)); }
+  }
+  else if(t.dataset.gjump){ const sec=$("#gsec-"+t.dataset.gjump); if(sec) sec.scrollIntoView({behavior:"smooth",block:"start"}); }
+  else if(t.dataset.goto){ filters.add(t.dataset.goto); location.hash="#monsters"; }
+});
+
+/* ---------- 자동완성: 이미 등록된 게임·태그를 드롭다운으로 ---------- */
+const AC_SRC={f_game:"game", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
+let acBox=null, acInput=null, acItems=[], acIdx=-1;
+function acValues(cat){
+  const cnt=new Map();
+  monsters.forEach(m=>new Set(vals(m,cat)).forEach(v=>cnt.set(v,(cnt.get(v)||0)+1)));
+  return [...cnt].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
+}
+function acParts(input){ return AC_SRC[input.id]==="game" ? [input.value] : input.value.split("/"); }
+function acOpen(input){
+  const cat=AC_SRC[input.id]; if(!cat) return;
+  const parts=acParts(input), cur=parts[parts.length-1].trim(), lc=cur.toLowerCase();
+  const used=new Set(parts.slice(0,-1).map(t=>t.trim()));
+  acItems=acValues(cat).filter(([v])=>!used.has(v) && v!==cur && (!lc || v.toLowerCase().includes(lc))).slice(0,10);
+  if(!acItems.length){ acClose(); return; }
+  if(!acBox){ acBox=document.createElement("div"); acBox.className="ac"; acBox.setAttribute("role","listbox"); document.body.appendChild(acBox);
+    acBox.addEventListener("mousedown",e=>{ const b=e.target.closest("button[data-i]"); if(!b) return; e.preventDefault(); acPick(+b.dataset.i); }); }
+  acInput=input; acIdx=lc?0:-1;
+  const hl=v=>{ if(!lc) return esc(v); const k=v.toLowerCase().indexOf(lc); return esc(v.slice(0,k))+"<mark>"+esc(v.slice(k,k+cur.length))+"</mark>"+esc(v.slice(k+cur.length)); };
+  acBox.innerHTML=`<div class="hint">${cat==="game"?"등록된 게임":"등록된 "+CAT[cat].label+" · Enter로 추가"}</div>`+acItems.map(([v,n],k)=>`<button type="button" role="option" data-i="${k}" class="${k===acIdx?"on":""}"><span>${hl(v)}</span><span class="n">${n}</span></button>`).join("");
+  const rc=input.getBoundingClientRect();
+  acBox.style.left=rc.left+"px"; acBox.style.width=Math.max(200,rc.width)+"px";
+  const below=innerHeight-rc.bottom;
+  if(below<200 && rc.top>below){ acBox.style.top=""; acBox.style.bottom=(innerHeight-rc.top+4)+"px"; }
+  else { acBox.style.bottom=""; acBox.style.top=(rc.bottom+4)+"px"; }
+  acBox.hidden=false;
+}
+function acClose(){ if(acBox) acBox.hidden=true; acIdx=-1; acItems=[]; }
+function acPick(k){
+  const it=acItems[k]; if(!it||!acInput) return;
+  const input=acInput;
+  if(AC_SRC[input.id]==="game"){ input.value=it[0]; acClose(); return; }
+  const parts=acParts(input).slice(0,-1).map(t=>t.trim()).filter(Boolean); parts.push(it[0]);
+  input.value=parts.join(" / ")+" / ";
+  input.setSelectionRange(input.value.length,input.value.length);
+  acOpen(input);
+}
+function acMove(d){ if(!acItems.length) return; acIdx=(acIdx+d+acItems.length)%acItems.length; acBox.querySelectorAll("button").forEach((b,k)=>b.classList.toggle("on",k===acIdx)); acBox.querySelectorAll("button")[acIdx].scrollIntoView({block:"nearest"}); }
+function wireAC(){
+  Object.keys(AC_SRC).forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.setAttribute("autocomplete","off");
+    el.addEventListener("focus",()=>acOpen(el));
+    el.addEventListener("input",()=>acOpen(el));
+    el.addEventListener("blur",()=>setTimeout(()=>{ if(acInput===el) acClose(); },120));
+    el.addEventListener("keydown",e=>{
+      const open=acBox && !acBox.hidden && acInput===el;
+      if(e.key==="ArrowDown"){ if(!open) acOpen(el); else acMove(1); e.preventDefault(); }
+      else if(e.key==="ArrowUp" && open){ acMove(-1); e.preventDefault(); }
+      else if((e.key==="Enter"||e.key==="Tab") && open && acIdx>=0){ e.preventDefault(); acPick(acIdx); }
+      else if(e.key==="Escape" && open){ e.stopPropagation(); acClose(); }
+    });
+  });
+}
+addEventListener("resize",acClose);
+
+function thumbHTML(m, w){
+  const yid=ytId(m.link);
+  if (m.media||m.image) return `<button type="button" class="thumb" data-zoom="${esc(m.id)}" aria-label="${esc(m.name)} 크게 보기">${mediaHTML(m,w)}</button>`;
+  if (yid) return `<a class="thumb" href="${esc(m.link)}" target="_blank" rel="noopener" title="유튜브 썸네일 (이미지를 넣으면 바뀌어요)"><span class="yt"><img src="https://i.ytimg.com/vi/${esc(yid)}/mqdefault.jpg" alt="" loading="lazy"></span></a>`;
+  return `<div class="thumb"><span>없음</span></div>`;
+}
 function rowHTML(m){
   const img = imgSrc(m);
   const cells = k => `<div class="cell">${(m[k]||[]).map(v=>tagBtn(k,v)).join("")}</div>`;
@@ -455,9 +637,7 @@ function rowHTML(m){
   return `<tr>
     <td class="game">${m.game?tagBtn("game",m.game):""}</td>
     <td class="name">${esc(m.name)}</td>
-    <td>${(m.media||img)?`<button type="button" class="thumb" data-zoom="${esc(m.id)}" aria-label="${esc(m.name)} 크게 보기">${mediaHTML(m,240)}</button>`
-      : yid ? `<a class="thumb" href="${esc(m.link)}" target="_blank" rel="noopener" title="유튜브 썸네일 (이미지를 넣으면 바뀌어요)"><span class="yt"><img src="https://i.ytimg.com/vi/${esc(yid)}/mqdefault.jpg" alt="" loading="lazy"></span></a>`
-      : `<div class="thumb"><span>없음</span></div>`}</td>
+    <td>${thumbHTML(m,240)}</td>
     <td>${cells("theme")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td>
     <td>${deep("systems")}</td><td>${deep("pcs")}</td>
     <td>${link}</td>
@@ -559,10 +739,8 @@ function drawPop(edit){
 }
 async function savePop(){
   const x=entryFor(popKey); if(!x) return;
-  const arr=x.m[x.cat].map(e=>({...e}));
-  arr[x.i]={...arr[x.i], label:($("#popLabel").value.trim()||"공략"), note:$("#popNote").value};
   const btn=$("#popSave"); btn.disabled=true; btn.textContent="저장 중…";
-  try{ await store.update(x.m.id,{[x.cat]:arr, updatedAt:Date.now()}); x.m[x.cat]=arr; editing=false; drawPop(false); place(); toast("저장했어요"); }
+  try{ await saveNote(x.m.id, x.cat, x.i, $("#popLabel").value, $("#popNote").value); editing=false; drawPop(false); place(); toast("저장했어요"); }
   catch(err){ btn.disabled=false; btn.textContent="저장"; toast(errMsg(err)); }
 }
 function place(){
@@ -604,7 +782,7 @@ function openForm(m){
       <div class="err" id="fErr" hidden></div>
       <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
     </form></div>`;
-  sc.hidden=false; setThumb();
+  sc.hidden=false; setThumb(); wireAC();
   $("#f_game").focus();
   $("#fClose").onclick=$("#fCancel").onclick=closeForm;
   sc.onclick=e=>{ if(e.target===sc) closeForm(); };
@@ -622,7 +800,7 @@ function openForm(m){
   d.ondrop=e=>{e.preventDefault(); d.classList.remove("over"); const f=[...e.dataTransfer.files].find(f=>/^(image|video)\//.test(f.type)); if(f) upload(f);};
   $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m); };
 }
-function closeForm(){ $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
+function closeForm(){ acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
 document.addEventListener("paste", e=>{
   if ($("#scrim").hidden) return;
   const f=[...(e.clipboardData?.files||[])].find(f=>/^(image|video)\//.test(f.type));
