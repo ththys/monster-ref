@@ -6,12 +6,12 @@ window.REF_CONFIG = {
   //    Firebase 콘솔 > 프로젝트 설정 > 내 앱(웹)의 firebaseConfig 값을 그대로 붙여 넣으세요.
   //    비워 두면 "이 브라우저에만 저장" 모드로 동작합니다.
   firebase: {
-    apiKey: "여기에 붙여 넣기",
-    authDomain: "",
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: ""
+    apiKey: "AIzaSyBt75WCkZe-gdOoLHd23_19Mq6VD2ua89s",
+    authDomain: "monster-ref.firebaseapp.com",
+    projectId: "monster-ref",
+    storageBucket: "monster-ref.firebasestorage.app",
+    messagingSenderId: "495025801043",
+    appId: "1:495025801043:web:463bda47ab7d7b0c1803a6"
   },
 
   // 2) 이미지·영상 저장 (Cloudinary, 무료)
@@ -23,6 +23,7 @@ window.REF_CONFIG = {
     // , { cloudName: "두번째계정", uploadPreset: "monster_ref" }
   ],
 
-  // 3) 편집할 수 있는 구글 계정 (firestore.rules 의 이메일과 똑같이)
-  editors: ["본인 구글 이메일"]
+  // 3) 편집 버튼을 보여 줄 구글 계정. 비워 두면 로그인한 사람 모두에게 버튼이 보이지만,
+  //    실제 저장은 Firebase 규칙에 적은 계정만 됩니다. (공개 저장소라 이메일은 여기 적지 않음)
+  editors: []
 };
