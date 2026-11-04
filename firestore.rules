@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /monsters/{id} {
+      // 링크를 아는 사람은 누구나 볼 수 있음
+      allow read: if true;
+      // 아래 목록의 구글 계정으로 로그인했을 때만 추가·수정·삭제 가능
+      allow write: if request.auth != null
+                   && request.auth.token.email in ['본인 구글 이메일'];
+    }
+  }
+}

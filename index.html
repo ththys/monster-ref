@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>몬스터 레퍼런스 아카이브</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 좌측 태그 필터 레일 + 우측 스프레드시트형 레퍼런스 표. 확장 시스템/PC 도구 칩은 호버 시 공략 노트 팝오버 */
+:root{
+  --bg:#f3f4f6; --panel:#ffffff; --ink:#16181d; --muted:#5f6573; --line:#dde0e6; --hover:#eef0f4;
+  --accent:#d9480f; --accent-ink:#ffffff;
+  --t-theme:#6741d9; --t-theme-bg:#efeafe;
+  --t-look:#0b7285;  --t-look-bg:#e3f4f6;
+  --t-weapon:#a61e4d;--t-weapon-bg:#fce8ef;
+  --t-sys:#b35900;   --t-sys-bg:#fff1dc;
+  --t-pc:#1864ab;    --t-pc-bg:#e3eefb;
+  --t-game:#343a40;  --t-game-bg:#e9ecef;
+  --shadow:0 12px 32px rgba(20,24,33,.16);
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121418; --panel:#1a1d23; --ink:#e8eaee; --muted:#9aa1ae; --line:#2b3039; --hover:#22262e;
+  --accent:#ff7a3d; --accent-ink:#1a0d05;
+  --t-theme:#b9a3ff; --t-theme-bg:#2a2340;
+  --t-look:#66d3e0;  --t-look-bg:#15323a;
+  --t-weapon:#ff8fb1;--t-weapon-bg:#3a1a26;
+  --t-sys:#ffb35c;   --t-sys-bg:#3a2a14;
+  --t-pc:#74b4ff;    --t-pc-bg:#172a42;
+  --t-game:#ced4da;  --t-game-bg:#2a2e35;
+  --shadow:0 12px 32px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121418; --panel:#1a1d23; --ink:#e8eaee; --muted:#9aa1ae; --line:#2b3039; --hover:#22262e;
+  --accent:#ff7a3d; --accent-ink:#1a0d05;
+  --t-theme:#b9a3ff; --t-theme-bg:#2a2340;
+  --t-look:#66d3e0;  --t-look-bg:#15323a;
+  --t-weapon:#ff8fb1;--t-weapon-bg:#3a1a26;
+  --t-sys:#ffb35c;   --t-sys-bg:#3a2a14;
+  --t-pc:#74b4ff;    --t-pc-bg:#172a42;
+  --t-game:#ced4da;  --t-game-bg:#2a2e35;
+  --shadow:0 12px 32px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1480px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.ttl{display:flex;flex-direction:column;gap:2px}
+.ttl .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.ttl h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:7px 12px;font-weight:500}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.danger{color:var(--t-weapon)}
+.btn.sm{padding:4px 9px;font-size:12px}
+.mode{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:0 4px}
+.mode i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.mode.cloud i{background:#2f9e44}
+.mode.warn i{background:var(--accent)}
+.ro .rowact,.ro #popEdit,.ro .edit-only{display:none!important}
+
+.searchbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.search{flex:1 1 320px;min-width:0;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 12px}
+.search svg{flex:none;color:var(--muted)}
+.search input{border:0;background:transparent;padding:10px 0;width:100%;outline:none}
+.active-filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.active-filters .lbl{font-size:12px;color:var(--muted)}
+.count{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.main{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}}
+
+aside.rail{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:16px;position:sticky;top:max(12px,env(safe-area-inset-top,0px));max-height:calc(100vh - 24px);overflow:auto}
+@media (max-width:860px){aside.rail{position:static;max-height:none}}
+.group h3{margin:0 0 8px;font-size:11px;font-family:var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:6px}
+.group h3 i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.group .chips{display:flex;flex-wrap:wrap;gap:5px}
+.empty-note{font-size:12px;color:var(--muted)}
+
+.tag{display:inline-flex;align-items:center;gap:4px;border:1px solid transparent;border-radius:4px;padding:1px 7px;font-size:12px;line-height:1.6;white-space:nowrap;background:var(--c-bg);color:var(--c)}
+button.tag:hover{border-color:var(--c)}
+.tag.on{background:var(--c);color:var(--panel)}
+.tag .n{font-family:var(--f-mono);font-size:10.5px;opacity:.75;font-variant-numeric:tabular-nums}
+.tag .x{font-size:13px;line-height:1}
+.c-theme{--c:var(--t-theme);--c-bg:var(--t-theme-bg)}
+.c-look{--c:var(--t-look);--c-bg:var(--t-look-bg)}
+.c-weapon{--c:var(--t-weapon);--c-bg:var(--t-weapon-bg)}
+.c-sys{--c:var(--t-sys);--c-bg:var(--t-sys-bg)}
+.c-pc{--c:var(--t-pc);--c-bg:var(--t-pc-bg)}
+.c-game{--c:var(--t-game);--c-bg:var(--t-game-bg)}
+
+/* 상세 노트를 가진 칩: 점선 밑줄 + 노트 표시 점 */
+.deep{border:1px dashed var(--c);font-weight:600;cursor:help}
+.deep.has::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--c);margin-left:2px}
+
+.tablebox{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;min-width:1080px}
+th,td{text-align:left;vertical-align:top;padding:10px 10px;border-bottom:1px solid var(--line)}
+th{font-size:11px;font-family:var(--f-mono);letter-spacing:.06em;color:var(--muted);font-weight:500;background:var(--panel);position:sticky;top:0;white-space:nowrap}
+tbody tr:hover{background:var(--hover)}
+tbody tr:last-child td{border-bottom:0}
+td .cell{display:flex;flex-wrap:wrap;gap:4px}
+td.game{white-space:nowrap;color:var(--muted);font-size:13px}
+td.name{font-weight:600;min-width:120px}
+.thumb{width:84px;height:84px;border-radius:6px;background:var(--hover);border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;padding:0}
+.thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block}
+.thumb span{text-align:center;padding:0 4px}
+.thumb span{font-size:11px;color:var(--muted)}
+.link{color:var(--accent);font-weight:500;text-decoration:none;white-space:nowrap}
+.link:hover{text-decoration:underline}
+.linkcell{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.lstate{font-size:11px;font-family:var(--f-mono);color:var(--muted);white-space:nowrap}
+.lstate.dead{color:var(--t-weapon);font-weight:500}
+.lstate.ok{color:#2f9e44}
+.thumb .yt{position:relative;width:100%;height:100%}
+.thumb .yt::after{content:"▶";position:absolute;right:4px;bottom:3px;font-size:10px;color:#fff;background:rgba(0,0,0,.6);border-radius:3px;padding:0 4px}
+#deadBtn{color:var(--t-weapon);border-color:var(--t-weapon)}
+.rowact{display:flex;gap:4px;opacity:.55}
+tr:hover .rowact,.rowact:focus-within{opacity:1}
+.iconbtn{border:0;background:transparent;padding:4px 6px;border-radius:4px;color:var(--muted);font-size:12px}
+.iconbtn:hover{background:var(--line);color:var(--ink)}
+
+.state{padding:48px 20px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+.state strong{color:var(--ink);font-size:15px}
+
+/* 팝오버 */
+.pop{position:fixed;z-index:50;width:min(420px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.pop .crumb{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:9px 12px;font-size:12px;background:var(--hover);border-bottom:1px solid var(--line);color:var(--muted)}
+.pop .crumb b{color:var(--ink);font-weight:600}
+.pop .crumb .sep{opacity:.5}
+.pop .crumb .root{color:var(--c);font-weight:600}
+.pop .crumb input{border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:1px 6px;width:9em;font-size:12px}
+.pop .body{padding:12px;white-space:pre-wrap;font-size:13.5px;line-height:1.65;max-height:320px;overflow:auto}
+.pop .body.blank{color:var(--muted);font-style:italic}
+.pop textarea{border:0;border-top:1px solid var(--line);background:var(--panel);padding:12px;min-height:160px;resize:vertical;font-size:13.5px;line-height:1.6;outline:none}
+.pop .foot{display:flex;justify-content:flex-end;gap:6px;padding:8px 12px;border-top:1px solid var(--line)}
+.pop .foot .hint{margin-right:auto;font-size:11.5px;color:var(--muted);align-self:center}
+
+/* 모달 */
+.scrim{position:fixed;inset:0;z-index:60;background:rgba(10,12,16,.45);display:grid;place-items:center;padding:16px}
+.modal{background:var(--panel);border-radius:12px;width:min(640px,100%);max-height:calc(100vh - 32px);overflow:auto;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.modal header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal header h2{margin:0;font-size:16px}
+.modal form{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.modal form{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field.full{grid-column:1/-1}
+.field label{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.field label i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.field small{font-size:11.5px;color:var(--muted)}
+.field input[type=text],.field input[type=url]{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 10px;width:100%}
+.drop{border:1px dashed var(--line);border-radius:8px;padding:12px;display:flex;gap:12px;align-items:center;background:var(--bg)}
+.drop.over{border-color:var(--accent)}
+.imgurl{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 10px;width:100%;margin-top:6px}
+.notice{grid-column:1/-1;font-size:12.5px;background:var(--hover);border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.notice .row{display:flex;gap:6px;flex-wrap:wrap}
+.drop .thumb{flex:none}
+.drop .txt{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.modal .foot{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
+.err{color:var(--t-weapon);font-size:12px;grid-column:1/-1}
+
+.lightbox{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.85);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));cursor:zoom-out}
+.lightbox .lb{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:100%;cursor:default}
+.lightbox img,.lightbox video{max-width:min(1200px,100%);max-height:calc(100vh - 120px);border-radius:8px;background:#000}
+.lightbox .lbbar{display:flex;gap:14px;align-items:center;color:#d6d9df;font-size:13px}
+.lightbox .lbbar a,.lightbox .lbbar button{color:#fff;background:none;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:5px 10px;text-decoration:none;font-size:13px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;font-size:13px;z-index:80}
+@media (prefers-reduced-motion:no-preference){.pop,.modal{animation:in .14s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="ttl">
+      <span class="eyebrow">Combat Design · Monster Reference</span>
+      <h1>몬스터 레퍼런스 아카이브</h1>
+    </div>
+    <div class="actions">
+      <span class="mode" id="mode"><i></i><span>불러오는 중</span></span>
+      <button class="btn" id="authBtn" type="button" hidden>로그인</button>
+      <button class="btn edit-only" id="importBtn" type="button">불러오기</button>
+      <input id="importFile" type="file" accept="application/json,.json,application/zip,.zip" hidden>
+      <button class="btn" id="exportBtn" type="button" title="데이터와 이미지·영상 원본을 ZIP 하나로 받기">백업</button>
+      <button class="btn primary edit-only" id="addBtn" type="button">+ 레퍼런스 추가</button>
+    </div>
+  </header>
+
+  <div class="searchbar">
+    <label class="search" for="q">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input id="q" type="search" placeholder="게임, 몬스터, 태그, 공략 내용까지 검색 — 띄어쓰기로 여러 단어 AND" autocomplete="off">
+    </label>
+    <span class="count" id="count"></span>
+    <button class="btn sm" id="deadBtn" type="button" hidden></button>
+  </div>
+  <div class="active-filters" id="active" hidden></div>
+
+  <div class="main">
+    <aside class="rail" id="rail" aria-label="태그 필터"></aside>
+    <section class="tablebox" id="tablebox">
+      <div class="state" id="state"><strong>레퍼런스를 불러오는 중…</strong></div>
+      <table id="tbl" hidden>
+        <thead><tr>
+          <th>게임</th><th>몬스터</th><th>이미지</th><th>테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th>대응 PC 도구</th><th>링크</th><th></th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </section>
+  </div>
+</div>
+
+<div id="pop" class="pop" hidden></div>
+<div id="scrim" class="scrim" hidden></div>
+<div id="lightbox" class="lightbox" hidden></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="config.js"></script>
+<script>
+(() => {
+const CATS = [
+  {key:"game",   label:"게임",            cls:"c-game"},
+  {key:"theme",  label:"테마",            cls:"c-theme"},
+  {key:"looks",  label:"외형",            cls:"c-look"},
+  {key:"weapons",label:"무기",            cls:"c-weapon"},
+  {key:"systems",label:"전투 확장 시스템", cls:"c-sys", deep:true, root:"몬스터 전투 확장 시스템"},
+  {key:"pcs",    label:"대응 PC 도구",     cls:"c-pc",  deep:true, root:"대응 PC 도구"},
+];
+const CAT = Object.fromEntries(CATS.map(c=>[c.key,c]));
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const splitTags = s => String(s||"").split(/[\/,·]/).map(t=>t.trim()).filter(Boolean);
+
+const STORE_KEY = "monster-ref-v1";
+const MAX_ANIM_KB = 700; /* Firestore 문서 1MB 제한 안에 들도록 */
+const SEED = [{id:"zzz-primordial-nightmare",game:"젠레스 존 제로",name:"태초의 악몽",
+  theme:["변이","비행기","빠름","에너지"],looks:["인간형","여성","건담"],weapons:["에너지","검"],
+  systems:[{name:"제어기",label:"공략",note:"극한 회피 또는 극한 지원을 시전하여 제어기를 피해 회피\n- N회 성공 시 피해량을 줌\n- 이때 유저는 궁극기를 사용 못함\n- 태그 게이지를 무한으로 사용 가능"}],
+  pcs:[{name:"엽빛나",label:"공략",note:""}],link:"",image:"",createdAt:1793786300000,updatedAt:1793786300000}];
+const uid = () => "m" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+function persist(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(monsters)); return true; }
+  catch(e){ toast("브라우저 저장 공간이 가득 찼어요. 내보내기로 백업한 뒤 이미지를 줄여 주세요"); return false; }
+}
+function commit(next){
+  const prev = monsters;
+  monsters = next.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(!persist()){ monsters = prev; throw new Error("quota"); }
+  render();
+  if(popKey && !editing){ drawPop(false); place(); }
+}
+/* ---------- 저장소: Firebase 설정이 있으면 클라우드, 없으면 이 브라우저 ---------- */
+const CFG = window.REF_CONFIG || {};
+const EDITORS = (CFG.editors||[]).map(e=>String(e).trim().toLowerCase()).filter(e=>e && !e.includes("본인"));
+let mode = "local", fs = null, auth = null, user = null;
+const COL = () => fs.collection("monsters");
+const clean = d => { const o={...d}; delete o.id; return o; };
+function fbConfigured(){ const f=CFG.firebase; return !!(f && f.apiKey && f.projectId && !/붙여|여기/.test(f.apiKey)); }
+function canEdit(){
+  if (mode==="local") return true;
+  if (!user) return false;
+  return !EDITORS.length || EDITORS.includes((user.email||"").toLowerCase());
+}
+const store = {
+  async update(id, patch){ if(mode==="cloud") return COL().doc(id).update(patch); commit(monsters.map(m=>m.id===id?{...m,...patch}:m)); },
+  async set(id, data){ if(mode==="cloud") return COL().doc(id).set(clean(data)); commit(monsters.filter(m=>m.id!==id).concat({...data,id})); },
+  async add(data){ const id=uid(); if(mode==="cloud") return COL().doc(id).set(clean(data)); commit(monsters.concat({...data,id})); },
+  async remove(id){ if(mode==="cloud") return COL().doc(id).delete(); commit(monsters.filter(m=>m.id!==id)); },
+  async bulk(arr){
+    if(mode==="cloud"){
+      for(let i=0;i<arr.length;i+=20){ const b=fs.batch(); arr.slice(i,i+20).forEach(m=>b.set(COL().doc(m.id),clean(m))); await b.commit(); }
+      return;
+    }
+    const byId=new Map(monsters.map(m=>[m.id,m])); arr.forEach(m=>byId.set(m.id,m)); commit([...byId.values()]);
+  },
+};
+function errMsg(ex){
+  const c=ex&&ex.code||"";
+  if(c==="permission-denied") return "수정 권한이 없어요. 등록된 구글 계정으로 로그인해 주세요";
+  if(c==="invalid-argument"||/size|large/i.test(ex&&ex.message||"")) return "데이터가 너무 커요. 이미지를 더 작은 것으로 바꿔 주세요";
+  if(c==="unavailable") return "인터넷 연결을 확인해 주세요";
+  if(ex&&ex.message==="quota") return "브라우저 저장 공간이 가득 찼어요";
+  return "저장하지 못했어요. 다시 시도해 주세요";
+}
+function applyMode(){
+  document.body.classList.toggle("ro", !canEdit());
+  const m=$("#mode"), a=$("#authBtn");
+  if(mode==="cloud"){
+    m.className="mode cloud";
+    m.lastElementChild.textContent = user ? (canEdit()? "동기화 중 · "+(user.email||"") : "보기 전용 · 편집 권한 없는 계정") : "동기화 중 · 보기 전용";
+    a.hidden=false; a.textContent = user ? "로그아웃" : "구글 로그인";
+  } else {
+    m.className="mode warn";
+    m.lastElementChild.textContent = fbConfigured() ? "클라우드 연결 실패 · 이 브라우저에만 저장" : "이 브라우저에만 저장 중 (config.js 미설정)";
+    a.hidden=true;
+  }
+}
+/* 이미지는 최대 640px JPEG로 줄여 데이터 안에 함께 저장 */
+function shrink(file, max=640){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onerror=rej;
+    fr.onload=()=>{ const im=new Image(); im.onerror=rej; im.onload=()=>{
+      const k=Math.min(1,max/Math.max(im.width,im.height));
+      const c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
+      const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,c.width,c.height); g.drawImage(im,0,0,c.width,c.height);
+      res(c.toDataURL("image/jpeg",0.82)); }; im.src=fr.result; };
+    fr.readAsDataURL(file);
+  });
+}
+let monsters = [];
+let filters = new Set();   // "cat|value"
+let query = "";
+let loaded = false;
+
+/* ---------- helpers ---------- */
+function vals(m, key){
+  if (key === "game") return m.game ? [m.game] : [];
+  if (CAT[key].deep) return (m[key]||[]).map(e=>e.name);
+  return m[key] || [];
+}
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.hidden=false;
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,1800);
+}
+function imgSrc(m){ return m.image || ""; }
+/* ---------- Cloudinary ---------- */
+const CLOUDS = (CFG.cloudinary||[]).filter(c=>c && c.cloudName && c.uploadPreset && !/본인|붙여|여기/.test(c.cloudName+c.uploadPreset));
+const upTarget = () => CLOUDS[CLOUDS.length-1] || null;   /* 새 파일은 목록의 마지막 계정으로 */
+const IMG_MAX = 10*1024*1024, VID_MAX = 100*1024*1024;
+const MB = n => (n/1048576).toFixed(1);
+function mediaUrls(md, w){
+  const base = `https://res.cloudinary.com/${encodeURIComponent(md.cloud)}/${md.rt}/upload/`;
+  const id = md.id, sz = `w_${w},c_limit`;
+  if (md.rt==="video") return {kind:"video", src:`${base}q_auto,${sz}/${id}.mp4`, poster:`${base}so_0,${sz}/${id}.jpg`, orig:`${base}${id}.${md.fmt||"mp4"}`};
+  if (md.anim)         return {kind:"video", src:`${base}q_auto,${sz}/${id}.mp4`, poster:`${base}pg_1,${sz}/${id}.jpg`, orig:`${base}${id}.${md.fmt||"gif"}`};
+  return {kind:"img", src:`${base}f_auto,q_auto,${sz}/${id}`, orig:`${base}${id}.${md.fmt||"jpg"}`};
+}
+function origUrl(m){ return m.media ? mediaUrls(m.media,1).orig : (m.image||""); }
+function mediaHTML(m, w, big){
+  if (m.media){
+    const u = mediaUrls(m.media, w);
+    if (u.kind==="video") return big
+      ? `<video src="${esc(u.src)}" poster="${esc(u.poster)}" autoplay muted loop playsinline controls></video>`
+      : `<video class="lazyv" data-src="${esc(u.src)}" poster="${esc(u.poster)}" muted loop playsinline preload="none"></video>`;
+    return `<img src="${esc(u.src)}" alt="" loading="lazy">`;
+  }
+  if (m.image) return `<img src="${esc(m.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">`;
+  return "";
+}
+/* 화면에 보이는 영상만 재생 */
+const io = "IntersectionObserver" in window ? new IntersectionObserver(es=>es.forEach(en=>{
+  const v=en.target;
+  if (en.isIntersecting){ if(!v.getAttribute("src")) v.src=v.dataset.src; v.muted=true; const p=v.play(); if(p) p.catch(()=>{}); }
+  else v.pause();
+}),{rootMargin:"200px"}) : null;
+/* ---------- 유튜브 링크 확인: 썸네일이 없거나 기본 회색(120px)이면 삭제·비공개로 판단 ---------- */
+const DEAD = "link|dead";
+function ytId(u){
+  try{
+    const x=new URL(u), h=x.hostname.replace(/^(www|m|music)\./,"");
+    if(h==="youtu.be") return x.pathname.slice(1).split("/")[0]||"";
+    if(h==="youtube.com"||h==="youtube-nocookie.com"){
+      if(x.searchParams.get("v")) return x.searchParams.get("v");
+      const mm=x.pathname.match(/^\/(shorts|embed|live|v)\/([\w-]{6,})/); if(mm) return mm[2];
+    }
+  }catch{}
+  return "";
+}
+const linkState = new Map();   /* id -> checking | ok | dead */
+const YT_TXT = {checking:"확인 중", ok:"● 재생 가능", dead:"✕ 삭제·비공개 의심"};
+function paintYt(id){
+  const st=linkState.get(id)||"checking";
+  document.querySelectorAll(`[data-yt="${id}"]`).forEach(el=>{ el.className="lstate "+st; el.textContent=YT_TXT[st]; });
+  const n=monsters.filter(m=>{ const i=ytId(m.link); return i && linkState.get(i)==="dead"; }).length;
+  const b=$("#deadBtn"); b.hidden=!n && !filters.has(DEAD); b.textContent=filters.has(DEAD)?`끊긴 링크만 보는 중 (${n}) ×`:`끊긴 링크 ${n}`;
+}
+function checkYt(id, force){
+  if(!id || (!force && linkState.has(id))) { if(id) paintYt(id); return; }
+  linkState.set(id,"checking"); paintYt(id);
+  const im=new Image();
+  im.onload=()=>{ linkState.set(id, im.naturalWidth<=120 ? "dead" : "ok"); paintYt(id); };
+  im.onerror=()=>{ linkState.set(id,"dead"); paintYt(id); };
+  im.src=`https://i.ytimg.com/vi/${encodeURIComponent(id)}/mqdefault.jpg?t=${force?Date.now():0}`;
+}
+function wireVideos(root){
+  root.querySelectorAll("video.lazyv").forEach(v=>{ if(io) io.observe(v); else { v.src=v.dataset.src; v.muted=true; v.play().catch(()=>{}); } });
+}
+
+/* ---------- filtering ---------- */
+function haystack(m){
+  const parts=[m.game,m.name,m.link,...(m.theme||[]),...(m.looks||[]),...(m.weapons||[])];
+  for (const k of ["systems","pcs"]) for (const e of (m[k]||[])) parts.push(e.name,e.label,e.note);
+  return parts.filter(Boolean).join(" ").toLowerCase();
+}
+function visible(){
+  const toks = query.toLowerCase().split(/\s+/).filter(Boolean);
+  return monsters.filter(m=>{
+    for (const f of filters){
+      if(f===DEAD){ const i=ytId(m.link); if(!(i && linkState.get(i)==="dead")) return false; continue; }
+      const [k,v]=f.split("|"); if(!vals(m,k).includes(v)) return false; }
+    if (toks.length){ const h=haystack(m); if(!toks.every(t=>h.includes(t))) return false; }
+    return true;
+  });
+}
+
+/* ---------- render ---------- */
+function render(){
+  renderRail(); renderActive();
+  const list = visible();
+  $("#count").textContent = loaded ? `${list.length} / ${monsters.length}건` : "";
+  const st=$("#state"), tbl=$("#tbl");
+  if (!loaded) return;
+  if (!monsters.length){
+    tbl.hidden=true; st.hidden=false;
+    st.innerHTML = `<strong>아직 레퍼런스가 없어요</strong><span>${canEdit()?"‘+ 레퍼런스 추가’로 첫 몬스터를 등록하거나, 백업해 둔 data.json을 불러오기로 넣으세요.":"편집하려면 오른쪽 위에서 구글 로그인을 해 주세요."} 태그는 <b>변이/비행기/빠름</b>처럼 / 로 구분해 적으면 됩니다.</span>`;
+    return;
+  }
+  if (!list.length){
+    tbl.hidden=true; st.hidden=false;
+    st.innerHTML = `<strong>조건에 맞는 레퍼런스가 없어요</strong><button class="btn sm" type="button" data-clear>필터 모두 해제</button>`;
+    return;
+  }
+  st.hidden=true; tbl.hidden=false;
+  if(io) io.disconnect();
+  $("#rows").innerHTML = list.map(rowHTML).join("");
+  wireVideos($("#rows"));
+  [...new Set(monsters.map(m=>ytId(m.link)).filter(Boolean))].forEach(id=>checkYt(id));
+}
+function tagBtn(cat, v, extra=""){
+  const on = filters.has(cat+"|"+v);
+  return `<button type="button" class="tag ${CAT[cat].cls} ${on?"on":""}" data-tag="${esc(cat)}|${esc(v)}" ${extra}>${esc(v)}</button>`;
+}
+function deepChip(m, cat, i){
+  const e=m[cat][i];
+  return `<button type="button" class="tag deep ${CAT[cat].cls} ${e.note?"has":""}" data-deep="${esc(m.id)}|${cat}|${i}" aria-label="${esc(e.name)} 상세 보기">${esc(e.name)}</button>`;
+}
+function rowHTML(m){
+  const img = imgSrc(m);
+  const cells = k => `<div class="cell">${(m[k]||[]).map(v=>tagBtn(k,v)).join("")}</div>`;
+  const deep = k => `<div class="cell">${(m[k]||[]).map((_,i)=>deepChip(m,k,i)).join("")}</div>`;
+  let link = ""; const yid = ytId(m.link);
+  if (m.link){ try{ const u=new URL(m.link); link=`<div class="linkcell"><a class="link" href="${esc(u.href)}" target="_blank" rel="noopener">${yid?"▶ 영상":"↗ 열기"}</a>${yid?`<span class="lstate" data-yt="${esc(yid)}"></span>`:""}</div>`; }catch{ link=esc(m.link); } }
+  return `<tr>
+    <td class="game">${m.game?tagBtn("game",m.game):""}</td>
+    <td class="name">${esc(m.name)}</td>
+    <td>${(m.media||img)?`<button type="button" class="thumb" data-zoom="${esc(m.id)}" aria-label="${esc(m.name)} 크게 보기">${mediaHTML(m,240)}</button>`
+      : yid ? `<a class="thumb" href="${esc(m.link)}" target="_blank" rel="noopener" title="유튜브 썸네일 (이미지를 넣으면 바뀌어요)"><span class="yt"><img src="https://i.ytimg.com/vi/${esc(yid)}/mqdefault.jpg" alt="" loading="lazy"></span></a>`
+      : `<div class="thumb"><span>없음</span></div>`}</td>
+    <td>${cells("theme")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td>
+    <td>${deep("systems")}</td><td>${deep("pcs")}</td>
+    <td>${link}</td>
+    <td><div class="rowact"><button type="button" class="iconbtn" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn" data-del="${esc(m.id)}">삭제</button></div></td>
+  </tr>`;
+}
+function renderRail(){
+  const counts = {};
+  for (const c of CATS) counts[c.key]=new Map();
+  for (const m of monsters) for (const c of CATS) for (const v of new Set(vals(m,c.key))) counts[c.key].set(v,(counts[c.key].get(v)||0)+1);
+  $("#rail").innerHTML = CATS.map(c=>{
+    const arr=[...counts[c.key]].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
+    return `<div class="group"><h3><i style="background:var(--${{game:"t-game",theme:"t-theme",looks:"t-look",weapons:"t-weapon",systems:"t-sys",pcs:"t-pc"}[c.key]})"></i>${c.label}</h3>
+      <div class="chips">${arr.length?arr.map(([v,n])=>{const on=filters.has(c.key+"|"+v);return `<button type="button" class="tag ${c.cls} ${on?"on":""}" data-tag="${esc(c.key)}|${esc(v)}">${esc(v)} <span class="n">${n}</span></button>`}).join(""):`<span class="empty-note">—</span>`}</div></div>`;
+  }).join("");
+}
+function renderActive(){
+  const a=$("#active");
+  if(!filters.size){a.hidden=true;a.innerHTML="";return;}
+  a.hidden=false;
+  a.innerHTML = `<span class="lbl">필터</span>`+[...filters].filter(f=>f!==DEAD).map(f=>{const [k,v]=f.split("|");return `<button type="button" class="tag on ${CAT[k].cls}" data-tag="${esc(f)}">${CAT[k].label}: ${esc(v)} <span class="x">×</span></button>`}).join("")+`<button type="button" class="btn sm" data-clear>모두 해제</button>`;
+}
+
+/* ---------- click delegation ---------- */
+document.addEventListener("click", e=>{
+  const t=e.target.closest("[data-tag],[data-clear],[data-edit],[data-del],[data-zoom],[data-deep]");
+  if(!t) return;
+  if (t.dataset.tag){ const f=t.dataset.tag; filters.has(f)?filters.delete(f):filters.add(f); hidePop(true); render(); }
+  else if (t.hasAttribute("data-clear")){ filters.clear(); query=""; $("#q").value=""; render(); }
+  else if (t.dataset.edit){ openForm(monsters.find(m=>m.id===t.dataset.edit)); }
+  else if (t.dataset.del){ confirmDelete(t.dataset.del); }
+  else if (t.dataset.zoom){
+    const m=monsters.find(x=>x.id===t.dataset.zoom); if(!m) return;
+    const lb=$("#lightbox"), o=origUrl(m);
+    lb.innerHTML=`<div class="lb">${mediaHTML(m,1280,true)}<div class="lbbar"><span>${esc(m.game)} · ${esc(m.name)}</span>${o&&!o.startsWith("data:")?`<a href="${esc(o)}" target="_blank" rel="noopener">원본 열기</a>`:""}<button type="button" id="lbClose">닫기</button></div></div>`;
+    lb.hidden=false;
+  }
+  else if (t.dataset.deep){ // 탭(모바일) 또는 클릭: 고정
+    showPop(t, true);
+  }
+});
+$("#lightbox").addEventListener("click",e=>{ if(e.target.id==="lightbox"||e.target.id==="lbClose"){ $("#lightbox").hidden=true; $("#lightbox").innerHTML=""; } });
+$("#q").addEventListener("input", e=>{ query=e.target.value; render(); });
+$("#addBtn").addEventListener("click", ()=>openForm(null));
+$("#deadBtn").addEventListener("click", ()=>{ filters.has(DEAD)?filters.delete(DEAD):filters.add(DEAD); render(); });
+
+/* ---------- popover (hover detail) ---------- */
+const pop=$("#pop");
+let popKey=null, pinned=false, editing=false, hideT=null, showT=null, anchorEl=null;
+
+document.addEventListener("mouseover", e=>{
+  const t=e.target.closest("[data-deep]");
+  if (t && !pinned){ clearTimeout(hideT); clearTimeout(showT); showT=setTimeout(()=>showPop(t,false),140); }
+});
+document.addEventListener("mouseout", e=>{
+  const t=e.target.closest("[data-deep]");
+  if (t && !t.contains(e.relatedTarget)){ clearTimeout(showT); schedHide(); }
+});
+pop.addEventListener("mouseenter", ()=>clearTimeout(hideT));
+pop.addEventListener("mouseleave", ()=>schedHide());
+document.addEventListener("mousedown", e=>{ if(!pop.hidden && pinned && !editing && !pop.contains(e.target) && !e.target.closest("[data-deep]")) hidePop(true); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ if(!$("#scrim").hidden) closeForm(); else if(!$("#lightbox").hidden){ $("#lightbox").hidden=true; $("#lightbox").innerHTML=""; } else hidePop(true);} });
+
+function schedHide(){ if(pinned||editing) return; clearTimeout(hideT); hideT=setTimeout(()=>hidePop(false),220); }
+function hidePop(force){ if(editing && !force) return; pop.hidden=true; popKey=null; pinned=false; editing=false; anchorEl=null; }
+
+function showPop(el, pin){
+  const key=el.dataset.deep;
+  if (editing && key!==popKey) return;
+  anchorEl=el; popKey=key; if(pin) pinned=true;
+  drawPop(false); place();
+}
+function entryFor(key){
+  const [id,cat,i]=key.split("|"); const m=monsters.find(x=>x.id===id);
+  return m && m[cat] && m[cat][+i] ? {m,cat,i:+i,e:m[cat][+i]} : null;
+}
+function crumbs(x, editLabel){
+  const c=CAT[x.cat];
+  const label = editLabel ? `<input id="popLabel" type="text" value="${esc(x.e.label||"공략")}" aria-label="섹션 이름">` : `<b>${esc(x.e.label||"공략")}</b>`;
+  return `<div class="crumb ${c.cls}"><span class="root">${c.root}</span><span class="sep">›</span><b>${esc(x.e.name)}</b><span class="sep">›</span><span>${esc(x.m.game||"-")}</span><span class="sep">›</span><span>${esc(x.m.name)}</span><span class="sep">›</span>${label}</div>`;
+}
+function drawPop(edit){
+  const x=entryFor(popKey); if(!x){hidePop(true);return;}
+  editing=edit;
+  if(!edit){
+    pop.innerHTML = crumbs(x,false)
+      + `<div class="body ${x.e.note?"":"blank"}">${x.e.note?esc(x.e.note):"아직 공략 내용이 없어요. 수정을 눌러 적어 주세요."}</div>`
+      + `<div class="foot"><span class="hint">${pinned?"":"칩을 클릭하면 창이 고정돼요"}</span><button type="button" class="btn sm" id="popEdit">수정</button></div>`;
+    $("#popEdit").onclick=()=>{ pinned=true; drawPop(true); place(); $("#popNote").focus(); };
+  } else {
+    pop.innerHTML = crumbs(x,true)
+      + `<textarea id="popNote" placeholder="예) 극한 회피 또는 극한 지원으로 제어기를 피함 → N회 성공 시 피해…">${esc(x.e.note||"")}</textarea>`
+      + `<div class="foot"><span class="hint">⌘/Ctrl+Enter 저장</span><button type="button" class="btn sm" id="popCancel">취소</button><button type="button" class="btn sm primary" id="popSave">저장</button></div>`;
+    $("#popCancel").onclick=()=>{ drawPop(false); place(); };
+    $("#popSave").onclick=savePop;
+    $("#popNote").addEventListener("keydown",e=>{ if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)) savePop(); });
+  }
+  pop.hidden=false;
+}
+async function savePop(){
+  const x=entryFor(popKey); if(!x) return;
+  const arr=x.m[x.cat].map(e=>({...e}));
+  arr[x.i]={...arr[x.i], label:($("#popLabel").value.trim()||"공략"), note:$("#popNote").value};
+  const btn=$("#popSave"); btn.disabled=true; btn.textContent="저장 중…";
+  try{ await store.update(x.m.id,{[x.cat]:arr, updatedAt:Date.now()}); x.m[x.cat]=arr; editing=false; drawPop(false); place(); toast("저장했어요"); }
+  catch(err){ btn.disabled=false; btn.textContent="저장"; toast(errMsg(err)); }
+}
+function place(){
+  if(!anchorEl||pop.hidden) return;
+  const r=anchorEl.getBoundingClientRect(), w=pop.offsetWidth, h=pop.offsetHeight, vw=innerWidth, vh=innerHeight;
+  let left=Math.min(Math.max(16,r.left), vw-w-16);
+  let top=r.bottom+6; if(top+h>vh-12) top=Math.max(12,r.top-h-6);
+  pop.style.left=left+"px"; pop.style.top=top+"px";
+}
+addEventListener("resize",place);
+addEventListener("scroll",()=>{ if(!pinned) hidePop(false); else place(); },true);
+
+/* ---------- add / edit form ---------- */
+let formImage = null, formMedia = null, uploading = false;
+function openForm(m){
+  if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
+  hidePop(true);
+  formImage = m && m.image ? m.image : null;
+  formMedia = m && m.media ? m.media : null; uploading = false;
+  const j = a => (a||[]).join(" / ");
+  const sc=$("#scrim");
+  sc.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+    <header><h2 id="fTitle">${m?"레퍼런스 편집":"레퍼런스 추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <form id="form" novalidate>
+      <div class="field"><label for="f_game">게임 이름</label><input id="f_game" type="text" value="${esc(m?.game)}" placeholder="젠레스 존 제로" required></div>
+      <div class="field"><label for="f_name">몬스터 이름</label><input id="f_name" type="text" value="${esc(m?.name)}" placeholder="태초의 악몽" required></div>
+      <div class="field full"><label>이미지</label>
+        <div class="drop" id="drop"><div class="thumb" id="fThumb"><span>없음</span></div>
+          <div class="txt"><span>파일을 끌어 놓거나, 이 창에서 Ctrl+V로 붙여 넣으세요. ${upTarget()?"GIF·WEBP·MP4 모두 그대로 올라가요 (이미지 10MB, 영상 100MB까지 · 10MB 넘는 GIF는 영상으로 바꿔서 올려요).":`움직이는 GIF·WEBP는 ${MAX_ANIM_KB}KB까지 원본 그대로 저장돼요.`}</span>
+          <span style="display:flex;gap:6px;flex-wrap:wrap"><label class="btn sm" for="f_file" style="font-weight:500">파일 선택</label><input id="f_file" type="file" accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm,video/quicktime" hidden><button type="button" class="btn sm" id="fImgClear" hidden>이미지 빼기</button></span></div></div>
+        <input id="f_imgurl" class="imgurl" type="url" value="${formImage&&!formImage.startsWith("data:")?esc(formImage):""}" placeholder="또는 이미지 주소 붙여넣기" aria-label="이미지 주소"></div>
+      <div class="notice" id="fNotice" hidden></div>
+      <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마 태그</label><input id="f_theme" type="text" value="${esc(j(m?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
+      <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(m?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
+      <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(m?.weapons))}" placeholder="에너지 / 검"></div>
+      <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((m?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>상세 공략은 표에서 칩에 마우스를 올려 수정</small></div>
+      <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>대응 PC 도구</label><input id="f_pcs" type="text" value="${esc(j((m?.pcs||[]).map(e=>e.name)))}" placeholder="엽빛나"></div>
+      <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(m?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
+      <div class="err" id="fErr" hidden></div>
+      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
+    </form></div>`;
+  sc.hidden=false; setThumb();
+  $("#f_game").focus();
+  $("#fClose").onclick=$("#fCancel").onclick=closeForm;
+  sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  $("#fImgClear").onclick=()=>{ if(uploading) return; formImage=null; formMedia=null; $("#f_imgurl").value=""; $("#fNotice").hidden=true; setThumb(); };
+  $("#f_imgurl").oninput=e=>{
+    const v=e.target.value.trim();
+    if(v){ if(!/^https?:\/\//i.test(v)) return; formImage=v; formMedia=null; $("#fNotice").hidden=true; }
+    else if(formImage && !formImage.startsWith("data:")) formImage=null;
+    setThumb();
+  };
+  $("#f_file").onchange=e=>{ const f=e.target.files[0]; if(f) upload(f); };
+  const d=$("#drop");
+  d.ondragover=e=>{e.preventDefault(); d.classList.add("over");};
+  d.ondragleave=()=>d.classList.remove("over");
+  d.ondrop=e=>{e.preventDefault(); d.classList.remove("over"); const f=[...e.dataTransfer.files].find(f=>/^(image|video)\//.test(f.type)); if(f) upload(f);};
+  $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m); };
+}
+function closeForm(){ $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
+document.addEventListener("paste", e=>{
+  if ($("#scrim").hidden) return;
+  const f=[...(e.clipboardData?.files||[])].find(f=>/^(image|video)\//.test(f.type));
+  if (f){ e.preventDefault(); upload(f); }
+});
+function setThumb(msg){
+  const t=$("#fThumb"), c=$("#fImgClear"); if(!t) return;
+  if(msg){ t.innerHTML=`<span>${esc(msg)}</span>`; }
+  else if(formMedia){ t.innerHTML=mediaHTML({media:formMedia},240); wireVideos(t); }
+  else if(formImage){
+    t.innerHTML=`<img src="${esc(formImage)}" alt="" referrerpolicy="no-referrer">`;
+    t.querySelector("img").onerror=()=>{ t.innerHTML="<span>주소 확인</span>"; };
+  } else t.innerHTML="<span>없음</span>";
+  if(c) c.hidden=!(formImage||formMedia);
+  const sv=$("#fSave"); if(sv) sv.disabled=uploading;
+}
+const readURL = file => new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); });
+/* 움직이는 GIF·WEBP인지 파일 헤더로 판별 */
+async function isAnimated(file){
+  const t=(file.type||"").toLowerCase();
+  if(!/gif|webp|png/.test(t)) return false;
+  const b=new Uint8Array(await file.arrayBuffer());
+  const str=(o,n)=>String.fromCharCode(...b.subarray(o,o+n));
+  if(str(0,3)==="GIF"){ let n=0; for(let k=0;k<b.length-2;k++){ if(b[k]===0x21&&b[k+1]===0xF9&&b[k+2]===0x04 && ++n>1) return true; } return false; }
+  if(str(0,4)==="RIFF"&&str(8,4)==="WEBP"){ return str(12,4)==="VP8X" && (b[20]&0x02)===0x02; }
+  if(b[0]===0x89&&str(1,3)==="PNG"){ const lim=Math.min(b.length-4,4096); for(let k=8;k<lim;k++){ if(str(k,4)==="acTL") return true; if(str(k,4)==="IDAT") return false; } }
+  return false;
+}
+async function uploadInline(file){
+  const err=$("#fErr"), note=$("#fNotice");
+  err.hidden=true; note.hidden=true;
+  $("#fThumb").innerHTML="<span>읽는 중…</span>";
+  try{
+    if(await isAnimated(file)){
+      if(file.size<=MAX_ANIM_KB*1024){ formImage=await readURL(file); $("#f_imgurl").value=""; setThumb(); return; }
+      setThumb();
+      const kb=Math.round(file.size/1024);
+      note.innerHTML=`<span><b>움직이는 이미지가 ${kb.toLocaleString()}KB라 원본 그대로는 저장할 수 없어요</b> (${MAX_ANIM_KB}KB까지). 움직임을 살리려면 이미지를 위키·Imgur 등에 올린 뒤 위 주소 칸에 붙여 넣어 주세요.</span>
+        <span class="row"><button type="button" class="btn sm" id="nStill">정지 이미지로 저장</button><button type="button" class="btn sm" id="nCancel">취소</button></span>`;
+      note.hidden=false;
+      $("#nCancel").onclick=()=>{ note.hidden=true; };
+      $("#nStill").onclick=async()=>{ note.hidden=true; $("#fThumb").innerHTML="<span>줄이는 중…</span>"; try{ formImage=await shrink(file); $("#f_imgurl").value=""; }catch{ } setThumb(); };
+      return;
+    }
+    formImage=await shrink(file); $("#f_imgurl").value=""; setThumb();
+  }catch(ex){ setThumb(); err.hidden=false; err.textContent="이미지를 읽지 못했어요. PNG·JPG·GIF·WEBP 파일인지 확인해 주세요"; }
+}
+function cloudUpload(t, blob, rt, onp){
+  return new Promise((res,rej)=>{
+    const fd=new FormData(); fd.append("file", blob, blob.name||"upload"); fd.append("upload_preset", t.uploadPreset);
+    const x=new XMLHttpRequest();
+    x.open("POST", `https://api.cloudinary.com/v1_1/${encodeURIComponent(t.cloudName)}/${rt}/upload`);
+    x.upload.onprogress=e=>{ if(e.lengthComputable) onp(Math.round(e.loaded/e.total*100)); };
+    x.onload=()=>{ let j={}; try{ j=JSON.parse(x.responseText); }catch{}
+      if(x.status>=200&&x.status<300) res(j); else rej({status:x.status, detail:(j.error&&j.error.message)||""}); };
+    x.onerror=()=>rej({msg:"인터넷 연결을 확인해 주세요"});
+    x.send(fd);
+  });
+}
+function cloudErr(ex){
+  if(ex&&ex.msg) return ex.msg;
+  const d=(ex&&ex.detail)||"";
+  if(/preset/i.test(d)) return "업로드 설정 이름(uploadPreset)을 확인해 주세요. Cloudinary에서 Unsigned로 만들어야 해요";
+  if(/cloud name|Invalid cloud/i.test(d)) return "Cloudinary 클라우드 이름(cloudName)을 확인해 주세요";
+  if(/size|too large/i.test(d)) return "파일이 너무 커요. 이미지 10MB, 영상 100MB까지 올릴 수 있어요";
+  if(ex&&(ex.status===420||ex.status===429)||/limit|quota|exceed/i.test(d)) return "Cloudinary 무료 한도에 걸렸어요. config.js에 계정을 하나 더 추가해 주세요";
+  return "업로드하지 못했어요"+(d?": "+d:"");
+}
+/* 10MB 넘는 움직이는 GIF·WEBP를 브라우저에서 영상으로 변환 (크롬·엣지) */
+async function animToVideo(file, onp){
+  if(!("ImageDecoder" in window) || !window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream)
+    throw {msg:`이 GIF는 ${MB(file.size)}MB라 영상으로 바꿔 올려야 하는데, 이 브라우저는 변환을 지원하지 않아요. 크롬이나 엣지에서 올려 주세요`};
+  const mime=["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9","video/webm"].find(t=>MediaRecorder.isTypeSupported(t));
+  if(!mime) throw {msg:"이 브라우저는 영상 변환을 지원하지 않아요. 크롬이나 엣지에서 올려 주세요"};
+  const dec=new ImageDecoder({data:file.stream(), type:file.type||"image/gif"});
+  await dec.completed; await dec.tracks.ready;
+  const n=dec.tracks.selectedTrack.frameCount;
+  const f0=(await dec.decode({frameIndex:0})).image;
+  const k=Math.min(1, 960/Math.max(f0.displayWidth,f0.displayHeight));
+  const W=Math.max(2,Math.round(f0.displayWidth*k/2)*2), H=Math.max(2,Math.round(f0.displayHeight*k/2)*2);
+  f0.close();
+  const c=document.createElement("canvas"); c.width=W; c.height=H; const g=c.getContext("2d");
+  g.fillStyle="#fff"; g.fillRect(0,0,W,H);
+  const rec=new MediaRecorder(c.captureStream(30),{mimeType:mime, videoBitsPerSecond:3000000});
+  const chunks=[]; rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  const stopped=new Promise(res=>rec.onstop=res);
+  rec.start(250);
+  for(let i=0;i<n;i++){
+    const fr=(await dec.decode({frameIndex:i})).image;
+    g.fillRect(0,0,W,H); g.drawImage(fr,0,0,W,H);
+    const ms=Math.max(20,(fr.duration||100000)/1000); fr.close();
+    onp(Math.round((i+1)/n*100));
+    await new Promise(res=>setTimeout(res,ms));
+  }
+  rec.stop(); await stopped; dec.close();
+  const type=mime.split(";")[0];
+  return new File([new Blob(chunks,{type})], (file.name||"clip").replace(/\.\w+$/,"")+(type.includes("mp4")?".mp4":".webm"), {type});
+}
+async function upload(file){
+  const target=upTarget();
+  if(!target) return uploadInline(file);
+  if(uploading) return;
+  const err=$("#fErr"), note=$("#fNotice"); err.hidden=true; note.hidden=true;
+  uploading=true; setThumb("확인 중…");
+  try{
+    const isVid=/^video\//.test(file.type||"");
+    let rt="image", send=file, anim=false;
+    if(isVid){
+      rt="video";
+      if(file.size>VID_MAX) throw {msg:`영상이 ${MB(file.size)}MB예요. 100MB까지 올릴 수 있어요`};
+    } else {
+      anim=await isAnimated(file);
+      if(file.size>IMG_MAX){
+        if(anim){ send=await animToVideo(file, p=>setThumb(`영상 변환 ${p}%`)); rt="video"; anim=false; }
+        else { const blob=await (await fetch(await shrink(file,2400))).blob(); send=new File([blob],"image.jpg",{type:"image/jpeg"}); }
+      }
+    }
+    const res=await cloudUpload(target, send, rt, p=>setThumb(`업로드 ${p}%`));
+    formMedia={cloud:target.cloudName, rt:res.resource_type||rt, id:res.public_id, fmt:res.format||"", anim:(res.resource_type||rt)==="image"&&anim, bytes:res.bytes||send.size};
+    formImage=null; $("#f_imgurl").value="";
+    uploading=false; setThumb();
+  }catch(ex){
+    uploading=false; setThumb();
+    err.hidden=false; err.textContent=cloudErr(ex);
+  }
+}
+async function saveForm(m){
+  const err=$("#fErr"), game=$("#f_game").value.trim(), name=$("#f_name").value.trim();
+  if(!game||!name){ err.hidden=false; err.textContent="게임 이름과 몬스터 이름은 꼭 적어 주세요."; return; }
+  const keep=(names, old)=>names.map(n=>{ const o=(old||[]).find(e=>e.name===n); return o?{...o}:{name:n,label:"공략",note:""}; });
+  const data={
+    game, name,
+    theme:splitTags($("#f_theme").value), looks:splitTags($("#f_looks").value), weapons:splitTags($("#f_weapons").value),
+    systems:keep(splitTags($("#f_systems").value), m?.systems), pcs:keep(splitTags($("#f_pcs").value), m?.pcs),
+    link:$("#f_link").value.trim(), image:formImage||"", media:formMedia||null, updatedAt:Date.now(),
+  };
+  if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
+  const btn=$("#fSave"); btn.disabled=true;
+  try{
+    if(m) await store.set(m.id,{...data, createdAt:m.createdAt||Date.now()});
+    else await store.add({...data, createdAt:Date.now()});
+    closeForm(); toast(m?"저장했어요":"추가했어요");
+  }catch(ex){ btn.disabled=false; err.hidden=false; err.textContent=errMsg(ex); }
+}
+function confirmDelete(id){
+  const m=monsters.find(x=>x.id===id); if(!m) return;
+  const sc=$("#scrim");
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" style="width:min(380px,100%)"><header><h2>레퍼런스 삭제</h2></header>
+    <div style="padding:16px 18px">${esc(m.game)} · <b>${esc(m.name)}</b>을(를) 삭제할까요? 적어 둔 공략 노트도 함께 사라져요.</div>
+    <div class="foot" style="display:flex;justify-content:flex-end;gap:8px;padding:0 18px 16px"><button type="button" class="btn" id="dNo">취소</button><button type="button" class="btn primary" id="dYes">삭제</button></div></div>`;
+  sc.hidden=false; sc.onclick=e=>{if(e.target===sc) closeForm();};
+  $("#dNo").onclick=closeForm;
+  $("#dYes").onclick=async()=>{ try{ await store.remove(id); closeForm(); toast("삭제했어요"); }catch(ex){ closeForm(); toast(errMsg(ex)); } };
+}
+
+/* ---------- 백업 (ZIP 한 번에) / 복원 ---------- */
+const ZIPLIB="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+const safeName = s => String(s||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);
+function saveBlob(blob, name){
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+function jsonBackup(list){
+  return {version:2, exportedAt:new Date().toISOString(), monsters:list.map(m=>({...m, originalUrl:origUrl(m).startsWith("data:")?"":origUrl(m)}))};
+}
+let busy=false;
+$("#exportBtn").addEventListener("click", async ()=>{
+  if(busy) return; busy=true;
+  const stamp=new Date().toISOString().slice(0,10);
+  try{
+    if(!window.JSZip) await loadScript(ZIPLIB);
+    const zip=new JSZip(), failed=[];
+    const list=monsters.map(m=>({...m}));
+    let done=0; const targets=list.filter(m=>m.media||(m.image&&!m.image.startsWith("data:")));
+    for(const m of targets){
+      const url=origUrl(m);
+      try{
+        const r=await fetch(url,{mode:"cors"}); if(!r.ok) throw 0;
+        const b=await r.blob();
+        const ext=(m.media&&m.media.fmt)||((b.type.split("/")[1]||"bin").replace("jpeg","jpg"));
+        const path=`media/${safeName(m.game)}_${safeName(m.name)}_${m.id}.${ext}`;
+        zip.file(path,b); m.mediaFile=path;
+      }catch{ failed.push(`${m.game} · ${m.name}\t${url}`); }
+      toast(`백업 중… 파일 ${++done}/${targets.length}`);
+    }
+    zip.file("data.json", JSON.stringify(jsonBackup(list),null,2));
+    if(failed.length) zip.file("가져오지_못한_파일.txt", "아래 파일은 원본 사이트에서 받지 못했어요. 주소로 직접 열어 저장해 주세요.\n\n"+failed.join("\n"));
+    toast("압축하는 중…");
+    saveBlob(await zip.generateAsync({type:"blob"}), `monster-ref-backup-${stamp}.zip`);
+    toast(`백업을 내려받았어요 · ${list.length}건${failed.length?` (파일 ${failed.length}개는 주소만 저장)`:""}`);
+  }catch{
+    saveBlob(new Blob([JSON.stringify(jsonBackup(monsters),null,2)],{type:"application/json"}), `monster-ref-${stamp}.json`);
+    toast("압축 도구를 불러오지 못해 데이터(JSON)만 받았어요");
+  }finally{ busy=false; }
+});
+$("#importBtn").addEventListener("click", ()=>{ if(!busy) $("#importFile").click(); });
+$("#importFile").addEventListener("change", async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f||busy) return;
+  busy=true;
+  try{
+    let j, zip=null;
+    if(/\.zip$/i.test(f.name)||f.type.includes("zip")){
+      if(!window.JSZip) await loadScript(ZIPLIB);
+      zip=await JSZip.loadAsync(f);
+      const dj=zip.file("data.json"); if(!dj) throw 0;
+      j=JSON.parse(await dj.async("string"));
+    } else j=JSON.parse(await f.text());
+    const arr=Array.isArray(j)?j:j.monsters;
+    if(!Array.isArray(arr)) throw 0;
+    const list=arr.filter(m=>m&&m.name).map(m=>{ const o={...m,id:m.id||uid()}; delete o.originalUrl; return o; });
+    if(!list.length) throw 0;
+    /* ZIP 복원: 원본 파일을 지금 연결된 Cloudinary 계정에 다시 올림 */
+    const target=upTarget(); let re=0, reFail=0;
+    if(zip && target){
+      const withFile=list.filter(m=>m.mediaFile&&zip.file(m.mediaFile));
+      for(const m of withFile){
+        try{
+          const b=await zip.file(m.mediaFile).async("blob");
+          const ext=m.mediaFile.split(".").pop().toLowerCase();
+          const isVid=/^(mp4|webm|mov)$/.test(ext) || (m.media&&m.media.rt==="video");
+          const typ=isVid?`video/${ext==="mov"?"quicktime":ext}`:`image/${ext==="jpg"?"jpeg":ext}`;
+          const file=new File([b], m.mediaFile.split("/").pop(), {type:typ});
+          if(!isVid && file.size>IMG_MAX) throw 0;
+          const res=await cloudUpload(target, file, isVid?"video":"image", ()=>{});
+          m.media={cloud:target.cloudName, rt:res.resource_type, id:res.public_id, fmt:res.format||ext, anim:res.resource_type==="image"&&await isAnimated(file), bytes:res.bytes||file.size};
+          m.image=""; re++;
+        }catch{ reFail++; }
+        toast(`복원 중… 파일 ${re+reFail}/${withFile.length}`);
+      }
+    }
+    list.forEach(m=>{ delete m.mediaFile; });
+    toast("데이터를 저장하는 중…");
+    try{ await store.bulk(list); toast(`${list.length}건을 불러왔어요${re?` · 파일 ${re}개 다시 올림`:""}${reFail?` · ${reFail}개 실패`:""}`); }
+    catch(ex){ toast(errMsg(ex)); }
+  }catch{ toast("불러올 수 없는 파일이에요. 백업으로 받은 ZIP이나 JSON인지 확인해 주세요"); }
+  finally{ busy=false; }
+});
+
+/* ---------- boot ---------- */
+const FB = "https://www.gstatic.com/firebasejs/10.12.2/";
+const loadScript = src => new Promise((res,rej)=>{ const el=document.createElement("script"); el.src=src; el.onload=res; el.onerror=rej; document.head.appendChild(el); });
+
+$("#authBtn").addEventListener("click", async ()=>{
+  if(!auth) return;
+  if(user){ await auth.signOut(); toast("로그아웃했어요"); return; }
+  const p=new firebase.auth.GoogleAuthProvider();
+  try{ await auth.signInWithPopup(p); }
+  catch(ex){
+    if(ex&&(ex.code==="auth/popup-blocked"||ex.code==="auth/operation-not-supported-in-this-environment")) auth.signInWithRedirect(p);
+    else if(ex&&ex.code==="auth/unauthorized-domain") toast("Firebase 승인된 도메인에 이 사이트 주소를 추가해 주세요");
+    else if(ex&&ex.code!=="auth/popup-closed-by-user"&&ex.code!=="auth/cancelled-popup-request") toast("로그인하지 못했어요: "+(ex.code||""));
+  }
+});
+
+async function bootCloud(){
+  await loadScript(FB+"firebase-app-compat.js");
+  await Promise.all([loadScript(FB+"firebase-firestore-compat.js"), loadScript(FB+"firebase-auth-compat.js")]);
+  firebase.initializeApp(CFG.firebase);
+  fs=firebase.firestore(); auth=firebase.auth();
+  mode="cloud"; applyMode();
+  auth.onAuthStateChanged(u=>{ user=u; applyMode(); if(!canEdit()) { closeForm(); hidePop(true); } render(); });
+  const timer=setTimeout(()=>{ if(!loaded) $("#state").innerHTML="<strong>클라우드 응답이 늦어요</strong><span>인터넷 연결과 config.js 설정을 확인해 주세요.</span>"; },10000);
+  COL().onSnapshot(snap=>{
+    clearTimeout(timer); loaded=true;
+    monsters=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    render();
+    if(popKey && !editing){ drawPop(false); place(); }
+  }, ex=>{
+    clearTimeout(timer);
+    $("#state").innerHTML = ex&&ex.code==="permission-denied"
+      ? "<strong>읽기 권한이 없어요</strong><span>Firestore 규칙(firestore.rules)을 붙여 넣었는지 확인해 주세요.</span>"
+      : `<strong>클라우드에서 불러오지 못했어요</strong><span>${esc(ex&&ex.message||"")}</span>`;
+  });
+}
+async function bootLocal(){
+  mode="local"; applyMode();
+  let saved=null;
+  try{ saved=JSON.parse(localStorage.getItem(STORE_KEY)||"null"); }catch{ saved=null; }
+  if(!Array.isArray(saved)){
+    try{ const r=await fetch("data.json",{cache:"no-store"}); if(r.ok){ const j=await r.json(); saved=Array.isArray(j)?j:j.monsters; } }catch{}
+  }
+  monsters=(Array.isArray(saved)?saved:SEED).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  loaded=true; persist(); render();
+}
+(async()=>{
+  if(fbConfigured()){
+    try{ await bootCloud(); return; }
+    catch(ex){ console.error(ex); toast("Firebase에 연결하지 못해 이 브라우저 저장으로 열었어요"); }
+  }
+  await bootLocal(); applyMode();
+})();
+})();
+</script>
+</body>
+</html>
