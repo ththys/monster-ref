@@ -177,6 +177,17 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .lightbox .lbbar{display:flex;gap:14px;align-items:center;color:#d6d9df;font-size:13px}
 .lightbox .lbbar a,.lightbox .lbbar button{color:#fff;background:none;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:5px 10px;text-decoration:none;font-size:13px}
 
+/* 방문자용 포트폴리오 화면 */
+.pub{min-height:calc(100vh - 40px);display:flex;flex-direction:column;gap:14px;max-width:1480px;margin:0 auto}
+.pub header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pub header h1{margin:0;font-size:20px;font-weight:700}
+.pub header .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pub .acts{display:flex;gap:8px;align-items:center}
+.pub .frame{position:relative;width:100%;aspect-ratio:16/9;max-height:calc(100vh - 120px);background:#111;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.pub .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.pub .empty{padding:60px 20px;text-align:center;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.pub .link{font-size:13px}
+.boot{padding:60px 0;text-align:center;color:var(--muted)}
 /* 상단 탭 */
 .tabs{display:flex;flex-direction:column;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px}
 .tabs a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;border-radius:6px;white-space:nowrap}
@@ -223,7 +234,19 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 </head>
 <body>
 
-<div class="wrap">
+<div class="boot" id="bootMsg">불러오는 중…</div>
+<section class="pub" id="publicView" hidden>
+  <header>
+    <div><div class="eyebrow">Portfolio</div><h1 id="pubTitle">포트폴리오</h1></div>
+    <div class="acts">
+      <a class="link" id="pubOpen" href="#" target="_blank" rel="noopener" hidden>새 탭에서 크게 보기 ↗</a>
+      <button class="btn sm" id="pubLogin" type="button">관리자 로그인</button>
+    </div>
+  </header>
+  <div class="frame" id="pubFrame" hidden></div>
+  <div class="empty" id="pubEmpty" hidden>포트폴리오를 준비 중이에요.</div>
+</section>
+<div class="wrap" id="archive" hidden>
   <header class="top">
     <div class="ttl">
       <span class="eyebrow">Combat Design · Monster Reference</span>
@@ -338,7 +361,7 @@ const store = {
 };
 function errMsg(ex){
   const c=ex&&ex.code||"";
-  if(c==="permission-denied") return "수정 권한이 없어요. 등록된 구글 계정으로 로그인해 주세요";
+  if(c==="permission-denied") return "수정 권한이 없어요. 관리자 계정으로 로그인해 주세요";
   if(c==="invalid-argument"||/size|large/i.test(ex&&ex.message||"")) return "데이터가 너무 커요. 이미지를 더 작은 것으로 바꿔 주세요";
   if(c==="unavailable") return "인터넷 연결을 확인해 주세요";
   if(ex&&ex.message==="quota") return "브라우저 저장 공간이 가득 찼어요";
@@ -350,7 +373,7 @@ function applyMode(){
   if(mode==="cloud"){
     m.className="mode cloud";
     m.lastElementChild.textContent = user ? (canEdit()? "동기화 중 · "+(user.email||"") : "보기 전용 · 편집 권한 없는 계정") : "동기화 중 · 보기 전용";
-    a.hidden=false; a.textContent = user ? "로그아웃" : "구글 로그인";
+    a.hidden=false; a.textContent = user ? "로그아웃" : "관리자 로그인";
   } else {
     m.className="mode warn";
     m.lastElementChild.textContent = fbConfigured() ? "클라우드 연결 실패 · 이 브라우저에만 저장" : "이 브라우저에만 저장 중 (config.js 미설정)";
@@ -1092,7 +1115,7 @@ $("#authBtn").addEventListener("click", async ()=>{
 function openLogin(){
   const sc=$("#scrim");
   sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="lTitle" style="width:min(400px,100%)">
-    <header><h2 id="lTitle">로그인</h2><button type="button" class="iconbtn" id="lClose" aria-label="닫기">✕</button></header>
+    <header><h2 id="lTitle">관리자 로그인</h2><button type="button" class="iconbtn" id="lClose" aria-label="닫기">✕</button></header>
     <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
       <button type="button" class="btn" id="lGoogle" style="padding:10px">구글 계정으로 로그인</button>
       <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px"><span style="flex:1;height:1px;background:var(--line)"></span>또는 이메일로<span style="flex:1;height:1px;background:var(--line)"></span></div>
@@ -1143,24 +1166,66 @@ function openLogin(){
   $("#l_email").focus();
 }
 
+/* ---------- 화면 전환: 방문자 = 포트폴리오 / 관리자 = 레퍼런스 아카이브 ---------- */
+function slidesEmbed(u){
+  const m=String(u||"").match(/docs\.google\.com\/presentation\/d\/(?:e\/)?([\w-]+)/);
+  if(!m) return u||"";
+  return /\/d\/e\//.test(u) ? `https://docs.google.com/presentation/d/e/${m[1]}/embed?start=false&loop=false&delayms=5000`
+                            : `https://docs.google.com/presentation/d/${m[1]}/embed?start=false&loop=false&delayms=5000`;
+}
+function showPublic(){
+  $("#bootMsg").hidden=true; $("#archive").hidden=true; $("#publicView").hidden=false;
+  document.title=(CFG.portfolio&&CFG.portfolio.title)||"포트폴리오";
+  const P=CFG.portfolio||{}, fr=$("#pubFrame");
+  $("#pubTitle").textContent=P.title||"포트폴리오";
+  if(P.slides){
+    if(!fr.firstChild){ fr.innerHTML=`<iframe src="${esc(slidesEmbed(P.slides))}" allowfullscreen loading="lazy" title="${esc(P.title||"포트폴리오")}"></iframe>`; }
+    fr.hidden=false; $("#pubEmpty").hidden=true;
+    const o=$("#pubOpen"); o.href=P.slides; o.hidden=false;
+  } else { fr.hidden=true; $("#pubEmpty").hidden=false; }
+}
+function showArchive(){
+  $("#bootMsg").hidden=true; $("#publicView").hidden=true; $("#archive").hidden=false;
+  document.title="몬스터 레퍼런스 아카이브";
+}
+$("#pubLogin").addEventListener("click",()=>{ if(auth) openLogin(); });
+
+let unsub=null;
+function stopData(){
+  if(unsub){ unsub(); unsub=null; }
+  monsters=[]; loaded=false; groupEdit=null; closeForm(); hidePop(true);
+}
+function startData(){
+  if(unsub) return;
+  loaded=false;
+  const timer=setTimeout(()=>{ if(!loaded){ showArchive(); $("#state").innerHTML="<strong>클라우드 응답이 늦어요</strong><span>인터넷 연결을 확인해 주세요.</span>"; } },10000);
+  unsub=COL().onSnapshot(snap=>{
+    clearTimeout(timer); loaded=true;
+    monsters=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    showArchive(); render();
+    if(popKey && !editing){ drawPop(false); place(); }
+  }, ex=>{
+    clearTimeout(timer); unsub=null;
+    if(ex&&ex.code==="permission-denied"){
+      /* 규칙에 없는 계정: 관리자 아님 */
+      toast("관리자 계정이 아니에요. 등록된 계정으로 로그인해 주세요");
+      auth.signOut();
+    } else {
+      showArchive();
+      $("#state").innerHTML=`<strong>클라우드에서 불러오지 못했어요</strong><span>${esc(ex&&ex.message||"")}</span>`;
+    }
+  });
+}
 async function bootCloud(){
   await loadScript(FB+"firebase-app-compat.js");
   await Promise.all([loadScript(FB+"firebase-firestore-compat.js"), loadScript(FB+"firebase-auth-compat.js")]);
   firebase.initializeApp(CFG.firebase);
   fs=firebase.firestore(); auth=firebase.auth();
   mode="cloud"; applyMode();
-  auth.onAuthStateChanged(u=>{ user=u; applyMode(); if(!canEdit()) { closeForm(); hidePop(true); } render(); });
-  const timer=setTimeout(()=>{ if(!loaded) $("#state").innerHTML="<strong>클라우드 응답이 늦어요</strong><span>인터넷 연결과 config.js 설정을 확인해 주세요.</span>"; },10000);
-  COL().onSnapshot(snap=>{
-    clearTimeout(timer); loaded=true;
-    monsters=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    render();
-    if(popKey && !editing){ drawPop(false); place(); }
-  }, ex=>{
-    clearTimeout(timer);
-    $("#state").innerHTML = ex&&ex.code==="permission-denied"
-      ? "<strong>읽기 권한이 없어요</strong><span>Firestore 규칙(firestore.rules)을 붙여 넣었는지 확인해 주세요.</span>"
-      : `<strong>클라우드에서 불러오지 못했어요</strong><span>${esc(ex&&ex.message||"")}</span>`;
+  auth.onAuthStateChanged(u=>{
+    user=u; applyMode();
+    if(u){ startData(); }
+    else { stopData(); showPublic(); }
   });
 }
 async function bootLocal(){
@@ -1171,7 +1236,7 @@ async function bootLocal(){
     try{ const r=await fetch("data.json",{cache:"no-store"}); if(r.ok){ const j=await r.json(); saved=Array.isArray(j)?j:j.monsters; } }catch{}
   }
   monsters=(Array.isArray(saved)?saved:SEED).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  loaded=true; persist(); render();
+  loaded=true; persist(); showArchive(); render();
 }
 (async()=>{
   if(fbConfigured()){
