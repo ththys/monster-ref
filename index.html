@@ -868,14 +868,62 @@ const loadScript = src => new Promise((res,rej)=>{ const el=document.createEleme
 $("#authBtn").addEventListener("click", async ()=>{
   if(!auth) return;
   if(user){ await auth.signOut(); toast("로그아웃했어요"); return; }
-  const p=new firebase.auth.GoogleAuthProvider();
-  try{ await auth.signInWithPopup(p); }
-  catch(ex){
-    if(ex&&(ex.code==="auth/popup-blocked"||ex.code==="auth/operation-not-supported-in-this-environment")) auth.signInWithRedirect(p);
-    else if(ex&&ex.code==="auth/unauthorized-domain") toast("Firebase 승인된 도메인에 이 사이트 주소를 추가해 주세요");
-    else if(ex&&ex.code!=="auth/popup-closed-by-user"&&ex.code!=="auth/cancelled-popup-request") toast("로그인하지 못했어요: "+(ex.code||""));
-  }
+  openLogin();
 });
+/* 로그인 창: 구글 또는 이메일·비밀번호 (구글 로그인이 막힌 회사망용) */
+function openLogin(){
+  const sc=$("#scrim");
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="lTitle" style="width:min(400px,100%)">
+    <header><h2 id="lTitle">로그인</h2><button type="button" class="iconbtn" id="lClose" aria-label="닫기">✕</button></header>
+    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+      <button type="button" class="btn" id="lGoogle" style="padding:10px">구글 계정으로 로그인</button>
+      <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px"><span style="flex:1;height:1px;background:var(--line)"></span>또는 이메일로<span style="flex:1;height:1px;background:var(--line)"></span></div>
+      <form id="lForm" novalidate style="display:flex;flex-direction:column;gap:10px">
+        <div class="field"><label for="l_email">이메일</label><input id="l_email" type="text" inputmode="email" autocomplete="username" style="border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 10px"></div>
+        <div class="field"><label for="l_pw">비밀번호</label><input id="l_pw" type="password" autocomplete="current-password" style="border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 10px"></div>
+        <div class="err" id="lErr" hidden></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <button type="button" class="iconbtn" id="lReset">비밀번호를 잊었어요</button>
+          <button type="submit" class="btn primary" id="lGo">로그인</button>
+        </div>
+      </form>
+    </div></div>`;
+  sc.hidden=false;
+  const err=$("#lErr"), show=t=>{ err.hidden=false; err.textContent=t; };
+  $("#lClose").onclick=closeForm; sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  $("#lGoogle").onclick=async()=>{
+    const p=new firebase.auth.GoogleAuthProvider();
+    try{ await auth.signInWithPopup(p); closeForm(); toast("로그인했어요"); }
+    catch(ex){
+      if(ex&&(ex.code==="auth/popup-blocked"||ex.code==="auth/operation-not-supported-in-this-environment")) auth.signInWithRedirect(p);
+      else if(ex&&ex.code==="auth/unauthorized-domain") show("Firebase 승인된 도메인에 이 사이트 주소를 추가해 주세요");
+      else if(ex&&ex.code!=="auth/popup-closed-by-user"&&ex.code!=="auth/cancelled-popup-request") show("구글 로그인이 안 돼요. 회사망에서 막혔다면 아래 이메일 로그인을 써 주세요 ("+(ex.code||"")+")");
+    }
+  };
+  $("#lForm").onsubmit=async e=>{
+    e.preventDefault();
+    const em=$("#l_email").value.trim(), pw=$("#l_pw").value;
+    if(!em||!pw) return show("이메일과 비밀번호를 입력해 주세요.");
+    const b=$("#lGo"); b.disabled=true;
+    try{ await auth.signInWithEmailAndPassword(em,pw); closeForm(); toast("로그인했어요"); }
+    catch(ex){
+      b.disabled=false;
+      const c=ex&&ex.code||"";
+      show(/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c) ? "이메일 또는 비밀번호가 맞지 않아요."
+         : /operation-not-allowed/.test(c) ? "Firebase에서 이메일/비밀번호 로그인이 꺼져 있어요."
+         : /too-many-requests/.test(c) ? "여러 번 틀려서 잠시 막혔어요. 몇 분 뒤 다시 시도해 주세요."
+         : /network/.test(c) ? "인터넷 연결 또는 회사망 차단을 확인해 주세요."
+         : "로그인하지 못했어요 ("+c+")");
+    }
+  };
+  $("#lReset").onclick=async()=>{
+    const em=$("#l_email").value.trim();
+    if(!em) return show("위에 이메일을 먼저 입력해 주세요.");
+    try{ await auth.sendPasswordResetEmail(em); err.hidden=false; err.textContent="비밀번호 재설정 메일을 보냈어요. 메일함을 확인해 주세요."; }
+    catch{ show("재설정 메일을 보내지 못했어요. 이메일을 확인해 주세요."); }
+  };
+  $("#l_email").focus();
+}
 
 async function bootCloud(){
   await loadScript(FB+"firebase-app-compat.js");
