@@ -67,7 +67,7 @@ header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:spac
 .mode i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
 .mode.cloud i{background:#2f9e44}
 .mode.warn i{background:var(--accent)}
-.ro .rowact,.ro #popEdit,.ro .edit-only{display:none!important}
+.ro #popEdit,.ro .edit-only{display:none!important}
 
 .searchbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .search{flex:1 1 320px;min-width:0;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 12px}
@@ -80,8 +80,10 @@ header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:spac
 .main{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}}
 
-aside.rail{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:16px;position:sticky;top:max(12px,env(safe-area-inset-top,0px));max-height:calc(100vh - 24px);overflow:auto}
-@media (max-width:860px){aside.rail{position:static;max-height:none}}
+.side{display:flex;flex-direction:column;gap:12px;position:sticky;top:max(12px,env(safe-area-inset-top,0px));max-height:calc(100vh - 24px);min-width:0}
+.rail{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:16px;overflow:auto;min-height:0}
+.content{display:flex;flex-direction:column;gap:12px;min-width:0}
+@media (max-width:860px){.side{position:static;max-height:none}}
 .group h3{margin:0 0 8px;font-size:11px;font-family:var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:6px}
 .group h3 i{width:8px;height:8px;border-radius:2px;display:inline-block}
 .group .chips{display:flex;flex-wrap:wrap;gap:5px}
@@ -176,10 +178,15 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .lightbox .lbbar a,.lightbox .lbbar button{color:#fff;background:none;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:5px 10px;text-decoration:none;font-size:13px}
 
 /* 상단 탭 */
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
-.tabs a{display:flex;align-items:center;gap:6px;padding:10px 14px;color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
-.tabs a:hover{color:var(--ink)}
-.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs{display:flex;flex-direction:column;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px}
+.tabs a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;border-radius:6px;white-space:nowrap}
+.tabs a:hover{color:var(--ink);background:var(--hover)}
+.tabs a[aria-current="page"]{color:var(--ink);background:var(--hover);box-shadow:inset 3px 0 0 var(--accent)}
+@media (max-width:860px){
+  .tabs{flex-direction:row;overflow-x:auto;scrollbar-width:none}
+  .tabs a{flex:1 0 auto;justify-content:center}
+  .tabs a[aria-current="page"]{box-shadow:inset 0 -2px 0 var(--accent)}
+}
 .tabs a .n{font-family:var(--f-mono);font-size:11px;font-weight:500;background:var(--hover);border-radius:10px;padding:0 7px;font-variant-numeric:tabular-nums}
 /* 시스템·PC 묶음 보기 */
 .groupbox{display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -232,24 +239,25 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
     </div>
   </header>
 
-  <nav class="tabs" aria-label="보기">
-    <a href="#monsters" data-view="monsters">몬스터 <span class="n" id="nMon"></span></a>
-    <a href="#systems" data-view="systems">전투 확장 시스템 <span class="n" id="nSys"></span></a>
-    <a href="#pcs" data-view="pcs">대응 PC 도구 <span class="n" id="nPc"></span></a>
-  </nav>
-
-  <div class="searchbar">
-    <label class="search" for="q">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-      <input id="q" type="search" placeholder="게임, 몬스터, 태그, 공략 내용까지 검색 — 띄어쓰기로 여러 단어 AND" autocomplete="off">
-    </label>
-    <span class="count" id="count"></span>
-    <button class="btn sm" id="deadBtn" type="button" hidden></button>
-  </div>
-  <div class="active-filters" id="active" hidden></div>
-
   <div class="main">
-    <aside class="rail" id="rail" aria-label="태그 필터"></aside>
+    <aside class="side">
+      <nav class="tabs" aria-label="보기">
+        <a href="#monsters" data-view="monsters"><span>몬스터</span><span class="n" id="nMon"></span></a>
+        <a href="#systems" data-view="systems"><span>전투 확장 시스템</span><span class="n" id="nSys"></span></a>
+        <a href="#pcs" data-view="pcs"><span>대응 PC 도구</span><span class="n" id="nPc"></span></a>
+      </nav>
+      <div class="rail" id="rail" aria-label="태그 필터"></div>
+    </aside>
+    <div class="content">
+      <div class="searchbar">
+        <label class="search" for="q">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input id="q" type="search" placeholder="게임, 몬스터, 태그, 공략 내용까지 검색 — 띄어쓰기로 여러 단어 AND" autocomplete="off">
+        </label>
+        <span class="count" id="count"></span>
+        <button class="btn sm" id="deadBtn" type="button" hidden></button>
+      </div>
+      <div class="active-filters" id="active" hidden></div>
     <section class="tablebox" id="tablebox">
       <div class="state" id="state"><strong>레퍼런스를 불러오는 중…</strong></div>
       <table id="tbl" hidden>
@@ -260,6 +268,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
       </table>
     </section>
     <section class="groupbox" id="groupbox" hidden></section>
+    </div>
   </div>
 </div>
 
@@ -532,7 +541,7 @@ function renderGroups(list){
             <div class="row"><span class="count" style="margin-right:auto;align-self:center">⌘/Ctrl+Enter 저장</span><button type="button" class="btn sm" data-gcancel>취소</button><button type="button" class="btn sm primary" data-gsave="${esc(key)}">저장</button></div></div>`
              : `<div class="gnote ${e.note?"":"blank"}">${e.note?esc(e.note):"아직 공략 내용이 없어요."}</div>`}
       </div>
-      <div class="gact edit-only">${ed?"":`<button type="button" class="btn sm" data-gedit="${esc(key)}">수정</button>`}</div>
+      <div class="gact" style="display:flex;gap:6px">${ed?"":`<button type="button" class="btn sm" data-copy="${esc(m.id)}">복사</button><button type="button" class="btn sm edit-only" data-gedit="${esc(key)}">수정</button>`}</div>
     </article>`;
   };
   gb.innerHTML = `<div class="gindex">${arr.map(([name,its],k)=>`<button type="button" class="tag ${c.cls}" data-gjump="${k}">${esc(name)} <span class="n">${its.length}</span></button>`).join("")}</div>`
@@ -622,6 +631,32 @@ function wireAC(){
 }
 addEventListener("resize",acClose);
 
+/* ---------- 레퍼런스 텍스트 복사 ---------- */
+function refText(m){
+  const j=a=>(a||[]).join(" / ");
+  const L=[`[${m.game||"-"}] ${m.name}`];
+  if((m.theme||[]).length)   L.push(`테마: ${j(m.theme)}`);
+  if((m.looks||[]).length)   L.push(`외형: ${j(m.looks)}`);
+  if((m.weapons||[]).length) L.push(`무기: ${j(m.weapons)}`);
+  for(const [k,lab] of [["systems","전투 확장 시스템"],["pcs","대응 PC 도구"]]){
+    for(const e of (m[k]||[])){
+      L.push(`${lab}: ${e.name}`);
+      if(e.note) L.push(`  └ ${e.label||"공략"}\n`+e.note.split("\n").map(x=>"    "+x).join("\n"));
+    }
+  }
+  if(m.link) L.push(`링크: ${m.link}`);
+  const o=origUrl(m); if(o && !o.startsWith("data:")) L.push(`이미지: ${o}`);
+  return L.join("\n");
+}
+async function copyText(text, btn){
+  const done=()=>{ toast("클립보드에 복사했어요"); if(btn){ const t=btn.textContent; btn.textContent="복사됨"; setTimeout(()=>btn.textContent=t,1200); } };
+  try{ await navigator.clipboard.writeText(text); done(); return; }catch{}
+  const ta=document.createElement("textarea"); ta.value=text; ta.setAttribute("readonly",""); ta.style.cssText="position:fixed;left:-9999px;top:0";
+  document.body.appendChild(ta); ta.select();
+  let ok=false; try{ ok=document.execCommand("copy"); }catch{}
+  ta.remove(); ok ? done() : toast("복사하지 못했어요. 브라우저 권한을 확인해 주세요");
+}
+
 function thumbHTML(m, w){
   const yid=ytId(m.link);
   if (m.media||m.image) return `<button type="button" class="thumb" data-zoom="${esc(m.id)}" aria-label="${esc(m.name)} 크게 보기">${mediaHTML(m,w)}</button>`;
@@ -641,7 +676,7 @@ function rowHTML(m){
     <td>${cells("theme")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td>
     <td>${deep("systems")}</td><td>${deep("pcs")}</td>
     <td>${link}</td>
-    <td><div class="rowact"><button type="button" class="iconbtn" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn" data-del="${esc(m.id)}">삭제</button></div></td>
+    <td><div class="rowact"><button type="button" class="iconbtn" data-copy="${esc(m.id)}" title="기획서에 붙여 넣을 텍스트로 복사">복사</button><button type="button" class="iconbtn edit-only" data-dup="${esc(m.id)}" title="같은 내용으로 새 레퍼런스 만들기">복제</button><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>
   </tr>`;
 }
 function renderRail(){
@@ -663,11 +698,13 @@ function renderActive(){
 
 /* ---------- click delegation ---------- */
 document.addEventListener("click", e=>{
-  const t=e.target.closest("[data-tag],[data-clear],[data-edit],[data-del],[data-zoom],[data-deep]");
+  const t=e.target.closest("[data-tag],[data-clear],[data-edit],[data-del],[data-zoom],[data-deep],[data-copy],[data-dup]");
   if(!t) return;
   if (t.dataset.tag){ const f=t.dataset.tag; filters.has(f)?filters.delete(f):filters.add(f); hidePop(true); render(); }
   else if (t.hasAttribute("data-clear")){ filters.clear(); query=""; $("#q").value=""; render(); }
   else if (t.dataset.edit){ openForm(monsters.find(m=>m.id===t.dataset.edit)); }
+  else if (t.dataset.dup){ const m=monsters.find(x=>x.id===t.dataset.dup); if(m) openForm(null, m); }
+  else if (t.dataset.copy){ const m=monsters.find(x=>x.id===t.dataset.copy); if(m) copyText(refText(m), t); }
   else if (t.dataset.del){ confirmDelete(t.dataset.del); }
   else if (t.dataset.zoom){
     const m=monsters.find(x=>x.id===t.dataset.zoom); if(!m) return;
@@ -755,30 +792,32 @@ addEventListener("scroll",()=>{ if(!pinned) hidePop(false); else place(); },true
 
 /* ---------- add / edit form ---------- */
 let formImage = null, formMedia = null, uploading = false;
-function openForm(m){
+function openForm(m, copyFrom){
   if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
   hidePop(true);
-  formImage = m && m.image ? m.image : null;
-  formMedia = m && m.media ? m.media : null; uploading = false;
+  /* 복제: 원본 내용을 채운 새 레퍼런스 (공략 메모·이미지도 그대로) */
+  const v = copyFrom ? {...copyFrom, name: copyFrom.name+" (복사본)"} : m;
+  formImage = v && v.image ? v.image : null;
+  formMedia = v && v.media ? v.media : null; uploading = false;
   const j = a => (a||[]).join(" / ");
   const sc=$("#scrim");
   sc.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
-    <header><h2 id="fTitle">${m?"레퍼런스 편집":"레퍼런스 추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <header><h2 id="fTitle">${m?"레퍼런스 편집":copyFrom?"레퍼런스 복제":"레퍼런스 추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <form id="form" novalidate>
-      <div class="field"><label for="f_game">게임 이름</label><input id="f_game" type="text" value="${esc(m?.game)}" placeholder="젠레스 존 제로" required></div>
-      <div class="field"><label for="f_name">몬스터 이름</label><input id="f_name" type="text" value="${esc(m?.name)}" placeholder="태초의 악몽" required></div>
+      <div class="field"><label for="f_game">게임 이름</label><input id="f_game" type="text" value="${esc(v?.game)}" placeholder="젠레스 존 제로" required></div>
+      <div class="field"><label for="f_name">몬스터 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="태초의 악몽" required></div>
       <div class="field full"><label>이미지</label>
         <div class="drop" id="drop"><div class="thumb" id="fThumb"><span>없음</span></div>
           <div class="txt"><span>파일을 끌어 놓거나, 이 창에서 Ctrl+V로 붙여 넣으세요. ${upTarget()?"GIF·WEBP·MP4 모두 그대로 올라가요 (이미지 10MB, 영상 100MB까지 · 10MB 넘는 GIF는 영상으로 바꿔서 올려요).":`움직이는 GIF·WEBP는 ${MAX_ANIM_KB}KB까지 원본 그대로 저장돼요.`}</span>
           <span style="display:flex;gap:6px;flex-wrap:wrap"><label class="btn sm" for="f_file" style="font-weight:500">파일 선택</label><input id="f_file" type="file" accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm,video/quicktime" hidden><button type="button" class="btn sm" id="fImgClear" hidden>이미지 빼기</button></span></div></div>
         <input id="f_imgurl" class="imgurl" type="url" value="${formImage&&!formImage.startsWith("data:")?esc(formImage):""}" placeholder="또는 이미지 주소 붙여넣기" aria-label="이미지 주소"></div>
       <div class="notice" id="fNotice" hidden></div>
-      <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마 태그</label><input id="f_theme" type="text" value="${esc(j(m?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
-      <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(m?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
-      <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(m?.weapons))}" placeholder="에너지 / 검"></div>
-      <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((m?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>상세 공략은 표에서 칩에 마우스를 올려 수정</small></div>
-      <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>대응 PC 도구</label><input id="f_pcs" type="text" value="${esc(j((m?.pcs||[]).map(e=>e.name)))}" placeholder="엽빛나"></div>
-      <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(m?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
+      <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마 태그</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
+      <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
+      <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(v?.weapons))}" placeholder="에너지 / 검"></div>
+      <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>상세 공략은 표에서 칩에 마우스를 올려 수정</small></div>
+      <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>대응 PC 도구</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="엽빛나"></div>
+      <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
       <div class="err" id="fErr" hidden></div>
       <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
     </form></div>`;
@@ -798,7 +837,7 @@ function openForm(m){
   d.ondragover=e=>{e.preventDefault(); d.classList.add("over");};
   d.ondragleave=()=>d.classList.remove("over");
   d.ondrop=e=>{e.preventDefault(); d.classList.remove("over"); const f=[...e.dataTransfer.files].find(f=>/^(image|video)\//.test(f.type)); if(f) upload(f);};
-  $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m); };
+  $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m, v); };
 }
 function closeForm(){ acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
 document.addEventListener("paste", e=>{
@@ -927,14 +966,15 @@ async function upload(file){
     err.hidden=false; err.textContent=cloudErr(ex);
   }
 }
-async function saveForm(m){
+async function saveForm(m, src){
+  src = src || m;
   const err=$("#fErr"), game=$("#f_game").value.trim(), name=$("#f_name").value.trim();
   if(!game||!name){ err.hidden=false; err.textContent="게임 이름과 몬스터 이름은 꼭 적어 주세요."; return; }
   const keep=(names, old)=>names.map(n=>{ const o=(old||[]).find(e=>e.name===n); return o?{...o}:{name:n,label:"공략",note:""}; });
   const data={
     game, name,
     theme:splitTags($("#f_theme").value), looks:splitTags($("#f_looks").value), weapons:splitTags($("#f_weapons").value),
-    systems:keep(splitTags($("#f_systems").value), m?.systems), pcs:keep(splitTags($("#f_pcs").value), m?.pcs),
+    systems:keep(splitTags($("#f_systems").value), src?.systems), pcs:keep(splitTags($("#f_pcs").value), src?.pcs),
     link:$("#f_link").value.trim(), image:formImage||"", media:formMedia||null, updatedAt:Date.now(),
   };
   if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
