@@ -23,12 +23,8 @@ window.REF_CONFIG = {
     // , { cloudName: "두번째계정", uploadPreset: "monster_ref" }
   ],
 
-  // 3) 로그인 안 한 방문자에게 보여 줄 포트폴리오 (구글 슬라이드 공유 링크)
-  //    레퍼런스 아카이브는 관리자 로그인 후에만 보입니다.
-  portfolio: {
-    title: "포트폴리오",
-    slides: "https://docs.google.com/presentation/d/1UHRyl4kGSr18Km-BQ_bQKtf0A7-M3k6wlFNO_-pQBr0/edit?usp=drive_link"
-  },
+  // 3) 방문자 화면 제목 (이름을 적기 전 기본값). 내용은 관리자 로그인 후 '자기소개서'에서 직접 작성합니다.
+  portfolio: { title: "자기소개서" },
 
   // 4) 편집 버튼을 보여 줄 구글 계정. 비워 두면 로그인한 사람 모두에게 버튼이 보이지만,
   //    실제 저장은 Firebase 규칙에 적은 계정만 됩니다. (공개 저장소라 이메일은 여기 적지 않음)

@@ -273,6 +273,31 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .carrow textarea{min-height:90px;resize:vertical;line-height:1.6}
 .carrow .ops{grid-column:1/-1;display:flex;gap:4px;justify-content:flex-end}
 @media (max-width:560px){.carrow{grid-template-columns:1fr}}
+/* 자기소개서 문서 */
+.pvacts{gap:6px;flex-wrap:wrap}
+.doc{max-width:760px;display:flex;flex-direction:column;gap:14px;font-size:15.5px;line-height:1.9}
+.doc h3{margin:18px 0 0;font-size:19px;letter-spacing:-.01em}
+.doc h3:first-child{margin-top:0}
+.doc p{margin:0;white-space:pre-wrap}
+.doc figure{margin:6px 0;display:flex;flex-direction:column;gap:6px}
+.doc figure img,.doc figure video{width:100%;max-width:100%;border-radius:10px;display:block;background:var(--hover)}
+.doc figcaption{font-size:13px;color:var(--muted);text-align:center}
+.docbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px}
+/* 블록 편집기 */
+.ed{display:flex;flex-direction:column;gap:0}
+.eb{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;padding:6px 0}
+.eb textarea{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px 12px;min-height:80px;resize:none;overflow:hidden;line-height:1.8;font-size:14.5px}
+.eb .ebm{display:flex;flex-direction:column;gap:6px;min-width:0}
+.eb .ebm .pic{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--hover);min-height:80px;display:grid;place-items:center;max-height:340px}
+.eb .ebm .pic img,.eb .ebm .pic video{width:100%;max-height:340px;object-fit:contain;display:block}
+.eb .ebm .pic span{color:var(--muted);font-size:13px;padding:24px}
+.eb .ebm input{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:6px 10px;font-size:13px}
+.eb .ops{display:flex;flex-direction:column;gap:2px}
+.ins{display:flex;gap:6px;justify-content:center;opacity:.35;transition:opacity .12s;padding:2px 0}
+.ins:hover,.ins:focus-within{opacity:1}
+.ins button{border:1px dashed var(--line);background:var(--panel);border-radius:999px;padding:2px 10px;font-size:12px;color:var(--muted)}
+.ins button:hover{color:var(--accent);border-color:var(--accent)}
+.edhint{font-size:12px;color:var(--muted)}
 /* 작업물 상세 */
 .wv{position:fixed;inset:0;z-index:66;background:var(--bg);overflow:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:env(safe-area-inset-top,0px) 60px}
 .wvin{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
@@ -354,31 +379,16 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 
 <div class="boot" id="bootMsg">불러오는 중…</div>
 <section class="pub" id="publicView" hidden>
-  <div class="pvbar" id="pvBar" hidden><span>방문자 화면 미리보기 · 공개로 표시한 작업물만 보여요</span><button class="btn sm" id="pvBack" type="button">관리 화면으로</button></div>
+  <div class="pvbar" id="pvBar" hidden><span>방문자 화면 미리보기 · 로그인하지 않은 사람에게 이렇게 보여요</span><button class="btn sm" id="pvBack" type="button">관리 화면으로</button></div>
   <header class="phead">
-    <div><div class="eyebrow">Portfolio</div><h1 id="pName">포트폴리오</h1><p class="headline" id="pHeadline" hidden></p></div>
+    <div><div class="eyebrow">자기소개서</div><h1 id="pName">자기소개서</h1><p class="headline" id="pHeadline" hidden></p></div>
     <button class="btn sm" id="pubLogin" type="button">관리자 로그인</button>
   </header>
   <p class="intro" id="pIntro" hidden></p>
   <div class="contacts" id="pContacts" hidden></div>
-  <button type="button" class="btn sm pv-only" data-pedit="profile" style="align-self:flex-start">이름·연락처 수정</button>
-  <nav class="psnav" id="pSecNav" aria-label="섹션"></nav>
+  <div class="pvacts pv-only"><button type="button" class="btn sm" data-pedit="profile">이름·연락처 수정</button><button type="button" class="btn sm primary" data-pedit="about">자기소개서 수정</button></div>
   <section class="psec" id="secAbout">
-    <div class="sh"><span class="num">01</span><h2>자기소개서</h2><span class="sp"></span><button type="button" class="btn sm pv-only" data-pedit="about">수정</button></div>
-    <div class="about" id="pAbout"></div>
-  </section>
-  <section class="psec" id="secCareer">
-    <div class="sh"><span class="num">02</span><h2>경력기술서</h2><span class="sp"></span><button type="button" class="btn sm pv-only" data-pedit="career">수정</button></div>
-    <div class="careers" id="pCareer"></div>
-  </section>
-  <section class="psec" id="secWorks">
-    <div class="sh"><span class="num" id="worksNum">03</span><h2>포트폴리오</h2><span class="sp"></span>
-      <div class="seg" id="pLayout"><button type="button" data-layout="grid">목록</button><button type="button" data-layout="slides">슬라이드</button></div>
-      <button type="button" class="btn sm primary pv-only" data-pedit="addwork">+ 작업물</button></div>
-    <div class="ptags" id="pTags" hidden></div>
-    <div class="pgrid" id="pGrid"></div>
-    <div id="pSlides" hidden></div>
-    <div class="empty" id="pubEmpty" hidden></div>
+    <article class="doc" id="pDoc"></article>
   </section>
 </section>
 <div class="wv" id="workView" hidden></div>
@@ -404,7 +414,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <a href="#monsters" data-view="monsters"><span>몬스터</span><span class="n" id="nMon"></span></a>
         <a href="#systems" data-view="systems"><span>전투 확장 시스템</span><span class="n" id="nSys"></span></a>
         <a href="#pcs" data-view="pcs"><span>대응 PC 도구</span><span class="n" id="nPc"></span></a>
-        <a href="#portfolio" data-view="portfolio"><span>포트폴리오</span><span class="n" id="nWork"></span></a>
+        <a href="#portfolio" data-view="portfolio"><span>자기소개서</span><span class="n" id="nWork" hidden></span></a>
       </nav>
       <div class="rail" id="rail" aria-label="태그 필터"></div>
     </aside>
@@ -1019,7 +1029,7 @@ function wireMediaField(){
 }
 function closeForm(){ acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
 document.addEventListener("paste", e=>{
-  if ($("#scrim").hidden) return;
+  if ($("#scrim").hidden || !$("#fThumb")) return;
   const f=[...(e.clipboardData?.files||[])].find(f=>/^(image|video)\//.test(f.type));
   if (f){ e.preventDefault(); upload(f); }
 });
@@ -1267,60 +1277,34 @@ function careerHTML(c){
     ${lines.length?(bullets?`<ul>${lines.map(x=>`<li>${esc(x.replace(/^\s*[-•·*]\s+/,""))}</li>`).join("")}</ul>`:`<div class="txt">${esc(c.body)}</div>`):""}
   </div></div>`;
 }
+function aboutBlocks(P){
+  P=P||{};
+  if(Array.isArray(P.aboutBlocks)) return P.aboutBlocks;
+  return P.about ? [{t:"text",text:P.about}] : [];
+}
+function docHTML(blocks){
+  return blocks.map(b=>{
+    if(b.t==="text") return aboutHTML(b.text);
+    if(b.media||b.image) return `<figure>${mediaHTML({media:b.media,image:b.image},1600)}${b.caption?`<figcaption>${esc(b.caption)}</figcaption>`:""}</figure>`;
+    return "";
+  }).join("");
+}
 function renderPublic(){
   if($("#publicView").hidden) return;
-  const P=profile||{}, name=P.name||(CFG.portfolio&&CFG.portfolio.title)||"포트폴리오";
+  const P=profile||{}, name=P.name||(CFG.portfolio&&CFG.portfolio.title)||"자기소개서";
   const admin = previewing && canEdit();
   document.body.classList.toggle("pv-admin", admin);
-  if($("#workView").hidden) document.title = P.name ? `${P.name} · 포트폴리오` : name;
+  document.title = P.name ? `${P.name} · 자기소개서` : name;
   $("#pName").textContent=name;
   const hl=$("#pHeadline"); hl.textContent=P.headline||""; hl.hidden=!P.headline;
   const it=$("#pIntro"); it.textContent=P.intro||""; it.hidden=!P.intro;
   const cs=parseLinks(P.contacts), ce=$("#pContacts"); ce.innerHTML=cs.map(contactHTML).join(""); ce.hidden=!cs.length;
-
-  /* 01 자기소개서 */
-  const hasAbout=!!(P.about||"").trim();
-  $("#secAbout").hidden = !hasAbout && !admin;
-  $("#pAbout").innerHTML = hasAbout ? aboutHTML(P.about) : `<p class="ph-note">자기소개서가 비어 있어요. ‘수정’을 눌러 적어 주세요. ‘## 제목’으로 시작하는 줄은 소제목이 돼요.</p>`;
-  /* 02 경력기술서 */
-  const cars=(P.careers||[]).filter(c=>c.company||c.body);
-  $("#secCareer").hidden = !cars.length && !admin;
-  $("#pCareer").innerHTML = cars.length ? cars.map(careerHTML).join("") : `<p class="ph-note" style="padding-top:12px">경력기술서가 비어 있어요. ‘수정’을 눌러 회사·프로젝트별로 추가해 주세요.</p>`;
-  /* 섹션 번호와 내비 */
-  const secs=[["secAbout","자기소개서"],["secCareer","경력기술서"],["secWorks","포트폴리오"]].filter(([id])=>!$("#"+id).hidden);
-  secs.forEach(([id],k)=>{ const n=$("#"+id+" .num"); if(n) n.textContent=String(k+1).padStart(2,"0"); });
-  $("#pSecNav").innerHTML = secs.length>1 ? secs.map(([id,lab])=>`<button type="button" data-goto-sec="${id}">${lab}</button>`).join("") : "";
-  $("#pSecNav").hidden = secs.length<2;
-
-  /* 03 포트폴리오 */
-  const list=pubWorks();
-  const layout = pubLayout || P.workLayout || "grid";
-  $("#pLayout").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.layout===layout));
-  $("#pLayout").hidden = list.length<2;
-  const cnt=new Map(); list.forEach(w=>(w.tags||[]).forEach(t=>cnt.set(t,(cnt.get(t)||0)+1)));
-  if(pubTag && !cnt.has(pubTag)) pubTag="";
-  const tg=$("#pTags");
-  tg.hidden=cnt.size<2;
-  tg.innerHTML=`<button type="button" data-ptag="" class="${pubTag?"":"on"}">전체 ${list.length}</button>`+[...cnt].sort((a,b)=>b[1]-a[1]).map(([t,n])=>`<button type="button" data-ptag="${esc(t)}" class="${pubTag===t?"on":""}">${esc(t)} ${n}</button>`).join("");
-  const shown=pubTag?list.filter(w=>(w.tags||[]).includes(pubTag)):list;
+  const blocks=aboutBlocks(P);
   if(pio) pio.disconnect();
-  const g=$("#pGrid"), sl=$("#pSlides"), em=$("#pubEmpty");
-  if(layout==="slides" && shown.length){
-    g.hidden=true; g.innerHTML=""; sl.hidden=false;
-    if(slideIdx>=shown.length) slideIdx=0;
-    renderSlide(shown);
-  } else {
-    sl.hidden=true; sl.innerHTML=""; g.hidden=false;
-    g.innerHTML=shown.map(w=>`<article class="pcard" data-work="${esc(w.id)}" tabindex="0" role="button" aria-label="${esc(w.title)} 자세히 보기">
-        <button type="button" class="btn sm pv-only pedit" data-wedit2="${esc(w.id)}">편집</button>
-        <div class="pcover">${coverHTML(w)}</div>
-        <div class="pb">${metaLine(w)?`<div class="pmeta">${metaLine(w)}</div>`:""}<h3>${esc(w.title)}</h3>${w.summary?`<p>${esc(w.summary)}</p>`:""}
-          ${(w.tags||[]).length?`<div class="cell">${w.tags.map(t=>`<span class="ttag">${esc(t)}</span>`).join("")}</div>`:""}</div>
-      </article>`).join("");
-    wireVideos(g,pio);
-  }
-  em.hidden=!!shown.length;
-  em.textContent = (worksLoaded||mode==="local") ? (admin?"공개로 표시한 작업물이 아직 없어요. ‘+ 작업물’로 추가하거나, 관리 화면에서 ‘공개’를 켜 주세요.":"포트폴리오를 준비 중이에요.") : "불러오는 중…";
+  const d=$("#pDoc");
+  d.innerHTML = blocks.length ? docHTML(blocks)
+    : `<p class="ph-note">${admin?"자기소개서가 비어 있어요. ‘자기소개서 수정’을 눌러 글과 이미지를 넣어 주세요.":"준비 중이에요."}</p>`;
+  wireVideos(d,pio);
 }
 function slideMediaHTML(it, big){
   if(!it) return "";
@@ -1351,7 +1335,7 @@ function renderSlide(shown){
   </div>`;
   sl.querySelectorAll("video").forEach(v=>{ v.muted=true; if(v.dataset.src && !v.getAttribute("src")) v.src=v.dataset.src; const p=v.play&&v.play(); if(p) p.catch(()=>{}); });
 }
-function shownWorks(){ const list=pubWorks(); return pubTag?list.filter(w=>(w.tags||[]).includes(pubTag)):list; }
+function shownWorks(){ if(!$("#pSlides")) return []; const list=pubWorks(); return pubTag?list.filter(w=>(w.tags||[]).includes(pubTag)):list; }
 $("#publicView").addEventListener("click",e=>{
   const t=e.target.closest("[data-wedit2],[data-pedit],[data-goto-sec],[data-layout],[data-slide],[data-slideto],[data-gal],[data-ptag],[data-work]"); if(!t) return;
   if(t.dataset.wedit2){ e.stopPropagation(); openWorkForm(works.find(w=>w.id===t.dataset.wedit2)); return; }
@@ -1366,7 +1350,7 @@ $("#publicView").addEventListener("click",e=>{
 });
 $("#publicView").addEventListener("keydown",e=>{ const c=e.target.closest&&e.target.closest("article.pcard"); if(c && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); location.hash="work-"+c.dataset.work; } });
 document.addEventListener("keydown",e=>{
-  if($("#publicView").hidden || !$("#workView").hidden || !$("#scrim").hidden || $("#pSlides").hidden) return;
+  if(!$("#pSlides") || $("#publicView").hidden || !$("#workView").hidden || !$("#scrim").hidden || $("#pSlides").hidden) return;
   if(/^(INPUT|TEXTAREA)$/.test(document.activeElement&&document.activeElement.tagName)) return;
   if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const n=shownWorks().length; if(!n) return; slideIdx=(slideIdx+(e.key==="ArrowRight"?1:-1)+n)%n; galIdx=0; renderSlide(shownWorks()); }
 });
@@ -1412,25 +1396,14 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#workView").
 
 /* ---------- 관리자: 포트폴리오 관리 (#portfolio) ---------- */
 function renderPortAdmin(){
-  const P=profile||{}, n=works.filter(w=>w.published).length;
-  $("#count").textContent=`작업물 ${works.length}개 · 공개 ${n}개`;
+  const P=profile||{}, blocks=aboutBlocks(P);
+  const nImg=blocks.filter(b=>b.t!=="text").length, nTxt=blocks.filter(b=>b.t==="text").reduce((a,b)=>a+(b.text||"").replace(/\s/g,"").length,0);
+  $("#count").textContent=`글 ${nTxt.toLocaleString()}자 · 이미지 ${nImg}개`;
   if(io) io.disconnect();
   $("#portAdmin").innerHTML=`
-    <div class="ptool"><button type="button" class="btn primary edit-only" data-wadd>+ 작업물 추가</button><button type="button" class="btn edit-only" data-wprof>이름·연락처</button><button type="button" class="btn edit-only" data-wabout>자기소개서</button><button type="button" class="btn edit-only" data-wcareer>경력기술서</button><button type="button" class="btn" data-wpreview>방문자 화면 보기 · 바로 수정</button></div>
-    <div class="pprof"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>${esc(P.name||"이름 없음")}</b><span>${esc(P.headline||"방문자 화면 맨 위에 보일 이름·한 줄 소개·연락처를 ‘이름·연락처’에서 적어 주세요.")}</span>
-      <span class="pmeta" style="margin-top:4px">자기소개서 ${(P.about||"").trim()?"작성됨":"비어 있음"} · 경력 ${(P.careers||[]).length}건 · 작업물 ${works.length}건 · 보기 방식 ${(P.workLayout||"grid")==="slides"?"슬라이드":"목록"}</span></div></div>
-    ${works.length?`<div class="wlist">${works.map((w,k)=>`<div class="wrow">
-        ${(w.media||w.image)?`<button type="button" class="thumb" data-zoomw="${esc(w.id)}">${mediaHTML(w,240)}</button>`:`<div class="thumb">${workYt(w)?`<img src="https://i.ytimg.com/vi/${esc(workYt(w))}/mqdefault.jpg" alt="">`:"<span>없음</span>"}</div>`}
-        <div class="info"><b>${esc(w.title)}</b>${metaLine(w)?`<span class="pmeta">${metaLine(w)}</span>`:""}
-          ${(w.tags||[]).length?`<div class="cell">${w.tags.map(t=>`<span class="ttag">${esc(t)}</span>`).join("")}</div>`:""}</div>
-        <div class="acts">
-          <button type="button" class="pubchip ${w.published?"on":""}" data-wpub="${esc(w.id)}" title="눌러서 공개/비공개 전환">${w.published?"● 공개":"○ 비공개"}</button>
-          <button type="button" class="iconbtn edit-only" data-wmove="${k}|-1" ${k?"":"disabled"} aria-label="위로">↑</button>
-          <button type="button" class="iconbtn edit-only" data-wmove="${k}|1" ${k<works.length-1?"":"disabled"} aria-label="아래로">↓</button>
-          <button type="button" class="iconbtn edit-only" data-wedit="${esc(w.id)}">편집</button>
-          <button type="button" class="iconbtn edit-only" data-wdel="${esc(w.id)}">삭제</button>
-        </div></div>`).join("")}</div>`
-      :`<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>아직 작업물이 없어요</strong><span>‘+ 작업물 추가’로 첫 포트폴리오를 등록하세요. ‘공개’로 표시한 것만 방문자에게 보여요.</span></div>`}`;
+    <div class="ptool"><button type="button" class="btn primary edit-only" data-wabout>자기소개서 작성</button><button type="button" class="btn edit-only" data-wprof>이름·연락처</button><button type="button" class="btn" data-wpreview>방문자 화면 보기 · 바로 수정</button></div>
+    <div class="pprof"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>${esc(P.name||"이름 없음")}</b><span>${esc(P.headline||"방문자 화면 맨 위에 보일 이름·한 줄 소개·연락처를 ‘이름·연락처’에서 적어 주세요.")}</span></div></div>
+    <div class="docbox"><div class="doc">${blocks.length?docHTML(blocks):`<p class="ph-note">아직 비어 있어요. ‘자기소개서 작성’에서 글을 쓰고, 글 사이사이에 이미지·움짤을 넣을 수 있어요.</p>`}</div></div>`;
   wireVideos($("#portAdmin"));
 }
 $("#portAdmin").addEventListener("click", async e=>{
@@ -1520,23 +1493,88 @@ function openProfileForm(){
     catch(ex){ b.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); }
   };
 }
+/* 자기소개서 편집기: 글 블록과 이미지 블록을 원하는 순서로 */
+let edBlocks=[];
 function openAboutForm(){
   if(!canEdit()) return;
-  const P=profile||{}, sc=$("#scrim");
-  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle" style="width:min(820px,100%)">
-    <header><h2 id="fTitle">자기소개서</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
-    <form id="aform" novalidate style="grid-template-columns:1fr">
-      <div class="field full"><textarea id="a_body" style="min-height:52vh;font-size:14.5px" placeholder="## 지원 동기&#10;전투 기획에 관심을 갖게 된 계기…&#10;&#10;## 강점&#10;…">${esc(P.about||"")}</textarea>
-        <small>‘## 제목’으로 시작하는 줄은 소제목이 되고, 빈 줄로 문단이 나뉘어요.</small></div>
+  edBlocks=aboutBlocks(profile).map(b=>({...b}));
+  if(!edBlocks.length) edBlocks=[{t:"text",text:""}];
+  const sc=$("#scrim");
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle" style="width:min(860px,100%)">
+    <header><h2 id="fTitle">자기소개서 작성</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <form id="aform" novalidate style="grid-template-columns:1fr;gap:8px">
+      <p class="edhint" style="margin:0">글 칸에서 <b>## 제목</b>으로 시작하는 줄은 소제목이 돼요. 이미지·움짤은 블록 사이의 <b>+ 이미지</b>로 넣거나, 글 칸에 바로 붙여 넣기(Ctrl+V)·끌어 놓기 하면 그 아래에 들어가요.</p>
+      <div class="ed" id="edList"></div>
+      <input id="edFile" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm" hidden>
       <div class="err" id="fErr" hidden></div>
       <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">저장</button></div>
     </form></div>`;
-  sc.hidden=false; $("#a_body").focus();
+  sc.hidden=false; drawEd();
+  const first=$("#edList textarea"); if(first) first.focus();
   $("#fClose").onclick=$("#fCancel").onclick=closeForm;
   sc.onclick=e=>{ if(e.target===sc) closeForm(); };
-  $("#aform").onsubmit=async e=>{ e.preventDefault(); const b=$("#fSave"); b.disabled=true;
-    try{ await wstore.saveProfile({ ...profile, about:$("#a_body").value, updatedAt:Date.now() }); closeForm(); toast("저장했어요"); }
-    catch(ex){ b.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); } };
+  let insAt=edBlocks.length;
+  $("#edList").onclick=e=>{
+    const t=e.target.closest("[data-ins],[data-em],[data-edel]"); if(!t) return;
+    syncEd();
+    if(t.dataset.ins){ const [k,kind]=t.dataset.ins.split("|"); const at=+k;
+      if(kind==="text"){ edBlocks.splice(at,0,{t:"text",text:""}); drawEd(); const ta=$(`#edList textarea[data-k="${at}"]`); if(ta) ta.focus(); }
+      else { insAt=at; $("#edFile").click(); } }
+    else if(t.dataset.edel){ edBlocks.splice(+t.dataset.edel,1); drawEd(); }
+    else { const [k,d]=t.dataset.em.split("|").map(Number), j=k+d; if(j>=0&&j<edBlocks.length){ [edBlocks[k],edBlocks[j]]=[edBlocks[j],edBlocks[k]]; drawEd(); } }
+  };
+  $("#edFile").onchange=e=>{ const f=[...e.target.files]; e.target.value=""; edInsertFiles(f, insAt); };
+  $("#edList").addEventListener("paste",e=>{
+    const ta=e.target.closest("textarea[data-k]"); if(!ta) return;
+    const f=[...(e.clipboardData?.files||[])].filter(x=>/^(image|video)\//.test(x.type));
+    if(f.length){ e.preventDefault(); e.stopPropagation(); syncEd(); edInsertFiles(f, +ta.dataset.k+1); }
+  });
+  $("#edList").addEventListener("dragover",e=>e.preventDefault());
+  $("#edList").addEventListener("drop",e=>{
+    const f=[...e.dataTransfer.files].filter(x=>/^(image|video)\//.test(x.type)); if(!f.length) return;
+    e.preventDefault(); syncEd();
+    const eb=e.target.closest(".eb"); edInsertFiles(f, eb? +eb.dataset.k+1 : edBlocks.length);
+  });
+  $("#aform").onsubmit=async e=>{
+    e.preventDefault(); syncEd();
+    if(edBlocks.some(b=>b.busy)){ $("#fErr").hidden=false; $("#fErr").textContent="업로드가 끝나면 저장할 수 있어요."; return; }
+    const blocks=edBlocks.filter(b=> b.t==="text" ? (b.text||"").trim() : (b.media||b.image))
+      .map(b=> b.t==="text" ? {t:"text",text:b.text} : {t:"media",media:b.media||null,image:b.image||"",caption:(b.caption||"").trim()});
+    const plain=blocks.filter(b=>b.t==="text").map(b=>b.text).join("\n\n");
+    const btn=$("#fSave"); btn.disabled=true;
+    try{ await wstore.saveProfile({ ...profile, aboutBlocks:blocks, about:plain, updatedAt:Date.now() }); closeForm(); toast("저장했어요"); }
+    catch(ex){ btn.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); }
+  };
+}
+function syncEd(){
+  document.querySelectorAll("#edList [data-k]").forEach(el=>{
+    const k=+el.dataset.k; if(!edBlocks[k]) return;
+    if(el.tagName==="TEXTAREA") edBlocks[k].text=el.value;
+    else if(el.tagName==="INPUT") edBlocks[k].caption=el.value;
+  });
+}
+function autoGrow(ta){ ta.style.height="auto"; ta.style.height=Math.max(80,ta.scrollHeight+2)+"px"; }
+function drawEd(){
+  const L=$("#edList"); if(!L) return;
+  const ins=k=>`<div class="ins"><button type="button" data-ins="${k}|text">+ 글</button><button type="button" data-ins="${k}|img">+ 이미지·움짤</button></div>`;
+  L.innerHTML = ins(0) + edBlocks.map((b,k)=>`<div class="eb" data-k="${k}">
+      ${b.t==="text"
+        ? `<textarea data-k="${k}" placeholder="${k===0?"## 지원 동기\n전투 기획에 관심을 갖게 된 계기…":"이어서 쓰기…"}" aria-label="글 ${k+1}">${esc(b.text||"")}</textarea>`
+        : `<div class="ebm"><div class="pic">${b.busy?`<span>${esc(b.busy)}</span>`:mediaHTML({media:b.media,image:b.image},960)}</div><input data-k="${k}" type="text" value="${esc(b.caption||"")}" placeholder="이미지 설명 (선택)" aria-label="이미지 설명"></div>`}
+      <div class="ops"><button type="button" class="iconbtn" data-em="${k}|-1" ${k?"":"disabled"} aria-label="위로">↑</button><button type="button" class="iconbtn" data-em="${k}|1" ${k<edBlocks.length-1?"":"disabled"} aria-label="아래로">↓</button><button type="button" class="iconbtn" data-edel="${k}" aria-label="삭제">✕</button></div>
+    </div>${ins(k+1)}`).join("");
+  L.querySelectorAll("textarea").forEach(ta=>{ autoGrow(ta); ta.addEventListener("input",()=>autoGrow(ta)); });
+  L.querySelectorAll("video").forEach(v=>{ if(v.dataset.src) v.src=v.dataset.src; v.muted=true; const p=v.play(); if(p) p.catch(()=>{}); });
+  const sv=$("#fSave"); if(sv) sv.disabled=edBlocks.some(b=>b.busy);
+}
+async function edInsertFiles(files, at){
+  const slots=files.filter(f=>/^(image|video)\//.test(f.type)).map(f=>({f, b:{t:"media",busy:"올리는 중",caption:""}}));
+  edBlocks.splice(at,0,...slots.map(x=>x.b)); drawEd();
+  for(const {f,b} of slots){
+    try{ const it=await uploadAny(f, pc=>{ b.busy=`업로드 ${pc}%`; syncEd(); drawEd(); }); delete b.busy; Object.assign(b,it); }
+    catch(ex){ syncEd(); edBlocks.splice(edBlocks.indexOf(b),1); toast(cloudErr(ex)); }
+    syncEd(); drawEd();
+  }
 }
 function openCareerForm(){
   if(!canEdit()) return;
@@ -1644,9 +1682,11 @@ function saveBlob(blob, name){
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
-function jsonBackup(list, wl){
+function jsonBackup(list, wl, pf){
   const ou=o=>({...o, originalUrl:origUrl(o).startsWith("data:")?"":origUrl(o)});
-  return {version:3, exportedAt:new Date().toISOString(), monsters:list.map(ou), works:(wl||works).map(ou), profile};
+  const p=pf||profile;
+  return {version:4, exportedAt:new Date().toISOString(), monsters:list.map(ou), works:(wl||works).map(ou),
+          profile:{...p, aboutBlocks:(p.aboutBlocks||[]).map(b=>b.t==="text"?b:ou(b))}};
 }
 let busy=false;
 $("#exportBtn").addEventListener("click", async ()=>{
@@ -1657,9 +1697,11 @@ $("#exportBtn").addEventListener("click", async ()=>{
     const zip=new JSZip(), failed=[];
     const list=monsters.map(m=>({...m}));
     const wl=works.map(w=>({...w}));
+    const pf={...profile, aboutBlocks:aboutBlocks(profile).map(b=>({...b}))};
     const hasFile=o=>o.media||(o.image&&!o.image.startsWith("data:"));
     const targets=[...list.filter(hasFile).map(o=>({o,name:`${safeName(o.game)}_${safeName(o.name)}`,label:`${o.game} · ${o.name}`})),
-                   ...wl.filter(hasFile).map(o=>({o,name:`portfolio_${safeName(o.title)}`,label:`포트폴리오 · ${o.title}`}))];
+                   ...wl.filter(hasFile).map(o=>({o,name:`portfolio_${safeName(o.title)}`,label:`포트폴리오 · ${o.title}`})),
+                   ...pf.aboutBlocks.map((o,k)=>({o:Object.assign(o,{id:o.id||("b"+k)}),k})).filter(x=>x.o.t!=="text"&&hasFile(x.o)).map(({o,k})=>({o,name:`자기소개서_${String(k+1).padStart(2,"0")}`,label:`자기소개서 이미지 ${k+1}`}))];
     let done=0;
     for(const {o,name,label} of targets){
       const url=origUrl(o);
@@ -1672,7 +1714,7 @@ $("#exportBtn").addEventListener("click", async ()=>{
       }catch{ failed.push(`${label}\t${url}`); }
       toast(`백업 중… 파일 ${++done}/${targets.length}`);
     }
-    zip.file("data.json", JSON.stringify(jsonBackup(list,wl),null,2));
+    zip.file("data.json", JSON.stringify(jsonBackup(list,wl,pf),null,2));
     if(failed.length) zip.file("가져오지_못한_파일.txt", "아래 파일은 원본 사이트에서 받지 못했어요. 주소로 직접 열어 저장해 주세요.\n\n"+failed.join("\n"));
     toast("압축하는 중…");
     saveBlob(await zip.generateAsync({type:"blob"}), `monster-ref-backup-${stamp}.zip`);
@@ -1702,7 +1744,8 @@ $("#importFile").addEventListener("change", async e=>{
     /* ZIP 복원: 원본 파일을 지금 연결된 Cloudinary 계정에 다시 올림 */
     const target=upTarget(); let re=0, reFail=0;
     if(zip && target){
-      const withFile=[...list,...wl].filter(m=>m.mediaFile&&zip.file(m.mediaFile));
+      const pfb=(j.profile&&Array.isArray(j.profile.aboutBlocks))?j.profile.aboutBlocks:[];
+      const withFile=[...list,...wl,...pfb].filter(m=>m.mediaFile&&zip.file(m.mediaFile));
       for(const m of withFile){
         try{
           const b=await zip.file(m.mediaFile).async("blob");
@@ -1718,12 +1761,12 @@ $("#importFile").addEventListener("change", async e=>{
         toast(`복원 중… 파일 ${re+reFail}/${withFile.length}`);
       }
     }
-    [...list,...wl].forEach(m=>{ delete m.mediaFile; });
+    [...list,...wl,...((j.profile&&j.profile.aboutBlocks)||[])].forEach(m=>{ delete m.mediaFile; delete m.originalUrl; });
     toast("데이터를 저장하는 중…");
     try{
       if(list.length) await store.bulk(list);
       for(const w of wl) await wstore.set(w.id, clean(w));
-      if(j.profile && typeof j.profile==="object" && Object.keys(j.profile).length) await wstore.saveProfile(j.profile);
+      if(j.profile && typeof j.profile==="object" && Object.keys(j.profile).length){ const pf={...j.profile}; if(Array.isArray(pf.aboutBlocks)) pf.aboutBlocks=pf.aboutBlocks.map(b=>{ const o={...b}; delete o.id; return o; }); await wstore.saveProfile(pf); }
       toast(`레퍼런스 ${list.length}건 · 작업물 ${wl.length}건을 불러왔어요${re?` · 파일 ${re}개 다시 올림`:""}${reFail?` · ${reFail}개 실패`:""}`);
     }catch(ex){ toast(errMsg(ex)); }
   }catch{ toast("불러올 수 없는 파일이에요. 백업으로 받은 ZIP이나 JSON인지 확인해 주세요"); }
