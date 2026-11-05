@@ -105,6 +105,43 @@ tr.drop-after td{box-shadow:inset 0 -2px 0 var(--accent)}
 .gitem.slim{grid-template-columns:64px minmax(0,1fr) auto;align-items:center}
 .gitem.slim .thumb{width:64px;height:64px}
 .ac button .en{color:var(--muted);font-size:12px;margin-left:6px}
+/* 공략 */
+td.guide{min-width:150px;max-width:220px}
+.gpv{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:6px 8px;font-size:12.5px;line-height:1.55;color:var(--ink);cursor:pointer}
+.gpv:hover{border-color:var(--accent)}
+.gpv span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;word-break:keep-all}
+.gpv small{display:block;margin-top:4px;color:var(--accent);font-weight:600;font-size:11.5px}
+.guidedoc{padding:18px 22px;max-height:65vh;overflow:auto}
+.guidedoc .doc{font-size:15px;line-height:1.85}
+/* 패치 타임라인 */
+.tlbar-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.tlbar-top select{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:7px 10px;font-weight:600}
+.tlbar-top .note{font-size:12.5px;color:var(--muted)}
+.tlbar-top .lg{display:flex;gap:10px;margin-left:auto;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.tlbar-top .lg i{display:inline-block;width:14px;height:8px;border-radius:3px;margin-right:4px;vertical-align:middle;background:var(--c-bg);border:1px solid var(--c)}
+.tlwrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+.tl{--cw:76px;min-width:calc(210px + var(--n) * var(--cw))}
+.tlrow{display:grid;grid-template-columns:210px minmax(0,1fr);border-bottom:1px solid var(--line)}
+.tlrow:last-child{border-bottom:0}
+.tln{position:sticky;left:0;z-index:2;background:var(--panel);padding:8px 12px;display:flex;flex-direction:column;justify-content:center;gap:2px;border-right:1px solid var(--line);min-width:0}
+.tln b{font-size:13.5px;word-break:keep-all}
+.tln small{font-size:11.5px;color:var(--muted)}
+.tlt{display:grid;grid-template-columns:repeat(var(--n),minmax(var(--cw),1fr));grid-template-rows:minmax(40px,auto);position:relative}
+.tlc{grid-row:1;border-left:1px dashed var(--line)}
+.tlc:first-child{border-left:0}
+.tlc.cur{background:var(--hover)}
+.tlbar{grid-row:1;z-index:1;align-self:center;margin:6px 4px;min-height:26px;border-radius:6px;border:1px solid var(--c);background:var(--c-bg);color:var(--c);font-size:12px;font-weight:600;padding:3px 8px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
+.tlbar:hover{filter:brightness(.97);box-shadow:0 0 0 2px var(--c-bg)}
+.tlbar .dots{display:flex;gap:3px;margin-left:auto}
+.tlbar.mon{--c:var(--accent);--c-bg:var(--hover);color:var(--ink);font-weight:600}
+.tlbar.mon img,.tlbar.mon video{width:22px;height:22px;border-radius:4px;object-fit:cover;flex:none}
+.tlhead .tln{font-size:12px;color:var(--muted);font-weight:600}
+.tlhead .tlt{grid-template-rows:auto}
+.tlv{grid-row:1;padding:8px 6px;text-align:center;display:flex;flex-direction:column;gap:1px;border-left:1px solid var(--line)}
+.tlv:first-child{border-left:0}
+.tlv b{font-size:13px;font-variant-numeric:tabular-nums}
+.tlv span{font-size:11px;color:var(--muted)}
+.tlsec{position:sticky;left:0;padding:8px 12px;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
 .search{flex:1 1 320px;min-width:0;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 12px}
 .search svg{flex:none;color:var(--muted)}
 .search input{border:0;background:transparent;padding:10px 0;width:100%;outline:none}
@@ -144,7 +181,7 @@ button.tag:hover{border-color:var(--c)}
 .deep.has::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--c);margin-left:2px}
 
 .tablebox{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow-x:auto;min-width:0}
-table{border-collapse:collapse;width:100%;min-width:960px}
+table{border-collapse:collapse;width:100%;min-width:1040px}
 th,td{text-align:left;vertical-align:top;padding:10px 10px;border-bottom:1px solid var(--line)}
 th{font-size:12px;font-family:var(--f-body);color:var(--muted);font-weight:600;background:var(--panel);position:sticky;top:0;white-space:nowrap}
 tbody tr:hover{background:var(--hover)}
@@ -463,10 +500,12 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <a href="#monsters" data-view="monsters"><span>몬스터</span><span class="n" id="nMon"></span></a>
         <a href="#systems" data-view="systems" class="sub"><span>전투 확장 시스템</span><span class="n" id="nSys"></span></a>
         <a href="#pcs" data-view="pcs" class="sub"><span>대응 PC 도구</span><span class="n" id="nPc"></span></a>
+        <a href="#timeline" data-view="timeline" class="sub"><span>패치 타임라인</span></a>
         <div class="navh">PC 레퍼런스</div>
         <a href="#pc" data-view="pc"><span>PC</span><span class="n" id="nPC"></span></a>
         <a href="#pc-systems" data-view="pc-systems" class="sub"><span>전투 확장 시스템</span><span class="n" id="nPCSys"></span></a>
         <a href="#pc-counters" data-view="pc-counters" class="sub"><span>대응 몬스터</span><span class="n" id="nPCCnt"></span></a>
+        <a href="#pc-timeline" data-view="pc-timeline" class="sub"><span>패치 타임라인</span></a>
         <div class="navh"></div>
         <a href="#portfolio" data-view="portfolio"><span>자기소개서</span><span class="n" id="nWork" hidden></span></a>
       </nav>
@@ -496,7 +535,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
       <div class="state" id="state"><strong>레퍼런스를 불러오는 중…</strong></div>
       <table id="tbl" hidden>
         <thead><tr>
-          <th class="grip" aria-label="순서"></th><th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th></th>
+          <th class="grip" aria-label="순서"></th><th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th>공략</th><th></th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -711,7 +750,7 @@ function wireVideos(root, ob){
 
 /* ---------- filtering ---------- */
 function haystack(m){
-  const parts=[m.game,m.version,m.name,m.nameEn,m.link,...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
+  const parts=[m.game,m.version,m.name,m.nameEn,m.link,m.guide,...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
   for (const k of ["systems","pcs"]) for (const e of (m[k]||[])){ const d=getDef(kindOf(m),k,e.name); parts.push(e.name,d.nameEn,d.label,d.note); }
   return parts.filter(Boolean).join(" ").toLowerCase();
 }
@@ -833,6 +872,11 @@ function render(){
   if (sub==="portfolio"){ tb.hidden=true; pa.hidden=false; renderPortAdmin(); return; }
   pa.hidden=true;
   if (!loaded) return;
+  if (sub==="timeline" && monsters.length && list.length){
+    if(io) io.disconnect();
+    renderTimeline(list);
+    return;
+  }
   if (sub!=="list" && monsters.length && list.length){
     if(io) io.disconnect();
     renderGroups(list);
@@ -872,6 +916,8 @@ const VIEWMAP={
   "pc":         {kind:"pc",      sub:"list"},
   "pc-systems": {kind:"pc",      sub:"systems"},
   "pc-counters":{kind:"pc",      sub:"pcs"},
+  "timeline":   {kind:"monster", sub:"timeline"},
+  "pc-timeline":{kind:"pc",      sub:"timeline"},
   "portfolio":  {kind:null,      sub:"portfolio"},
 };
 const VIEWS=Object.keys(VIEWMAP);
@@ -899,6 +945,57 @@ function renderTabs(){
 addEventListener("hashchange", ()=>{
   const v=location.hash.slice(1); if(!VIEWS.includes(v)) return;
   setView(v); groupEdit=null; hidePop(true); render(); scrollTo({top:0});
+});
+/* ---------- 패치 타임라인: 게임 하나를 골라 패치(버전) 순서로 ---------- */
+let tlGame="";
+function renderTimeline(list){
+  const gb=$("#groupbox"), tb=$("#tablebox"), KL=KINDS[kind].label;
+  tb.hidden=true; gb.hidden=false;
+  const games=new Map(); list.forEach(m=>{ if(m.game) games.set(m.game,(games.get(m.game)||0)+1); });
+  const gameList=[...games].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
+  const fg=[...filters].find(f=>f.startsWith("game|"));
+  const g = fg ? fg.slice(5) : (games.has(tlGame) ? tlGame : (gameList[0]||[""])[0]);
+  if(!g){ gb.innerHTML=`<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>게임 이름이 들어간 ${KL}가 없어요</strong><span>추가·편집에서 게임 이름과 버전을 적으면 패치별로 볼 수 있어요.</span></div>`; $("#count").textContent=""; return; }
+  tlGame=g;
+  const rows=list.filter(m=>m.game===g), withV=rows.filter(m=>(m.version||"").trim()), noV=rows.length-withV.length;
+  const vers=[...new Set(withV.map(m=>m.version.trim()))].sort(cmpVersion), N=vers.length, col=v=>vers.indexOf((v||"").trim());
+  $("#count").textContent=`${g} · 패치 ${N}개 · ${KL} ${withV.length}건`;
+  const top=`<div class="tlbar-top"><label class="sortbox" for="tlGameSel" style="font-weight:600;color:var(--ink)">게임
+      <select id="tlGameSel" ${fg?"disabled title=\"왼쪽 게임 필터를 해제하면 바꿀 수 있어요\"":""}>${gameList.map(([n,c])=>`<option value="${esc(n)}" ${n===g?"selected":""}>${esc(n)} (${c})</option>`).join("")}</select></label>
+      ${noV?`<span class="note">버전이 비어 있는 ${KL} ${noV}개는 빠져 있어요</span>`:""}
+      <span class="lg"><span class="c-sys"><i></i>${esc(CAT.systems.label)}</span><span class="c-pc"><i></i>${esc(CAT.pcs.label)}</span><span style="--c:var(--accent);--c-bg:var(--hover)"><i></i>${KL}</span></span></div>`;
+  if(!N){ gb.innerHTML=top+`<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>${esc(g)}에 버전이 적힌 ${KL}가 없어요</strong><span>편집에서 버전(예: 1.4)을 적어 주세요.</span></div>`; wireTl(); return; }
+  const cells=(on)=>vers.map((_,k)=>`<div class="tlc ${on&&on.has(k)?"cur":""}" style="grid-column:${k+1}"></div>`).join("");
+  const perVer=vers.map(v=>withV.filter(m=>m.version.trim()===v).length);
+  const head=`<div class="tlrow tlhead"><div class="tln">패치</div><div class="tlt">${vers.map((v,k)=>`<div class="tlv" style="grid-column:${k+1}"><b>${esc(v)}</b><span>${perVer[k]}개</span></div>`).join("")}</div></div>`;
+  const lane=(cat)=>{
+    const map=new Map();
+    withV.forEach(m=>(m[cat]||[]).forEach(e=>{ const x=map.get(e.name)||{name:e.name,cols:new Set(),users:[]}; x.cols.add(col(m.version)); x.users.push(m); map.set(e.name,x); }));
+    const items=[...map.values()].map(x=>({...x,s:Math.min(...x.cols),e:Math.max(...x.cols)}))
+      .sort((a,b)=>a.s-b.s||b.users.length-a.users.length||a.name.localeCompare(b.name,"ko"));
+    if(!items.length) return "";
+    const cls=CAT[cat].cls;
+    return `<div class="tlsec">${esc(CAT[cat].label)} · ${items.length}개</div>`+items.map(x=>{ const d=getDef(kind,cat,x.name);
+      return `<div class="tlrow"><div class="tln"><b>${esc(x.name)}</b>${d.nameEn?`<small lang="en">${esc(d.nameEn)}</small>`:""}</div>
+        <div class="tlt">${cells(x.cols)}<button type="button" class="tlbar ${cls}" style="grid-column:${x.s+1}/${x.e+2}" data-tldef="${esc(cat)}|${esc(x.name)}" title="${esc(x.name)} · ${esc(vers[x.s])}${x.s!==x.e?" → "+esc(vers[x.e]):""} · ${x.users.map(u=>u.name).join(", ")}">
+          ${x.s!==x.e?`${esc(vers[x.s])} → ${esc(vers[x.e])}`:esc(vers[x.s])} · ${x.users.length}</button></div></div>`; }).join("");
+  };
+  const mons=withV.slice().sort((a,b)=>cmpVersion(a.version,b.version)||byName(a,b));
+  const monLane=`<div class="tlsec">${KL} · ${mons.length}개</div>`+mons.map(m=>{ const c=col(m.version);
+    const th = (m.media||m.image) ? mediaHTML(m,96) : "";
+    return `<div class="tlrow"><div class="tln"><b>${esc(m.name)}</b>${m.nameEn?`<small lang="en">${esc(m.nameEn)}</small>`:""}</div>
+      <div class="tlt">${cells(new Set([c]))}<button type="button" class="tlbar mon" style="grid-column:${c+1}/${c+2}" data-tlmon="${esc(m.id)}" title="${esc(m.name)} · ${esc(m.version)}${(m.guide||"").trim()?" · 공략 있음":""}">${th}${esc(m.name)}</button></div></div>`; }).join("");
+  gb.innerHTML = top + `<div class="tlwrap"><div class="tl" style="--n:${N}">${head}${lane("systems")}${lane("pcs")}${monLane}</div></div>`;
+  wireVideos(gb); wireTl();
+}
+function wireTl(){
+  const sel=$("#tlGameSel"); if(sel) sel.onchange=e=>{ tlGame=e.target.value; render(); };
+}
+$("#groupbox").addEventListener("click", e=>{
+  const t=e.target.closest("[data-tldef],[data-tlmon]"); if(!t) return;
+  if(t.dataset.tldef){ const k=t.dataset.tldef.indexOf("|"); const cat=t.dataset.tldef.slice(0,k), name=t.dataset.tldef.slice(k+1);
+    if(canEdit()) openDefForm(kind,cat,name,null); }
+  else { const m=allRefs.find(x=>x.id===t.dataset.tlmon); if(m) openGuide(m); }
 });
 function renderGroups(list){
   const cat=sub, c=CAT[cat], gb=$("#groupbox"), tb=$("#tablebox"), KL=KINDS[kind].label;
@@ -1069,6 +1166,7 @@ function refText(m){
       if(d.note) L.push(`  └ ${d.label||"공략"}\n`+d.note.split("\n").map(x=>"    "+x).join("\n"));
     }
   }
+  if((m.guide||"").trim()) L.push(`공략:\n`+m.guide.trim().split("\n").map(x=>"  "+x).join("\n"));
   if(m.link) L.push(`링크: ${m.link}`);
   const o=origUrl(m); if(o && !o.startsWith("data:")) L.push(`이미지: ${o}`);
   return L.join("\n");
@@ -1088,6 +1186,27 @@ function thumbHTML(m, w){
   if (yid) return `<a class="thumb" href="${esc(m.link)}" target="_blank" rel="noopener" title="유튜브 썸네일 (이미지를 넣으면 바뀌어요)"><span class="yt"><img src="https://i.ytimg.com/vi/${esc(yid)}/mqdefault.jpg" alt="" loading="lazy"></span></a>`;
   return `<div class="thumb"><span>없음</span></div>`;
 }
+function guidePlain(t){ return String(t||"").replace(/^#{1,3}\s+/gm,"").trim(); }
+function guideCell(m){
+  if((m.guide||"").trim()) return `<button type="button" class="gpv" data-guide="${esc(m.id)}" aria-label="${esc(m.name)} 공략 보기"><span>${esc(guidePlain(m.guide).slice(0,240))}</span><small>전체 보기</small></button>`;
+  return `<button type="button" class="iconbtn edit-only" data-guideadd="${esc(m.id)}">+ 작성</button>`;
+}
+function openGuide(m){
+  const sc=$("#scrim"), has=(m.guide||"").trim();
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="gTitle" style="width:min(820px,100%)">
+    <header><h2 id="gTitle">공략 · ${esc(m.name)}${m.nameEn?` <span style="color:var(--muted);font-weight:500;font-size:13px">${esc(m.nameEn)}</span>`:""}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <div style="padding:10px 22px 0" class="gcrumb">${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${m.version?`<span class="tag c-ver">${esc(m.version)}</span>`:""}${(m.systems||[]).map(e=>`<span class="tag c-sys">${esc(e.name)}</span>`).join("")}</div>
+    <div class="guidedoc"><div class="doc">${has?aboutHTML(m.guide):`<p class="ph-note">아직 공략이 없어요.</p>`}</div></div>
+    <div class="foot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px;border-top:1px solid var(--line)">
+      ${has?`<button type="button" class="btn" id="gCopy" style="margin-right:auto">공략 복사</button>`:""}
+      <button type="button" class="btn edit-only" id="gEdit">편집</button><button type="button" class="btn primary" id="gClose">닫기</button></div></div>`;
+  sc.hidden=false;
+  $("#fClose").onclick=$("#gClose").onclick=closeForm;
+  sc.onclick=ev=>{ if(ev.target===sc) closeForm(); };
+  if(has) $("#gCopy").onclick=ev=>copyText(`[${m.game||"-"}${m.version?" "+m.version:""}] ${m.name} 공략\n\n${m.guide}`, ev.currentTarget);
+  $("#gEdit").onclick=()=>{ closeForm(); openForm(m); focusGuide(); };
+}
+function focusGuide(){ const g=$("#f_guide"); if(g){ g.scrollIntoView({block:"center"}); g.focus(); } }
 function rowHTML(m){
   const img = imgSrc(m);
   const cells = k => `<div class="cell">${(m[k]||[]).map(v=>tagBtn(k,v)).join("")}</div>`;
@@ -1104,6 +1223,7 @@ function rowHTML(m){
     <td>${cells("hooks")}</td>
     <td>${cells("theme")}</td><td>${cells("levels")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td>
     <td>${deep("systems")}</td><td>${deep("pcs")}</td>
+    <td class="guide">${guideCell(m)}</td>
     <td><div class="rowact"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>
   </tr>`;
 }
@@ -1126,11 +1246,13 @@ function renderActive(){
 
 /* ---------- click delegation ---------- */
 document.addEventListener("click", e=>{
-  const t=e.target.closest("[data-tag],[data-clear],[data-edit],[data-del],[data-zoom],[data-deep],[data-copy],[data-dup]");
+  const t=e.target.closest("[data-tag],[data-clear],[data-edit],[data-del],[data-zoom],[data-deep],[data-copy],[data-dup],[data-guide],[data-guideadd]");
   if(!t) return;
   if (t.dataset.tag){ const f=t.dataset.tag; filters.has(f)?filters.delete(f):filters.add(f); hidePop(true); render(); }
   else if (t.hasAttribute("data-clear")){ filters.clear(); query=""; $("#q").value=""; render(); }
   else if (t.dataset.edit){ openForm(monsters.find(m=>m.id===t.dataset.edit)); }
+  else if (t.dataset.guide){ const m=allRefs.find(x=>x.id===t.dataset.guide); if(m) openGuide(m); }
+  else if (t.dataset.guideadd){ const m=allRefs.find(x=>x.id===t.dataset.guideadd); if(m){ openForm(m); focusGuide(); } }
   else if (t.dataset.dup){ const m=monsters.find(x=>x.id===t.dataset.dup); if(m) openForm(null, m); }
   else if (t.dataset.copy){ const m=monsters.find(x=>x.id===t.dataset.copy); if(m) copyText(refText(m), t); }
   else if (t.dataset.del){ confirmDelete(t.dataset.del); }
@@ -1251,6 +1373,7 @@ function openForm(m, copyFrom){
       <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>이미 있는 이름이면 그 내용을 그대로 불러와요 · 내용은 칩에 마우스를 올려 수정</small></div>
       <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>${KINDS[fKind].counter}</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="${KINDS[fKind].counterPh}"></div>
       <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
+      <div class="field full"><label for="f_guide">공략</label><textarea id="f_guide" style="min-height:220px" placeholder="## 패턴 요약&#10;…&#10;&#10;## 공략 포인트&#10;- …">${esc(v?.guide||"")}</textarea><small>길게 써도 돼요 · ‘## 제목’ 줄은 소제목, 빈 줄로 문단 구분</small></div>
       <div class="err" id="fErr" hidden></div>
       <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
     </form></div>`;
@@ -1296,7 +1419,7 @@ function formSnapshot(m){
     hooks:splitTags($("#f_hooks").value), levels:splitTags($("#f_levels").value),
     theme:splitTags($("#f_theme").value), looks:splitTags($("#f_looks").value), weapons:splitTags($("#f_weapons").value),
     systems:keep(splitTags($("#f_systems").value), m?.systems), pcs:keep(splitTags($("#f_pcs").value), m?.pcs),
-    link:$("#f_link").value.trim(), image:formImage||"", media:formMedia||null };
+    link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null };
 }
 function closeForm(){ acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
 document.addEventListener("paste", e=>{
@@ -1436,7 +1559,7 @@ async function saveForm(m, src){
     version:$("#f_version").value.trim(), hooks:splitTags($("#f_hooks").value), levels:splitTags($("#f_levels").value),
     theme:splitTags($("#f_theme").value), looks:splitTags($("#f_looks").value), weapons:splitTags($("#f_weapons").value),
     systems:keep(splitTags($("#f_systems").value), src?.systems), pcs:keep(splitTags($("#f_pcs").value), src?.pcs),
-    link:$("#f_link").value.trim(), image:formImage||"", media:formMedia||null, updatedAt:Date.now(),
+    link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null, updatedAt:Date.now(),
   };
   if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
   const btn=$("#fSave"); btn.disabled=true;
