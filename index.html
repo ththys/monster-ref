@@ -93,6 +93,18 @@ tr.dragging{opacity:.4}
 tr.drop-before td{box-shadow:inset 0 2px 0 var(--accent)}
 tr.drop-after td{box-shadow:inset 0 -2px 0 var(--accent)}
 .manual-hint{font-size:12px;color:var(--muted)}
+.pop .crumb .en{font-weight:500;color:var(--muted)}
+.pop .pen{display:flex;gap:8px;padding:10px 12px 0}
+.pop .pen input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:6px 9px;font-size:13px}
+.pop .shared{font-size:11.5px;color:var(--muted);padding:8px 12px 0}
+.gsec>header .en{font-size:13px;color:var(--muted);font-weight:500}
+.gshared{padding:12px 14px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.gshared .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gshared .top .lbl{font-family:var(--f-mono);font-size:11.5px;border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--muted)}
+.gshared .top small{color:var(--muted);font-size:12px}
+.gitem.slim{grid-template-columns:64px minmax(0,1fr) auto;align-items:center}
+.gitem.slim .thumb{width:64px;height:64px}
+.ac button .en{color:var(--muted);font-size:12px;margin-left:6px}
 .search{flex:1 1 320px;min-width:0;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 12px}
 .search svg{flex:none;color:var(--muted)}
 .search input{border:0;background:transparent;padding:10px 0;width:100%;outline:none}
@@ -700,9 +712,36 @@ function wireVideos(root, ob){
 /* ---------- filtering ---------- */
 function haystack(m){
   const parts=[m.game,m.version,m.name,m.nameEn,m.link,...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
-  for (const k of ["systems","pcs"]) for (const e of (m[k]||[])) parts.push(e.name,e.label,e.note);
+  for (const k of ["systems","pcs"]) for (const e of (m[k]||[])){ const d=getDef(kindOf(m),k,e.name); parts.push(e.name,d.nameEn,d.label,d.note); }
   return parts.filter(Boolean).join(" ").toLowerCase();
 }
+/* ---------- 공통 항목: 같은 이름의 전투 확장 시스템·대응 항목은 내용 하나를 함께 씀 ----------
+   monsters 컬렉션 안에 kind:"def" 문서로 저장 (보안 규칙 변경 없이) */
+let defs = new Map();
+const DEF_KEY="monster-ref-defs";
+const defKey=(k,cat,name)=>`${k}|${cat}|${name}`;
+const defDocId=(k,cat,name)=>`def~${k}~${cat}~${name}`;
+function getDef(k,cat,name){
+  const d=defs.get(defKey(k,cat,name));
+  if(d) return {nameEn:d.nameEn||"", label:d.label||"공략", note:d.note||"", saved:true};
+  /* 예전처럼 몬스터마다 적어 둔 메모가 있으면 모아서 보여 줌 (저장하면 공통 설명이 됨) */
+  const found=[]; let label="";
+  allRefs.forEach(m=>{ if(kindOf(m)!==k) return; (m[cat]||[]).forEach(e=>{ if(e.name===name && (e.note||"").trim()){ found.push({m,e}); if(!label) label=e.label||""; } }); });
+  const uniq=[...new Set(found.map(x=>x.e.note.trim()))];
+  const note = uniq.length<=1 ? (uniq[0]||"") : found.map(x=>`[${x.m.name}]\n${x.e.note.trim()}`).join("\n\n");
+  return {nameEn:"", label:label||"공략", note, saved:false};
+}
+function persistDefs(){ try{ localStorage.setItem(DEF_KEY, JSON.stringify([...defs.values()])); }catch{ throw new Error("quota"); } }
+async function putDef(doc){
+  if(mode==="cloud") await COL().doc(defDocId(doc.refKind,doc.cat,doc.name)).set(doc);
+  defs.set(defKey(doc.refKind,doc.cat,doc.name), doc);
+  if(mode!=="cloud") persistDefs();
+}
+async function saveDef(k,cat,name,data){
+  await putDef({kind:"def", refKind:k, cat, name, nameEn:(data.nameEn||"").trim(), label:(data.label||"").trim()||"공략", note:data.note||"", updatedAt:Date.now()});
+  render();
+}
+
 /* ---------- 정렬 ---------- */
 const SORT_KEY="monster-ref-sort";
 let sortMode = (()=>{ try{ return localStorage.getItem(SORT_KEY)||"recent"; }catch{ return "recent"; } })();
@@ -822,8 +861,8 @@ function tagBtn(cat, v, extra=""){
   return `<button type="button" class="tag ${CAT[cat].cls} ${on?"on":""}" data-tag="${esc(cat)}|${esc(v)}" ${extra}>${esc(v)}</button>`;
 }
 function deepChip(m, cat, i){
-  const e=m[cat][i];
-  return `<button type="button" class="tag deep ${CAT[cat].cls} ${e.note?"has":""}" data-deep="${esc(m.id)}|${cat}|${i}" aria-label="${esc(e.name)} 상세 보기">${esc(e.name)}</button>`;
+  const e=m[cat][i], d=getDef(kindOf(m),cat,e.name);
+  return `<button type="button" class="tag deep ${CAT[cat].cls} ${d.note?"has":""}" title="${esc(d.nameEn||"")}" data-deep="${esc(m.id)}|${cat}|${i}" aria-label="${esc(e.name)} 상세 보기">${esc(e.name)}</button>`;
 }
 /* ---------- 보기 전환 (#monsters / #systems / #pcs) ---------- */
 const VIEWMAP={
@@ -875,63 +914,68 @@ function renderGroups(list){
   tb.hidden=true; gb.hidden=false;
   const item=({m,i,e})=>{
     const key=`${m.id}|${cat}|${i}`;
-    return `<article class="gitem">
+    return `<article class="gitem slim">
       ${thumbHTML(m,240)}
       <div class="gbody">
-        <div class="gcrumb">${m.game?tagBtn("game",m.game):""}${m.version?tagBtn("version",m.version):""}<span>›</span><b>${esc(m.name)}</b>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}<span>›</span><span class="lbl">${esc(e.label||"공략")}</span></div>
-        <div class="gnote ${e.note?"":"blank"}">${e.note?esc(e.note):"아직 공략 내용이 없어요."}</div>
+        <div class="gcrumb">${m.game?tagBtn("game",m.game):""}${m.version?tagBtn("version",m.version):""}<span>›</span><b>${esc(m.name)}</b>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}</div>
       </div>
       <div class="gact rowact" style="opacity:1"><button type="button" class="iconbtn edit-only" data-gedit="${esc(key)}">편집</button><button type="button" class="iconbtn edit-only" data-gdel="${esc(key)}">삭제</button></div>
     </article>`;
   };
   gb.innerHTML = `<div class="gindex">${arr.map(([name,its],k)=>`<button type="button" class="tag ${c.cls}" data-gjump="${k}">${esc(name)} <span class="n">${its.length}</span></button>`).join("")}</div>`
-    + arr.map(([name,its],k)=>`<section class="gsec" id="gsec-${k}">
-        <header><h2><span class="tag ${c.cls}">${esc(name)}</span></h2><span class="cnt">${its.length}건</span><span class="sp"></span>
+    + arr.map(([name,its],k)=>{ const d=getDef(kind,cat,name); return `<section class="gsec" id="gsec-${k}">
+        <header><h2><span class="tag ${c.cls}">${esc(name)}</span>${d.nameEn?`<span class="en" lang="en">${esc(d.nameEn)}</span>`:""}</h2><span class="cnt">${its.length}건</span><span class="sp"></span>
+          <button type="button" class="btn sm edit-only" data-dedit="${esc(cat)}|${esc(name)}">편집</button>
           <button type="button" class="btn sm" data-goto="${esc(cat)}|${esc(name)}">${KL} 표에서 보기</button></header>
+        <div class="gshared"><div class="top"><span class="lbl">${esc(d.label)}</span><small>${its.length>1?`${its.length}개가 함께 쓰는 공통 내용`:"공통 내용"}</small></div>
+          <div class="gnote ${d.note?"":"blank"}">${d.note?esc(d.note):"아직 내용이 없어요. ‘편집’에서 적어 주세요."}</div></div>
         ${its.map(item).join("")}
-      </section>`).join("");
+      </section>`; }).join("");
   wireVideos(gb);
 }
-async function saveNote(mid, cat, i, label, note){
-  const m=allRefs.find(x=>x.id===mid); if(!m) throw new Error("gone");
-  const arr=m[cat].map(e=>({...e}));
-  arr[i]={...arr[i], label:(label.trim()||"공략"), note};
-  await store.update(mid,{[cat]:arr, updatedAt:Date.now()}); m[cat]=arr;
-}
 $("#groupbox").addEventListener("click", e=>{
-  const t=e.target.closest("[data-gedit],[data-gdel],[data-gjump],[data-goto]"); if(!t) return;
-  if(t.dataset.gedit){ const [mid,cat,i]=t.dataset.gedit.split("|"); openNoteForm(mid,cat,+i); }
+  const t=e.target.closest("[data-dedit],[data-gedit],[data-gdel],[data-gjump],[data-goto]"); if(!t) return;
+  if(t.dataset.dedit){ const k=t.dataset.dedit.indexOf("|"); openDefForm(kind, t.dataset.dedit.slice(0,k), t.dataset.dedit.slice(k+1), null); }
+  else if(t.dataset.gedit){ const [mid,cat,i]=t.dataset.gedit.split("|"); const m=allRefs.find(x=>x.id===mid); if(m&&m[cat]&&m[cat][+i]) openDefForm(kindOf(m), cat, m[cat][+i].name, m); }
   else if(t.dataset.gdel){ const [mid,cat,i]=t.dataset.gdel.split("|"); confirmNoteDelete(mid,cat,+i); }
   else if(t.dataset.gjump){ const sec=$("#gsec-"+t.dataset.gjump); if(sec) sec.scrollIntoView({behavior:"smooth",block:"start"}); }
   else if(t.dataset.goto){ filters.add(t.dataset.goto); location.hash=listHash(); }
 });
-/* 전투 확장 시스템·대응 항목 편집 창: 공략 수정 + 복사·복제 */
-function openNoteForm(mid, cat, i){
+/* 전투 확장 시스템·대응 항목 편집 창: 공통 내용 + 영문 이름 (몬스터에서 열면 복사·복제도) */
+function openDefForm(k, cat, name, m){
   if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
-  const m=allRefs.find(x=>x.id===mid); if(!m||!m[cat]||!m[cat][i]) return;
-  const e=m[cat][i], c=CAT[cat], sc=$("#scrim");
-  const withNote=()=>{ const arr=m[cat].map(x=>({...x})); arr[i]={...arr[i], label:($("#nLabel").value.trim()||"공략"), note:$("#nNote").value}; return {...m,[cat]:arr}; };
+  const c=CAT[cat], d=getDef(k,cat,name), n=usersOf(k,cat,name).length, sc=$("#scrim");
+  const snapWith=()=>m; /* 공통 내용은 저장 후 복사에 반영 */
   sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
-    <header><h2 id="fTitle"><span class="tag ${c.cls}" style="font-size:14px">${esc(e.name)}</span> · ${esc(m.name)}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
-    <form id="nform" novalidate style="grid-template-columns:1fr">
-      <div class="gcrumb">${esc(c.root)} › ${esc(e.name)} › ${esc(m.game||"-")}${m.version?" "+esc(m.version):""} › ${esc(m.name)}</div>
-      <div class="field"><label for="nLabel">섹션 이름</label><input id="nLabel" type="text" value="${esc(e.label||"공략")}"></div>
-      <div class="field"><label for="nNote">내용</label><textarea id="nNote" style="min-height:220px">${esc(e.note||"")}</textarea><small>⌘/Ctrl+Enter 저장</small></div>
-      <button type="button" class="btn sm" id="nFull" style="justify-self:start">${KINDS[kindOf(m)].label} 레퍼런스 전체 편집 →</button>
+    <header><h2 id="fTitle"><span class="tag ${c.cls}" style="font-size:14px">${esc(name)}</span>${m?` · ${esc(m.name)}`:""}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <form id="nform" novalidate>
+      <div class="gcrumb full" style="grid-column:1/-1">${esc(c.root)} › ${esc(name)}${m?` › ${esc(m.game||"-")}${m.version?" "+esc(m.version):""} › ${esc(m.name)}`:""}</div>
+      <div class="field"><label for="nEn">영문 이름</label><input id="nEn" type="text" lang="en" value="${esc(d.nameEn)}" placeholder="Controller"></div>
+      <div class="field"><label for="nLabel">섹션 이름</label><input id="nLabel" type="text" value="${esc(d.label)}"></div>
+      <div class="field full"><label for="nNote">내용</label><textarea id="nNote" style="min-height:220px">${esc(d.note)}</textarea>
+        <small>${n>1?`${esc(name)}를 쓰는 ${KINDS[k].label} ${n}개에 모두 같은 내용이 보여요 · `:""}⌘/Ctrl+Enter 저장</small></div>
+      ${m?`<button type="button" class="btn sm" id="nFull" style="justify-self:start;grid-column:1/-1">${KINDS[kindOf(m)].label} 레퍼런스 전체 편집 →</button>`:""}
       <div class="err" id="fErr" hidden></div>
-      <div class="foot"><button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">저장</button></div>
+      <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="${esc(m.name)} 레퍼런스를 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="${esc(m.name)} 레퍼런스로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">저장</button></div>
     </form></div>`;
   sc.hidden=false;
   const ta=$("#nNote"); ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
   $("#fClose").onclick=$("#fCancel").onclick=closeForm;
   sc.onclick=ev=>{ if(ev.target===sc) closeForm(); };
-  $("#fCopy").onclick=ev=>copyText(refText(withNote()), ev.currentTarget);
-  $("#fDup").onclick=()=>{ const snap=withNote(); closeForm(); openForm(null, snap); };
-  $("#nFull").onclick=()=>{ closeForm(); openForm(m); };
+  const cur=()=>({nameEn:$("#nEn").value, label:$("#nLabel").value, note:$("#nNote").value});
+  if(m){
+    $("#fCopy").onclick=async ev=>{ const btn=ev.currentTarget, v=cur(); const keep=defs.get(defKey(k,cat,name));
+      defs.set(defKey(k,cat,name),{kind:"def",refKind:k,cat,name,...v});           /* 지금 입력값으로 잠깐 바꿔서 복사 */
+      const text=refText(snapWith());
+      if(keep) defs.set(defKey(k,cat,name),keep); else defs.delete(defKey(k,cat,name));
+      copyText(text, btn); };
+    $("#fDup").onclick=()=>{ closeForm(); openForm(null, m); };
+    $("#nFull").onclick=()=>{ closeForm(); openForm(m); };
+  }
   ta.addEventListener("keydown",ev=>{ if(ev.key==="Enter"&&(ev.metaKey||ev.ctrlKey)) $("#nform").requestSubmit(); });
   $("#nform").onsubmit=async ev=>{
     ev.preventDefault(); const b=$("#fSave"); b.disabled=true;
-    try{ await saveNote(mid,cat,i,$("#nLabel").value,$("#nNote").value); closeForm(); render(); toast("저장했어요"); }
+    try{ await saveDef(k,cat,name,cur()); closeForm(); toast("저장했어요"); }
     catch(ex){ b.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); }
   };
 }
@@ -940,7 +984,7 @@ function confirmNoteDelete(mid, cat, i){
   const m=allRefs.find(x=>x.id===mid); if(!m||!m[cat]||!m[cat][i]) return;
   const e=m[cat][i], c=CAT[cat], sc=$("#scrim");
   sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" style="width:min(400px,100%)"><header><h2>${esc(c.label)}에서 빼기</h2></header>
-    <div style="padding:16px 18px;line-height:1.6"><b>${esc(m.name)}</b>에서 <b>${esc(e.name)}</b>와(과) 적어 둔 내용을 삭제할까요?<br><span style="color:var(--muted);font-size:13px">${esc(KINDS[kindOf(m)].label)} 레퍼런스 자체는 지워지지 않아요.</span></div>
+    <div style="padding:16px 18px;line-height:1.6"><b>${esc(m.name)}</b>에서 <b>${esc(e.name)}</b>을(를) 뺄까요?<br><span style="color:var(--muted);font-size:13px">${esc(KINDS[kindOf(m)].label)} 레퍼런스와 ${esc(e.name)}의 공통 내용은 지워지지 않아요.</span></div>
     <div class="foot" style="display:flex;justify-content:flex-end;gap:8px;padding:0 18px 16px"><button type="button" class="btn" id="dNo">취소</button><button type="button" class="btn primary" id="dYes">삭제</button></div></div>`;
   sc.hidden=false; sc.onclick=ev=>{ if(ev.target===sc) closeForm(); };
   $("#dNo").onclick=closeForm;
@@ -972,7 +1016,7 @@ function acOpen(input){
     acBox.addEventListener("mousedown",e=>{ const b=e.target.closest("button[data-i]"); if(!b) return; e.preventDefault(); acPick(+b.dataset.i); }); }
   acInput=input; acIdx=lc?0:-1;
   const hl=v=>{ if(!lc) return esc(v); const k=v.toLowerCase().indexOf(lc); return esc(v.slice(0,k))+"<mark>"+esc(v.slice(k,k+cur.length))+"</mark>"+esc(v.slice(k+cur.length)); };
-  acBox.innerHTML=`<div class="hint">${cat==="game"?"등록된 게임":cat==="version"?"등록된 버전":cat==="worktags"?"등록된 태그 · Enter로 추가":"등록된 "+CAT[cat].label+" · Enter로 추가"}</div>`+acItems.map(([v,n],k)=>`<button type="button" role="option" data-i="${k}" class="${k===acIdx?"on":""}"><span>${hl(v)}</span><span class="n">${n}</span></button>`).join("");
+  acBox.innerHTML=`<div class="hint">${cat==="game"?"등록된 게임":cat==="version"?"등록된 버전":cat==="worktags"?"등록된 태그 · Enter로 추가":"등록된 "+CAT[cat].label+" · Enter로 추가"}</div>`+acItems.map(([v,n],k)=>{ const en=(cat==="systems"||cat==="pcs")?getDef(kind,cat,v).nameEn:""; return `<button type="button" role="option" data-i="${k}" class="${k===acIdx?"on":""}"><span>${hl(v)}${en?`<span class="en" lang="en">${esc(en)}</span>`:""}</span><span class="n">${n}</span></button>`; }).join("");
   const rc=input.getBoundingClientRect();
   acBox.style.left=rc.left+"px"; acBox.style.width=Math.max(200,rc.width)+"px";
   const below=innerHeight-rc.bottom;
@@ -1020,8 +1064,9 @@ function refText(m){
   if((m.weapons||[]).length) L.push(`무기: ${j(m.weapons)}`);
   for(const [k,lab] of [["systems","전투 확장 시스템"],["pcs","대응 PC 도구"]]){
     for(const e of (m[k]||[])){
-      L.push(`${k==="pcs"?KINDS[kindOf(m)].counter:lab}: ${e.name}`);
-      if(e.note) L.push(`  └ ${e.label||"공략"}\n`+e.note.split("\n").map(x=>"    "+x).join("\n"));
+      const d=getDef(kindOf(m),k,e.name);
+      L.push(`${k==="pcs"?KINDS[kindOf(m)].counter:lab}: ${e.name}${d.nameEn?` (${d.nameEn})`:""}`);
+      if(d.note) L.push(`  └ ${d.label||"공략"}\n`+d.note.split("\n").map(x=>"    "+x).join("\n"));
     }
   }
   if(m.link) L.push(`링크: ${m.link}`);
@@ -1135,21 +1180,26 @@ function entryFor(key){
   return m && m[cat] && m[cat][+i] ? {m,cat,i:+i,e:m[cat][+i]} : null;
 }
 function crumbs(x, editLabel){
-  const c=CAT[x.cat];
-  const label = editLabel ? `<input id="popLabel" type="text" value="${esc(x.e.label||"공략")}" aria-label="섹션 이름">` : `<b>${esc(x.e.label||"공략")}</b>`;
-  return `<div class="crumb ${c.cls}"><span class="root">${c.root}</span><span class="sep">›</span><b>${esc(x.e.name)}</b><span class="sep">›</span><span>${esc(x.m.game||"-")}</span><span class="sep">›</span><span>${esc(x.m.name)}</span><span class="sep">›</span>${label}</div>`;
+  const c=CAT[x.cat], d=getDef(kindOf(x.m),x.cat,x.e.name);
+  const label = editLabel ? `<input id="popLabel" type="text" value="${esc(d.label)}" aria-label="섹션 이름">` : `<b>${esc(d.label)}</b>`;
+  return `<div class="crumb ${c.cls}"><span class="root">${c.root}</span><span class="sep">›</span><b>${esc(x.e.name)}</b>${d.nameEn?`<span class="en" lang="en">${esc(d.nameEn)}</span>`:""}<span class="sep">›</span><span>${esc(x.m.game||"-")}</span><span class="sep">›</span><span>${esc(x.m.name)}</span><span class="sep">›</span>${label}</div>`;
 }
+function usersOf(k,cat,name){ return allRefs.filter(m=>kindOf(m)===k && (m[cat]||[]).some(e=>e.name===name)); }
 function drawPop(edit){
   const x=entryFor(popKey); if(!x){hidePop(true);return;}
   editing=edit;
+  const d=getDef(kindOf(x.m),x.cat,x.e.name), n=usersOf(kindOf(x.m),x.cat,x.e.name).length;
   if(!edit){
     pop.innerHTML = crumbs(x,false)
-      + `<div class="body ${x.e.note?"":"blank"}">${x.e.note?esc(x.e.note):"아직 공략 내용이 없어요. 수정을 눌러 적어 주세요."}</div>`
+      + (n>1?`<div class="shared">같은 ${esc(x.e.name)}를 쓰는 ${KINDS[kindOf(x.m)].label} ${n}개가 이 내용을 함께 봐요</div>`:"")
+      + `<div class="body ${d.note?"":"blank"}">${d.note?esc(d.note):"아직 공략 내용이 없어요. 수정을 눌러 적어 주세요."}</div>`
       + `<div class="foot"><span class="hint">${pinned?"":"칩을 클릭하면 창이 고정돼요"}</span><button type="button" class="btn sm" id="popEdit">수정</button></div>`;
     $("#popEdit").onclick=()=>{ pinned=true; drawPop(true); place(); $("#popNote").focus(); };
   } else {
     pop.innerHTML = crumbs(x,true)
-      + `<textarea id="popNote" placeholder="예) 극한 회피 또는 극한 지원으로 제어기를 피함 → N회 성공 시 피해…">${esc(x.e.note||"")}</textarea>`
+      + `<div class="pen"><input id="popEn" type="text" lang="en" value="${esc(d.nameEn)}" placeholder="영문 이름 (예: Controller)" aria-label="영문 이름"></div>`
+      + (n>1?`<div class="shared">저장하면 ${esc(x.e.name)}를 쓰는 ${n}개 모두에 반영돼요</div>`:"")
+      + `<textarea id="popNote" placeholder="예) 극한 회피 또는 극한 지원으로 제어기를 피함 → N회 성공 시 피해…">${esc(d.note)}</textarea>`
       + `<div class="foot"><span class="hint">⌘/Ctrl+Enter 저장</span><button type="button" class="btn sm" id="popCancel">취소</button><button type="button" class="btn sm primary" id="popSave">저장</button></div>`;
     $("#popCancel").onclick=()=>{ drawPop(false); place(); };
     $("#popSave").onclick=savePop;
@@ -1160,7 +1210,7 @@ function drawPop(edit){
 async function savePop(){
   const x=entryFor(popKey); if(!x) return;
   const btn=$("#popSave"); btn.disabled=true; btn.textContent="저장 중…";
-  try{ await saveNote(x.m.id, x.cat, x.i, $("#popLabel").value, $("#popNote").value); editing=false; drawPop(false); place(); toast("저장했어요"); }
+  try{ await saveDef(kindOf(x.m), x.cat, x.e.name, {nameEn:$("#popEn").value, label:$("#popLabel").value, note:$("#popNote").value}); editing=false; drawPop(false); place(); toast("저장했어요"); }
   catch(err){ btn.disabled=false; btn.textContent="저장"; toast(errMsg(err)); }
 }
 function place(){
@@ -1198,7 +1248,7 @@ function openForm(m, copyFrom){
       <div class="field full"><label for="f_levels"><i style="background:var(--t-level)"></i>레벨 테마</label><input id="f_levels" type="text" value="${esc(j(v?.levels))}" placeholder="폐허 도시 / 우주 정거장"><small>등장 스테이지의 분위기 · / 로 구분</small></div>
       <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
       <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(v?.weapons))}" placeholder="에너지 / 검"></div>
-      <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>상세 공략은 표에서 칩에 마우스를 올려 수정</small></div>
+      <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>이미 있는 이름이면 그 내용을 그대로 불러와요 · 내용은 칩에 마우스를 올려 수정</small></div>
       <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>${KINDS[fKind].counter}</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="${KINDS[fKind].counterPh}"></div>
       <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
       <div class="err" id="fErr" hidden></div>
@@ -1912,7 +1962,7 @@ function saveBlob(blob, name){
 function jsonBackup(list, wl, pf){
   const ou=o=>({...o, originalUrl:origUrl(o).startsWith("data:")?"":origUrl(o)});
   const p=pf||profile;
-  return {version:4, exportedAt:new Date().toISOString(), monsters:list.map(ou), works:(wl||works).map(ou),
+  return {version:5, exportedAt:new Date().toISOString(), monsters:list.map(ou), defs:[...defs.values()].map(d=>{ const o={...d}; delete o.id; return o; }), works:(wl||works).map(ou),
           profile:{...p, aboutBlocks:(p.aboutBlocks||[]).map(b=>b.t==="text"?b:ou(b))}};
 }
 let busy=false;
@@ -1965,9 +2015,10 @@ $("#importFile").addEventListener("change", async e=>{
     } else j=JSON.parse(await f.text());
     const arr=Array.isArray(j)?j:(j.monsters||[]);
     if(!Array.isArray(arr)) throw 0;
-    const list=arr.filter(m=>m&&m.name).map(m=>{ const o={...m,id:m.id||uid()}; delete o.originalUrl; return o; });
+    const defList=(Array.isArray(j.defs)?j.defs:[]).filter(d=>d&&d.name&&d.cat&&d.refKind);
+    const list=arr.filter(m=>m&&m.name&&m.kind!=="def").map(m=>{ const o={...m,id:m.id||uid()}; delete o.originalUrl; return o; });
     const wl=(Array.isArray(j.works)?j.works:[]).filter(w=>w&&w.title).map(w=>{ const o={...w,id:w.id||uid()}; delete o.originalUrl; return o; });
-    if(!list.length && !wl.length) throw 0;
+    if(!list.length && !wl.length && !defList.length) throw 0;
     /* ZIP 복원: 원본 파일을 지금 연결된 Cloudinary 계정에 다시 올림 */
     const target=upTarget(); let re=0, reFail=0;
     if(zip && target){
@@ -1992,6 +2043,7 @@ $("#importFile").addEventListener("change", async e=>{
     toast("데이터를 저장하는 중…");
     try{
       if(list.length) await store.bulk(list);
+      for(const d of defList) await putDef({kind:"def", refKind:d.refKind, cat:d.cat, name:d.name, nameEn:d.nameEn||"", label:d.label||"공략", note:d.note||"", updatedAt:d.updatedAt||Date.now()});
       for(const w of wl) await wstore.set(w.id, clean(w));
       if(j.profile && typeof j.profile==="object" && Object.keys(j.profile).length){ const pf={...j.profile}; if(Array.isArray(pf.aboutBlocks)) pf.aboutBlocks=pf.aboutBlocks.map(b=>{ const o={...b}; delete o.id; return o; }); await wstore.saveProfile(pf); }
       toast(`레퍼런스 ${list.length}건 · 작업물 ${wl.length}건을 불러왔어요${re?` · 파일 ${re}개 다시 올림`:""}${reFail?` · ${reFail}개 실패`:""}`);
@@ -2098,7 +2150,7 @@ $("#pubLogin").addEventListener("click",()=>{ if(auth) openLogin(); });
 let unsub=null;
 function stopData(){
   if(unsub){ unsub(); unsub=null; }
-  allRefs=[]; monsters=[]; loaded=false; groupEdit=null; closeForm(); hidePop(true);
+  allRefs=[]; monsters=[]; defs=new Map(); loaded=false; groupEdit=null; closeForm(); hidePop(true);
 }
 function startData(){
   if(unsub) return;
@@ -2106,7 +2158,9 @@ function startData(){
   const timer=setTimeout(()=>{ if(!loaded){ showArchive(); $("#state").innerHTML="<strong>클라우드 응답이 늦어요</strong><span>인터넷 연결을 확인해 주세요.</span>"; } },10000);
   unsub=COL().onSnapshot(snap=>{
     clearTimeout(timer); loaded=true;
-    allRefs=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); syncKind();
+    const docs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    defs=new Map(docs.filter(d=>d.kind==="def").map(d=>[defKey(d.refKind,d.cat,d.name),d]));
+    allRefs=docs.filter(d=>d.kind!=="def").sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); syncKind();
     showArchive(); render();
     if(popKey && !editing){ drawPop(false); place(); }
   }, ex=>{
@@ -2140,7 +2194,9 @@ async function bootLocal(){
   if(!Array.isArray(saved)){
     try{ const r=await fetch("data.json",{cache:"no-store"}); if(r.ok){ const j=await r.json(); saved=Array.isArray(j)?j:j.monsters; } }catch{}
   }
-  allRefs=(Array.isArray(saved)?saved:SEED).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); syncKind();
+  allRefs=(Array.isArray(saved)?saved:SEED).filter(d=>d.kind!=="def").sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  try{ defs=new Map((JSON.parse(localStorage.getItem(DEF_KEY)||"[]")||[]).map(d=>[defKey(d.refKind,d.cat,d.name),d])); }catch{ defs=new Map(); }
+  syncKind();
   try{ works=sortWorks(JSON.parse(localStorage.getItem(WORK_KEY)||"[]")||[]); profile=JSON.parse(localStorage.getItem(PROF_KEY)||"{}")||{}; }catch{ works=[]; profile={}; }
   worksLoaded=true;
   loaded=true; persist(); showArchive(); render();
