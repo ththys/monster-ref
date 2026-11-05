@@ -963,29 +963,32 @@ function renderTimeline(list){
   const top=`<div class="tlbar-top"><label class="sortbox" for="tlGameSel" style="font-weight:600;color:var(--ink)">게임
       <select id="tlGameSel" ${fg?"disabled title=\"왼쪽 게임 필터를 해제하면 바꿀 수 있어요\"":""}>${gameList.map(([n,c])=>`<option value="${esc(n)}" ${n===g?"selected":""}>${esc(n)} (${c})</option>`).join("")}</select></label>
       ${noV?`<span class="note">버전이 비어 있는 ${KL} ${noV}개는 빠져 있어요</span>`:""}
-      <span class="lg"><span class="c-sys"><i></i>${esc(CAT.systems.label)}</span><span class="c-pc"><i></i>${esc(CAT.pcs.label)}</span><span style="--c:var(--accent);--c-bg:var(--hover)"><i></i>${KL}</span></span></div>`;
+      <span class="lg"><span style="--c:var(--accent);--c-bg:var(--hover)"><i></i>${KL}</span><span class="c-pc"><i></i>${esc(CAT.pcs.label)}</span><span class="c-sys"><i></i>${esc(CAT.systems.label)}</span></span></div>`;
   if(!N){ gb.innerHTML=top+`<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>${esc(g)}에 버전이 적힌 ${KL}가 없어요</strong><span>편집에서 버전(예: 1.4)을 적어 주세요.</span></div>`; wireTl(); return; }
   const cells=(on)=>vers.map((_,k)=>`<div class="tlc ${on&&on.has(k)?"cur":""}" style="grid-column:${k+1}"></div>`).join("");
   const perVer=vers.map(v=>withV.filter(m=>m.version.trim()===v).length);
   const head=`<div class="tlrow tlhead"><div class="tln">패치</div><div class="tlt">${vers.map((v,k)=>`<div class="tlv" style="grid-column:${k+1}"><b>${esc(v)}</b><span>${perVer[k]}개</span></div>`).join("")}</div></div>`;
-  const lane=(cat)=>{
+  const spans=(cat)=>{
     const map=new Map();
     withV.forEach(m=>(m[cat]||[]).forEach(e=>{ const x=map.get(e.name)||{name:e.name,cols:new Set(),users:[]}; x.cols.add(col(m.version)); x.users.push(m); map.set(e.name,x); }));
-    const items=[...map.values()].map(x=>({...x,s:Math.min(...x.cols),e:Math.max(...x.cols)}))
-      .sort((a,b)=>a.s-b.s||b.users.length-a.users.length||a.name.localeCompare(b.name,"ko"));
-    if(!items.length) return "";
-    const cls=CAT[cat].cls;
-    return `<div class="tlsec">${esc(CAT[cat].label)} · ${items.length}개</div>`+items.map(x=>{ const d=getDef(kind,cat,x.name);
-      return `<div class="tlrow"><div class="tln"><b>${esc(x.name)}</b>${d.nameEn?`<small lang="en">${esc(d.nameEn)}</small>`:""}</div>
-        <div class="tlt">${cells(x.cols)}<button type="button" class="tlbar ${cls}" style="grid-column:${x.s+1}/${x.e+2}" data-tldef="${esc(cat)}|${esc(x.name)}" title="${esc(x.name)} · ${esc(vers[x.s])}${x.s!==x.e?" → "+esc(vers[x.e]):""} · ${x.users.map(u=>u.name).join(", ")}">
-          ${x.s!==x.e?`${esc(vers[x.s])} → ${esc(vers[x.e])}`:esc(vers[x.s])} · ${x.users.length}</button></div></div>`; }).join("");
+    return [...map.values()].map(x=>({...x,cat,s:Math.min(...x.cols),e:Math.max(...x.cols)}));
   };
-  const mons=withV.slice().sort((a,b)=>cmpVersion(a.version,b.version)||byName(a,b));
-  const monLane=`<div class="tlsec">${KL} · ${mons.length}개</div>`+mons.map(m=>{ const c=col(m.version);
-    const th = (m.media||m.image) ? mediaHTML(m,96) : "";
+  const spanRow=(x,typeLabel)=>{ const d=getDef(kind,x.cat,x.name);
+    return `<div class="tlrow"><div class="tln"><b>${esc(x.name)}</b>${typeLabel||d.nameEn?`<small>${typeLabel?esc(typeLabel):""}${typeLabel&&d.nameEn?" · ":""}${d.nameEn?`<span lang="en">${esc(d.nameEn)}</span>`:""}</small>`:""}</div>
+      <div class="tlt">${cells(x.cols)}<button type="button" class="tlbar ${CAT[x.cat].cls}" style="grid-column:${x.s+1}/${x.e+2}" data-tldef="${esc(x.cat)}|${esc(x.name)}" title="${esc(x.name)} · ${esc(vers[x.s])}${x.s!==x.e?" → "+esc(vers[x.e]):""} · ${x.users.map(u=>u.name).join(", ")}">
+        ${x.s!==x.e?`${esc(vers[x.s])} → ${esc(vers[x.e])}`:esc(vers[x.s])} · ${x.users.length}</button></div></div>`; };
+  const monRow=m=>{ const c=col(m.version), th=(m.media||m.image)?mediaHTML(m,96):"";
     return `<div class="tlrow"><div class="tln"><b>${esc(m.name)}</b>${m.nameEn?`<small lang="en">${esc(m.nameEn)}</small>`:""}</div>
-      <div class="tlt">${cells(new Set([c]))}<button type="button" class="tlbar mon" style="grid-column:${c+1}/${c+2}" data-tlmon="${esc(m.id)}" title="${esc(m.name)} · ${esc(m.version)}${(m.guide||"").trim()?" · 공략 있음":""}">${th}${esc(m.name)}</button></div></div>`; }).join("");
-  gb.innerHTML = top + `<div class="tlwrap"><div class="tl" style="--n:${N}">${head}${lane("systems")}${lane("pcs")}${monLane}</div></div>`;
+      <div class="tlt">${cells(new Set([c]))}<button type="button" class="tlbar mon" style="grid-column:${c+1}/${c+2}" data-tlmon="${esc(m.id)}" title="${esc(m.name)} · ${esc(m.version)}${(m.guide||"").trim()?" · 공략 있음":""}">${th}${esc(m.name)}</button></div></div>`; };
+  /* 컨텐츠: ${KL}와 대응 항목을 패치 순서대로 함께 */
+  const counters=spans("pcs");
+  const content=[...withV.map(m=>({t:0,s:col(m.version),name:m.name,m})), ...counters.map(x=>({t:1,s:x.s,name:x.name,x}))]
+    .sort((a,b)=>a.s-b.s||a.t-b.t||a.name.localeCompare(b.name,"ko"));
+  const contentLane = content.length ? `<div class="tlsec">컨텐츠 · ${KL} ${withV.length}${counters.length?` · ${esc(CAT.pcs.label)} ${counters.length}`:""}</div>`
+    + content.map(c=>c.t===0?monRow(c.m):spanRow(c.x, CAT.pcs.label)).join("") : "";
+  const sys=spans("systems").sort((a,b)=>a.s-b.s||b.users.length-a.users.length||a.name.localeCompare(b.name,"ko"));
+  const sysLane = sys.length ? `<div class="tlsec">${esc(CAT.systems.label)} · ${sys.length}개</div>`+sys.map(x=>spanRow(x,"")).join("") : "";
+  gb.innerHTML = top + `<div class="tlwrap"><div class="tl" style="--n:${N}">${head}${contentLane}${sysLane}</div></div>`;
   wireVideos(gb); wireTl();
 }
 function wireTl(){
