@@ -94,7 +94,7 @@ header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:spac
 .rail{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:16px;overflow:auto;min-height:0}
 .content{display:flex;flex-direction:column;gap:12px;min-width:0}
 @media (max-width:860px){.side{position:static;max-height:none}}
-.group h3{margin:0 0 8px;font-size:11px;font-family:var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:6px}
+.group h3{margin:0 0 8px;font-size:12px;font-family:var(--f-body);color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
 .group h3 i{width:8px;height:8px;border-radius:2px;display:inline-block}
 .group .chips{display:flex;flex-wrap:wrap;gap:5px}
 .empty-note{font-size:12px;color:var(--muted)}
@@ -119,14 +119,17 @@ button.tag:hover{border-color:var(--c)}
 .deep.has::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--c);margin-left:2px}
 
 .tablebox{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow-x:auto;min-width:0}
-table{border-collapse:collapse;width:100%;min-width:1360px}
+table{border-collapse:collapse;width:100%;min-width:960px}
 th,td{text-align:left;vertical-align:top;padding:10px 10px;border-bottom:1px solid var(--line)}
-th{font-size:11px;font-family:var(--f-mono);letter-spacing:.06em;color:var(--muted);font-weight:500;background:var(--panel);position:sticky;top:0;white-space:nowrap}
+th{font-size:12px;font-family:var(--f-body);color:var(--muted);font-weight:600;background:var(--panel);position:sticky;top:0;white-space:nowrap}
 tbody tr:hover{background:var(--hover)}
 tbody tr:last-child td{border-bottom:0}
 td .cell{display:flex;flex-wrap:wrap;gap:4px}
 td.game{white-space:nowrap;color:var(--muted);font-size:13px}
-td.name{font-weight:600;min-width:120px}
+td.name{min-width:150px;max-width:220px}
+td.name .nm{font-weight:700;font-size:14.5px;display:block;margin-bottom:6px;word-break:keep-all}
+td.name .cell{margin-bottom:6px}
+td .cell .tag{white-space:normal;word-break:keep-all}
 .thumb{width:84px;height:84px;border-radius:6px;background:var(--hover);border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;padding:0}
 .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block}
 .thumb span{text-align:center;padding:0 4px}
@@ -347,8 +350,14 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .tabs{display:flex;flex-direction:column;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px}
 .tabs a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;border-radius:6px;white-space:nowrap}
 .tabs a:hover{color:var(--ink);background:var(--hover)}
+.tabs a.sub{padding-left:22px;font-weight:500;font-size:13.5px}
+.navh{font-size:11.5px;font-weight:600;color:var(--muted);padding:10px 10px 4px}
+.navh:first-child{padding-top:4px}
+.navh:empty{padding:0;margin:4px 6px;border-top:1px solid var(--line)}
 .tabs a[aria-current="page"]{color:var(--ink);background:var(--hover);box-shadow:inset 3px 0 0 var(--accent)}
 @media (max-width:860px){
+  .navh{display:none}
+  .tabs a.sub{padding-left:10px}
   .tabs{flex-direction:row;overflow-x:auto;scrollbar-width:none}
   .tabs a{flex:1 0 auto;justify-content:center}
   .tabs a[aria-current="page"]{box-shadow:inset 0 -2px 0 var(--accent)}
@@ -423,9 +432,15 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
   <div class="main">
     <aside class="side">
       <nav class="tabs" aria-label="보기">
+        <div class="navh">몬스터 레퍼런스</div>
         <a href="#monsters" data-view="monsters"><span>몬스터</span><span class="n" id="nMon"></span></a>
-        <a href="#systems" data-view="systems"><span>전투 확장 시스템</span><span class="n" id="nSys"></span></a>
-        <a href="#pcs" data-view="pcs"><span>대응 PC 도구</span><span class="n" id="nPc"></span></a>
+        <a href="#systems" data-view="systems" class="sub"><span>전투 확장 시스템</span><span class="n" id="nSys"></span></a>
+        <a href="#pcs" data-view="pcs" class="sub"><span>대응 PC 도구</span><span class="n" id="nPc"></span></a>
+        <div class="navh">PC 레퍼런스</div>
+        <a href="#pc" data-view="pc"><span>PC</span><span class="n" id="nPC"></span></a>
+        <a href="#pc-systems" data-view="pc-systems" class="sub"><span>전투 확장 시스템</span><span class="n" id="nPCSys"></span></a>
+        <a href="#pc-counters" data-view="pc-counters" class="sub"><span>대응 몬스터</span><span class="n" id="nPCCnt"></span></a>
+        <div class="navh"></div>
         <a href="#portfolio" data-view="portfolio"><span>자기소개서</span><span class="n" id="nWork" hidden></span></a>
       </nav>
       <div class="rail" id="rail" aria-label="태그 필터"></div>
@@ -444,7 +459,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
       <div class="state" id="state"><strong>레퍼런스를 불러오는 중…</strong></div>
       <table id="tbl" hidden>
         <thead><tr>
-          <th>게임</th><th>버전</th><th>몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th>대응 PC 도구</th><th>링크</th><th></th>
+          <th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th></th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -487,13 +502,14 @@ const SEED = [{id:"zzz-primordial-nightmare",game:"젠레스 존 제로",name:"�
   pcs:[{name:"엽빛나",label:"공략",note:""}],link:"",image:"",createdAt:1793786300000,updatedAt:1793786300000}];
 const uid = () => "m" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 function persist(){
-  try{ localStorage.setItem(STORE_KEY, JSON.stringify(monsters)); return true; }
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(allRefs)); return true; }
   catch(e){ toast("브라우저 저장 공간이 가득 찼어요. 내보내기로 백업한 뒤 이미지를 줄여 주세요"); return false; }
 }
 function commit(next){
-  const prev = monsters;
-  monsters = next.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  if(!persist()){ monsters = prev; throw new Error("quota"); }
+  const prev = allRefs;
+  allRefs = next.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(!persist()){ allRefs = prev; throw new Error("quota"); }
+  syncKind();
   render();
   if(popKey && !editing){ drawPop(false); place(); }
 }
@@ -510,16 +526,16 @@ function canEdit(){
   return !EDITORS.length || EDITORS.includes((user.email||"").toLowerCase());
 }
 const store = {
-  async update(id, patch){ if(mode==="cloud") return COL().doc(id).update(patch); commit(monsters.map(m=>m.id===id?{...m,...patch}:m)); },
-  async set(id, data){ if(mode==="cloud") return COL().doc(id).set(clean(data)); commit(monsters.filter(m=>m.id!==id).concat({...data,id})); },
-  async add(data){ const id=uid(); if(mode==="cloud") return COL().doc(id).set(clean(data)); commit(monsters.concat({...data,id})); },
-  async remove(id){ if(mode==="cloud") return COL().doc(id).delete(); commit(monsters.filter(m=>m.id!==id)); },
+  async update(id, patch){ if(mode==="cloud") return COL().doc(id).update(patch); commit(allRefs.map(m=>m.id===id?{...m,...patch}:m)); },
+  async set(id, data){ if(mode==="cloud") return COL().doc(id).set(clean(data)); commit(allRefs.filter(m=>m.id!==id).concat({...data,id})); },
+  async add(data){ const id=uid(); if(mode==="cloud") return COL().doc(id).set(clean(data)); commit(allRefs.concat({...data,id})); },
+  async remove(id){ if(mode==="cloud") return COL().doc(id).delete(); commit(allRefs.filter(m=>m.id!==id)); },
   async bulk(arr){
     if(mode==="cloud"){
       for(let i=0;i<arr.length;i+=20){ const b=fs.batch(); arr.slice(i,i+20).forEach(m=>b.set(COL().doc(m.id),clean(m))); await b.commit(); }
       return;
     }
-    const byId=new Map(monsters.map(m=>[m.id,m])); arr.forEach(m=>byId.set(m.id,m)); commit([...byId.values()]);
+    const byId=new Map(allRefs.map(m=>[m.id,m])); arr.forEach(m=>byId.set(m.id,m)); commit([...byId.values()]);
   },
 };
 function errMsg(ex){
@@ -556,7 +572,22 @@ function shrink(file, max=640){
     fr.readAsDataURL(file);
   });
 }
-let monsters = [];
+let allRefs = [];   /* 몬스터 + PC 전체 */
+let monsters = [];  /* 지금 보고 있는 종류만 */
+let kind = "monster";
+const KINDS = {
+  monster:{ label:"몬스터", counter:"대응 PC 도구", counterPh:"엽빛나", namePh:"태초의 악몽" },
+  pc:     { label:"PC",    counter:"대응 몬스터",  counterPh:"태초의 악몽", namePh:"엽빛나" },
+};
+const kindOf = m => m.kind==="pc" ? "pc" : "monster";
+function syncKind(){
+  monsters = allRefs.filter(m=>kindOf(m)===kind);
+  const K=KINDS[kind];
+  CAT.pcs.label = K.counter; CAT.pcs.root = K.counter;
+  CAT.systems.root = `${K.label} 전투 확장 시스템`;
+  const th=$("#thName"); if(th) th.textContent=K.label;
+  const tc=$("#thCounter"); if(tc) tc.textContent=K.counter;
+}
 let filters = new Set();   // "cat|value"
 let query = "";
 let loaded = false;
@@ -665,18 +696,18 @@ function render(){
   $("#count").textContent = loaded ? `${list.length} / ${monsters.length}건` : "";
   const st=$("#state"), tbl=$("#tbl"), tb=$("#tablebox"), gb=$("#groupbox");
   tb.hidden=false; gb.hidden=true;
-  const pa=$("#portAdmin"); document.body.classList.toggle("v-port", view==="portfolio");
-  if (view==="portfolio"){ tb.hidden=true; pa.hidden=false; renderPortAdmin(); return; }
+  const pa=$("#portAdmin"); document.body.classList.toggle("v-port", sub==="portfolio");
+  if (sub==="portfolio"){ tb.hidden=true; pa.hidden=false; renderPortAdmin(); return; }
   pa.hidden=true;
   if (!loaded) return;
-  if (view!=="monsters" && monsters.length && list.length){
+  if (sub!=="list" && monsters.length && list.length){
     if(io) io.disconnect();
     renderGroups(list);
     return;
   }
   if (!monsters.length){
     tbl.hidden=true; st.hidden=false;
-    st.innerHTML = `<strong>아직 레퍼런스가 없어요</strong><span>${canEdit()?"‘+ 레퍼런스 추가’로 첫 몬스터를 등록하거나, 백업해 둔 data.json을 불러오기로 넣으세요.":"편집하려면 오른쪽 위에서 구글 로그인을 해 주세요."} 태그는 <b>변이/비행기/빠름</b>처럼 / 로 구분해 적으면 됩니다.</span>`;
+    st.innerHTML = `<strong>아직 ${KINDS[kind].label} 레퍼런스가 없어요</strong><span>${canEdit()?`‘+ 레퍼런스 추가’로 첫 ${KINDS[kind].label}를 등록해 주세요.`:"편집하려면 관리자 로그인을 해 주세요."} 태그는 <b>변이/비행기/빠름</b>처럼 / 로 구분해 적으면 됩니다.</span>`;
     return;
   }
   if (!list.length){
@@ -699,76 +730,130 @@ function deepChip(m, cat, i){
   return `<button type="button" class="tag deep ${CAT[cat].cls} ${e.note?"has":""}" data-deep="${esc(m.id)}|${cat}|${i}" aria-label="${esc(e.name)} 상세 보기">${esc(e.name)}</button>`;
 }
 /* ---------- 보기 전환 (#monsters / #systems / #pcs) ---------- */
-const VIEWS=["monsters","systems","pcs","portfolio"];
+const VIEWMAP={
+  "monsters":   {kind:"monster", sub:"list"},
+  "systems":    {kind:"monster", sub:"systems"},
+  "pcs":        {kind:"monster", sub:"pcs"},
+  "pc":         {kind:"pc",      sub:"list"},
+  "pc-systems": {kind:"pc",      sub:"systems"},
+  "pc-counters":{kind:"pc",      sub:"pcs"},
+  "portfolio":  {kind:null,      sub:"portfolio"},
+};
+const VIEWS=Object.keys(VIEWMAP);
 let view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "monsters";
+let sub = VIEWMAP[view].sub;
+function setView(v){
+  const prevKind=kind;
+  view=v; sub=VIEWMAP[v].sub;
+  if(VIEWMAP[v].kind){ kind=VIEWMAP[v].kind; }
+  if(kind!==prevKind){ filters.clear(); query=""; const q=$("#q"); if(q) q.value=""; }
+  syncKind();
+  const q=$("#q"); if(q) q.placeholder=`게임, ${KINDS[kind].label}, 태그, 공략 내용까지 검색 — 띄어쓰기로 여러 단어 AND`;
+}
+const listHash = () => kind==="pc" ? "#pc" : "#monsters";
 let groupEdit = null;   /* "monsterId|cat|index" */
 function renderTabs(){
   document.querySelectorAll(".tabs a").forEach(a=>a.setAttribute("aria-current", a.dataset.view===view?"page":"false"));
-  const distinct=k=>new Set(monsters.flatMap(m=>(m[k]||[]).map(e=>e.name))).size;
-  $("#nMon").textContent=monsters.length; $("#nSys").textContent=distinct("systems"); $("#nPc").textContent=distinct("pcs"); $("#nWork").textContent=works.length;
+  const of=k=>allRefs.filter(m=>kindOf(m)===k);
+  const distinct=(arr,k)=>new Set(arr.flatMap(m=>(m[k]||[]).map(e=>e.name))).size;
+  const M=of("monster"), P=of("pc");
+  $("#nMon").textContent=M.length; $("#nSys").textContent=distinct(M,"systems"); $("#nPc").textContent=distinct(M,"pcs");
+  $("#nPC").textContent=P.length; $("#nPCSys").textContent=distinct(P,"systems"); $("#nPCCnt").textContent=distinct(P,"pcs");
+  $("#nWork").textContent=works.length;
 }
 addEventListener("hashchange", ()=>{
   const v=location.hash.slice(1); if(!VIEWS.includes(v)) return;
-  view=v; groupEdit=null; hidePop(true); render(); scrollTo({top:0});
+  setView(v); groupEdit=null; hidePop(true); render(); scrollTo({top:0});
 });
 function renderGroups(list){
-  const cat=view, c=CAT[cat], gb=$("#groupbox"), tb=$("#tablebox");
+  const cat=sub, c=CAT[cat], gb=$("#groupbox"), tb=$("#tablebox"), KL=KINDS[kind].label;
   const groups=new Map();
   list.forEach(m=>(m[cat]||[]).forEach((e,i)=>{ if(!groups.has(e.name)) groups.set(e.name,[]); groups.get(e.name).push({m,i,e}); }));
   const arr=[...groups].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0],"ko"));
-  $("#count").textContent=`${arr.length}개 ${c.label} · 몬스터 ${list.length}건`;
+  $("#count").textContent=`${arr.length}개 ${c.label} · ${KL} ${list.length}건`;
   if(!arr.length){
     gb.hidden=true; tb.hidden=false; $("#tbl").hidden=true; $("#state").hidden=false;
-    $("#state").innerHTML=`<strong>${c.label}이(가) 들어간 몬스터가 없어요</strong><span>몬스터를 추가하거나 편집할 때 ‘${c.label}’ 칸에 적으면 여기에 이름별로 모여요.</span>`;
+    $("#state").innerHTML=`<strong>${c.label}이(가) 들어간 ${KL}가 없어요</strong><span>${KL}를 추가하거나 편집할 때 ‘${c.label}’ 칸에 적으면 여기에 이름별로 모여요.</span>`;
     return;
   }
-  /* 편집 중인 내용은 다시 그려도 유지 */
-  let draft=null;
-  if(groupEdit && $("#gNote")) draft={label:$("#gLabel").value, note:$("#gNote").value};
   tb.hidden=true; gb.hidden=false;
   const item=({m,i,e})=>{
-    const key=`${m.id}|${cat}|${i}`, ed=groupEdit===key;
+    const key=`${m.id}|${cat}|${i}`;
     return `<article class="gitem">
       ${thumbHTML(m,240)}
       <div class="gbody">
-        <div class="gcrumb">${m.game?tagBtn("game",m.game):""}<span>›</span><b>${esc(m.name)}</b><span>›</span>${ed?"":`<span class="lbl">${esc(e.label||"공략")}</span>`}</div>
-        ${ed ? `<div class="gedit"><input id="gLabel" type="text" value="${esc(e.label||"공략")}" aria-label="섹션 이름"><textarea id="gNote" aria-label="${esc(e.name)} 공략">${esc(e.note||"")}</textarea>
-            <div class="row"><span class="count" style="margin-right:auto;align-self:center">⌘/Ctrl+Enter 저장</span><button type="button" class="btn sm" data-gcancel>취소</button><button type="button" class="btn sm primary" data-gsave="${esc(key)}">저장</button></div></div>`
-             : `<div class="gnote ${e.note?"":"blank"}">${e.note?esc(e.note):"아직 공략 내용이 없어요."}</div>`}
+        <div class="gcrumb">${m.game?tagBtn("game",m.game):""}${m.version?tagBtn("version",m.version):""}<span>›</span><b>${esc(m.name)}</b><span>›</span><span class="lbl">${esc(e.label||"공략")}</span></div>
+        <div class="gnote ${e.note?"":"blank"}">${e.note?esc(e.note):"아직 공략 내용이 없어요."}</div>
       </div>
-      <div class="gact" style="display:flex;gap:6px">${ed?"":`<button type="button" class="btn sm" data-copy="${esc(m.id)}">복사</button><button type="button" class="btn sm edit-only" data-gedit="${esc(key)}">수정</button>`}</div>
+      <div class="gact rowact" style="opacity:1"><button type="button" class="iconbtn edit-only" data-gedit="${esc(key)}">편집</button><button type="button" class="iconbtn edit-only" data-gdel="${esc(key)}">삭제</button></div>
     </article>`;
   };
   gb.innerHTML = `<div class="gindex">${arr.map(([name,its],k)=>`<button type="button" class="tag ${c.cls}" data-gjump="${k}">${esc(name)} <span class="n">${its.length}</span></button>`).join("")}</div>`
     + arr.map(([name,its],k)=>`<section class="gsec" id="gsec-${k}">
         <header><h2><span class="tag ${c.cls}">${esc(name)}</span></h2><span class="cnt">${its.length}건</span><span class="sp"></span>
-          <button type="button" class="btn sm" data-goto="${esc(cat)}|${esc(name)}">몬스터 표에서 보기</button></header>
+          <button type="button" class="btn sm" data-goto="${esc(cat)}|${esc(name)}">${KL} 표에서 보기</button></header>
         ${its.map(item).join("")}
       </section>`).join("");
   wireVideos(gb);
-  if(groupEdit && $("#gNote")){
-    if(draft){ $("#gLabel").value=draft.label; $("#gNote").value=draft.note; }
-    $("#gNote").addEventListener("keydown",e=>{ if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)) $("[data-gsave]").click(); });
-  }
 }
 async function saveNote(mid, cat, i, label, note){
-  const m=monsters.find(x=>x.id===mid); if(!m) throw new Error("gone");
+  const m=allRefs.find(x=>x.id===mid); if(!m) throw new Error("gone");
   const arr=m[cat].map(e=>({...e}));
   arr[i]={...arr[i], label:(label.trim()||"공략"), note};
   await store.update(mid,{[cat]:arr, updatedAt:Date.now()}); m[cat]=arr;
 }
-$("#groupbox").addEventListener("click", async e=>{
-  const t=e.target.closest("[data-gedit],[data-gcancel],[data-gsave],[data-gjump],[data-goto]"); if(!t) return;
-  if(t.dataset.gedit){ groupEdit=t.dataset.gedit; render(); const n=$("#gNote"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } }
-  else if(t.hasAttribute("data-gcancel")){ groupEdit=null; render(); }
-  else if(t.dataset.gsave){
-    const [mid,cat,i]=t.dataset.gsave.split("|"); t.disabled=true; t.textContent="저장 중…";
-    try{ await saveNote(mid,cat,+i,$("#gLabel").value,$("#gNote").value); groupEdit=null; render(); toast("저장했어요"); }
-    catch(ex){ t.disabled=false; t.textContent="저장"; toast(errMsg(ex)); }
-  }
+$("#groupbox").addEventListener("click", e=>{
+  const t=e.target.closest("[data-gedit],[data-gdel],[data-gjump],[data-goto]"); if(!t) return;
+  if(t.dataset.gedit){ const [mid,cat,i]=t.dataset.gedit.split("|"); openNoteForm(mid,cat,+i); }
+  else if(t.dataset.gdel){ const [mid,cat,i]=t.dataset.gdel.split("|"); confirmNoteDelete(mid,cat,+i); }
   else if(t.dataset.gjump){ const sec=$("#gsec-"+t.dataset.gjump); if(sec) sec.scrollIntoView({behavior:"smooth",block:"start"}); }
-  else if(t.dataset.goto){ filters.add(t.dataset.goto); location.hash="#monsters"; }
+  else if(t.dataset.goto){ filters.add(t.dataset.goto); location.hash=listHash(); }
 });
+/* 전투 확장 시스템·대응 항목 편집 창: 공략 수정 + 복사·복제 */
+function openNoteForm(mid, cat, i){
+  if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
+  const m=allRefs.find(x=>x.id===mid); if(!m||!m[cat]||!m[cat][i]) return;
+  const e=m[cat][i], c=CAT[cat], sc=$("#scrim");
+  const withNote=()=>{ const arr=m[cat].map(x=>({...x})); arr[i]={...arr[i], label:($("#nLabel").value.trim()||"공략"), note:$("#nNote").value}; return {...m,[cat]:arr}; };
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+    <header><h2 id="fTitle"><span class="tag ${c.cls}" style="font-size:14px">${esc(e.name)}</span> · ${esc(m.name)}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <form id="nform" novalidate style="grid-template-columns:1fr">
+      <div class="gcrumb">${esc(c.root)} › ${esc(e.name)} › ${esc(m.game||"-")}${m.version?" "+esc(m.version):""} › ${esc(m.name)}</div>
+      <div class="field"><label for="nLabel">섹션 이름</label><input id="nLabel" type="text" value="${esc(e.label||"공략")}"></div>
+      <div class="field"><label for="nNote">내용</label><textarea id="nNote" style="min-height:220px">${esc(e.note||"")}</textarea><small>⌘/Ctrl+Enter 저장</small></div>
+      <button type="button" class="btn sm" id="nFull" style="justify-self:start">${KINDS[kindOf(m)].label} 레퍼런스 전체 편집 →</button>
+      <div class="err" id="fErr" hidden></div>
+      <div class="foot"><button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">저장</button></div>
+    </form></div>`;
+  sc.hidden=false;
+  const ta=$("#nNote"); ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
+  $("#fClose").onclick=$("#fCancel").onclick=closeForm;
+  sc.onclick=ev=>{ if(ev.target===sc) closeForm(); };
+  $("#fCopy").onclick=ev=>copyText(refText(withNote()), ev.currentTarget);
+  $("#fDup").onclick=()=>{ const snap=withNote(); closeForm(); openForm(null, snap); };
+  $("#nFull").onclick=()=>{ closeForm(); openForm(m); };
+  ta.addEventListener("keydown",ev=>{ if(ev.key==="Enter"&&(ev.metaKey||ev.ctrlKey)) $("#nform").requestSubmit(); });
+  $("#nform").onsubmit=async ev=>{
+    ev.preventDefault(); const b=$("#fSave"); b.disabled=true;
+    try{ await saveNote(mid,cat,i,$("#nLabel").value,$("#nNote").value); closeForm(); render(); toast("저장했어요"); }
+    catch(ex){ b.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); }
+  };
+}
+function confirmNoteDelete(mid, cat, i){
+  if(!canEdit()) return;
+  const m=allRefs.find(x=>x.id===mid); if(!m||!m[cat]||!m[cat][i]) return;
+  const e=m[cat][i], c=CAT[cat], sc=$("#scrim");
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" style="width:min(400px,100%)"><header><h2>${esc(c.label)}에서 빼기</h2></header>
+    <div style="padding:16px 18px;line-height:1.6"><b>${esc(m.name)}</b>에서 <b>${esc(e.name)}</b>와(과) 적어 둔 내용을 삭제할까요?<br><span style="color:var(--muted);font-size:13px">${esc(KINDS[kindOf(m)].label)} 레퍼런스 자체는 지워지지 않아요.</span></div>
+    <div class="foot" style="display:flex;justify-content:flex-end;gap:8px;padding:0 18px 16px"><button type="button" class="btn" id="dNo">취소</button><button type="button" class="btn primary" id="dYes">삭제</button></div></div>`;
+  sc.hidden=false; sc.onclick=ev=>{ if(ev.target===sc) closeForm(); };
+  $("#dNo").onclick=closeForm;
+  $("#dYes").onclick=async()=>{
+    const arr=m[cat].filter((_,k)=>k!==i);
+    try{ await store.update(mid,{[cat]:arr, updatedAt:Date.now()}); m[cat]=arr; closeForm(); render(); toast("삭제했어요"); }
+    catch(ex){ closeForm(); toast(errMsg(ex)); }
+  };
+}
 
 /* ---------- 자동완성: 이미 등록된 게임·태그를 드롭다운으로 ---------- */
 const AC_SINGLE=new Set(["game","version"]);
@@ -831,7 +916,7 @@ addEventListener("resize",acClose);
 /* ---------- 레퍼런스 텍스트 복사 ---------- */
 function refText(m){
   const j=a=>(a||[]).join(" / ");
-  const L=[`[${m.game||"-"}${m.version?" "+m.version:""}] ${m.name}`];
+  const L=[`[${m.game||"-"}${m.version?" "+m.version:""}] ${kindOf(m)==="pc"?"PC ":""}${m.name}`];
   if((m.hooks||[]).length)   L.push(`후킹 이미지: ${j(m.hooks)}`);
   if((m.theme||[]).length)   L.push(`테마: ${j(m.theme)}`);
   if((m.levels||[]).length)  L.push(`레벨 테마: ${j(m.levels)}`);
@@ -839,7 +924,7 @@ function refText(m){
   if((m.weapons||[]).length) L.push(`무기: ${j(m.weapons)}`);
   for(const [k,lab] of [["systems","전투 확장 시스템"],["pcs","대응 PC 도구"]]){
     for(const e of (m[k]||[])){
-      L.push(`${lab}: ${e.name}`);
+      L.push(`${k==="pcs"?KINDS[kindOf(m)].counter:lab}: ${e.name}`);
       if(e.note) L.push(`  └ ${e.label||"공략"}\n`+e.note.split("\n").map(x=>"    "+x).join("\n"));
     }
   }
@@ -869,14 +954,13 @@ function rowHTML(m){
   let link = ""; const yid = ytId(m.link);
   if (m.link){ try{ const u=new URL(m.link); link=`<div class="linkcell"><a class="link" href="${esc(u.href)}" target="_blank" rel="noopener">${yid?"▶ 영상":"↗ 열기"}</a>${yid?`<span class="lstate" data-yt="${esc(yid)}"></span>`:""}</div>`; }catch{ link=esc(m.link); } }
   return `<tr>
-    <td class="game">${m.game?tagBtn("game",m.game):""}</td>
-    <td class="game">${m.version?tagBtn("version",m.version):""}</td>
-    <td class="name">${esc(m.name)}</td>
+    <td class="name"><span class="nm">${esc(m.name)}</span>
+      ${(m.game||m.version)?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version?tagBtn("version",m.version):""}</div>`:""}
+      ${link}</td>
     <td>${thumbHTML(m,240)}</td>
     <td>${cells("hooks")}</td>
     <td>${cells("theme")}</td><td>${cells("levels")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td>
     <td>${deep("systems")}</td><td>${deep("pcs")}</td>
-    <td>${link}</td>
     <td><div class="rowact"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>
   </tr>`;
 }
@@ -949,7 +1033,7 @@ function showPop(el, pin){
   drawPop(false); place();
 }
 function entryFor(key){
-  const [id,cat,i]=key.split("|"); const m=monsters.find(x=>x.id===id);
+  const [id,cat,i]=key.split("|"); const m=allRefs.find(x=>x.id===id);
   return m && m[cat] && m[cat][+i] ? {m,cat,i:+i,e:m[cat][+i]} : null;
 }
 function crumbs(x, editLabel){
@@ -998,15 +1082,16 @@ function openForm(m, copyFrom){
   hidePop(true);
   /* 복제: 원본 내용을 채운 새 레퍼런스 (공략 메모·이미지도 그대로) */
   const v = copyFrom ? {...copyFrom, name: copyFrom.name+" (복사본)"} : m;
+  const fKind = v ? kindOf(v) : kind;
   formImage = v && v.image ? v.image : null;
   formMedia = v && v.media ? v.media : null; uploading = false;
   const j = a => (a||[]).join(" / ");
   const sc=$("#scrim");
   sc.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
-    <header><h2 id="fTitle">${m?"레퍼런스 편집":copyFrom?"레퍼런스 복제":"레퍼런스 추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <header><h2 id="fTitle">${KINDS[fKind].label} ${m?"레퍼런스 편집":copyFrom?"레퍼런스 복제":"레퍼런스 추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <form id="form" novalidate>
       <div class="field"><label for="f_game">게임 이름</label><input id="f_game" type="text" value="${esc(v?.game)}" placeholder="젠레스 존 제로" required></div>
-      <div class="field"><label for="f_name">몬스터 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="태초의 악몽" required></div>
+      <div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
       <div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>
       <div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>
       ${mediaFieldHTML("이미지")}
@@ -1015,7 +1100,7 @@ function openForm(m, copyFrom){
       <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
       <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(v?.weapons))}" placeholder="에너지 / 검"></div>
       <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>상세 공략은 표에서 칩에 마우스를 올려 수정</small></div>
-      <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>대응 PC 도구</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="엽빛나"></div>
+      <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>${KINDS[fKind].counter}</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="${KINDS[fKind].counterPh}"></div>
       <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
       <div class="err" id="fErr" hidden></div>
       <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
@@ -1194,9 +1279,10 @@ async function upload(file){
 async function saveForm(m, src){
   src = src || m;
   const err=$("#fErr"), game=$("#f_game").value.trim(), name=$("#f_name").value.trim();
-  if(!game||!name){ err.hidden=false; err.textContent="게임 이름과 몬스터 이름은 꼭 적어 주세요."; return; }
+  if(!game||!name){ err.hidden=false; err.textContent=`게임 이름과 ${KINDS[src?kindOf(src):kind].label} 이름은 꼭 적어 주세요.`; return; }
   const keep=(names, old)=>names.map(n=>{ const o=(old||[]).find(e=>e.name===n); return o?{...o}:{name:n,label:"공략",note:""}; });
   const data={
+    kind: src ? kindOf(src) : kind,
     game, name,
     version:$("#f_version").value.trim(), hooks:splitTags($("#f_hooks").value), levels:splitTags($("#f_levels").value),
     theme:splitTags($("#f_theme").value), looks:splitTags($("#f_looks").value), weapons:splitTags($("#f_weapons").value),
@@ -1733,7 +1819,7 @@ $("#exportBtn").addEventListener("click", async ()=>{
   try{
     if(!window.JSZip) await loadScript(ZIPLIB);
     const zip=new JSZip(), failed=[];
-    const list=monsters.map(m=>({...m}));
+    const list=allRefs.map(m=>({...m}));
     const wl=works.map(w=>({...w}));
     const pf={...profile, aboutBlocks:aboutBlocks(profile).map(b=>({...b}))};
     const hasFile=o=>o.media||(o.image&&!o.image.startsWith("data:"));
@@ -1756,9 +1842,9 @@ $("#exportBtn").addEventListener("click", async ()=>{
     if(failed.length) zip.file("가져오지_못한_파일.txt", "아래 파일은 원본 사이트에서 받지 못했어요. 주소로 직접 열어 저장해 주세요.\n\n"+failed.join("\n"));
     toast("압축하는 중…");
     saveBlob(await zip.generateAsync({type:"blob"}), `monster-ref-backup-${stamp}.zip`);
-    toast(`백업을 내려받았어요 · 레퍼런스 ${list.length}건 · 작업물 ${wl.length}건${failed.length?` (파일 ${failed.length}개는 주소만 저장)`:""}`);
+    toast(`백업을 내려받았어요 · 몬스터 ${list.filter(m=>kindOf(m)==="monster").length}건 · PC ${list.filter(m=>kindOf(m)==="pc").length}건 · 작업물 ${wl.length}건${failed.length?` (파일 ${failed.length}개는 주소만 저장)`:""}`);
   }catch{
-    saveBlob(new Blob([JSON.stringify(jsonBackup(monsters),null,2)],{type:"application/json"}), `monster-ref-${stamp}.json`);
+    saveBlob(new Blob([JSON.stringify(jsonBackup(allRefs),null,2)],{type:"application/json"}), `monster-ref-${stamp}.json`);
     toast("압축 도구를 불러오지 못해 데이터(JSON)만 받았어요");
   }finally{ busy=false; }
 });
@@ -1812,6 +1898,7 @@ $("#importFile").addEventListener("change", async e=>{
 });
 
 /* ---------- boot ---------- */
+setView(view);
 const FB = "https://www.gstatic.com/firebasejs/10.12.2/";
 const loadScript = src => new Promise((res,rej)=>{ const el=document.createElement("script"); el.src=src; el.onload=res; el.onerror=rej; document.head.appendChild(el); });
 
@@ -1881,7 +1968,7 @@ $("#pubLogin").addEventListener("click",()=>{ if(auth) openLogin(); });
 let unsub=null;
 function stopData(){
   if(unsub){ unsub(); unsub=null; }
-  monsters=[]; loaded=false; groupEdit=null; closeForm(); hidePop(true);
+  allRefs=[]; monsters=[]; loaded=false; groupEdit=null; closeForm(); hidePop(true);
 }
 function startData(){
   if(unsub) return;
@@ -1889,7 +1976,7 @@ function startData(){
   const timer=setTimeout(()=>{ if(!loaded){ showArchive(); $("#state").innerHTML="<strong>클라우드 응답이 늦어요</strong><span>인터넷 연결을 확인해 주세요.</span>"; } },10000);
   unsub=COL().onSnapshot(snap=>{
     clearTimeout(timer); loaded=true;
-    monsters=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    allRefs=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); syncKind();
     showArchive(); render();
     if(popKey && !editing){ drawPop(false); place(); }
   }, ex=>{
@@ -1923,7 +2010,7 @@ async function bootLocal(){
   if(!Array.isArray(saved)){
     try{ const r=await fetch("data.json",{cache:"no-store"}); if(r.ok){ const j=await r.json(); saved=Array.isArray(j)?j:j.monsters; } }catch{}
   }
-  monsters=(Array.isArray(saved)?saved:SEED).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  allRefs=(Array.isArray(saved)?saved:SEED).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); syncKind();
   try{ works=sortWorks(JSON.parse(localStorage.getItem(WORK_KEY)||"[]")||[]); profile=JSON.parse(localStorage.getItem(PROF_KEY)||"{}")||{}; }catch{ works=[]; profile={}; }
   worksLoaded=true;
   loaded=true; persist(); showArchive(); render();
