@@ -140,7 +140,7 @@ td.name{font-weight:600;min-width:120px}
 .thumb .yt{position:relative;width:100%;height:100%}
 .thumb .yt::after{content:"▶";position:absolute;right:4px;bottom:3px;font-size:10px;color:#fff;background:rgba(0,0,0,.6);border-radius:3px;padding:0 4px}
 #deadBtn{color:var(--t-weapon);border-color:var(--t-weapon)}
-.rowact{display:flex;gap:4px;opacity:.55}
+.rowact{display:flex;gap:4px;opacity:.55;white-space:nowrap}
 tr:hover .rowact,.rowact:focus-within{opacity:1}
 .iconbtn{border:0;background:transparent;padding:4px 6px;border-radius:4px;color:var(--muted);font-size:12px}
 .iconbtn:hover{background:var(--line);color:var(--ink)}
@@ -877,7 +877,7 @@ function rowHTML(m){
     <td>${cells("theme")}</td><td>${cells("levels")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td>
     <td>${deep("systems")}</td><td>${deep("pcs")}</td>
     <td>${link}</td>
-    <td><div class="rowact"><button type="button" class="iconbtn" data-copy="${esc(m.id)}" title="기획서에 붙여 넣을 텍스트로 복사">복사</button><button type="button" class="iconbtn edit-only" data-dup="${esc(m.id)}" title="같은 내용으로 새 레퍼런스 만들기">복제</button><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>
+    <td><div class="rowact"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>
   </tr>`;
 }
 function renderRail(){
