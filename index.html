@@ -80,6 +80,19 @@ header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:spac
 .ro #popEdit,.ro .edit-only{display:none!important}
 
 .searchbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sortbox{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.sortbox select{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:8px 10px;font-weight:500}
+th.grip,td.grip{display:none;width:34px;padding-left:8px;padding-right:0}
+.sort-manual th.grip,.sort-manual td.grip{display:table-cell}
+td.grip .g{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted)}
+td.grip .h{cursor:grab;font-size:16px;line-height:1;padding:2px;user-select:none}
+td.grip button{border:0;background:none;color:var(--muted);font-size:10px;padding:1px 4px;border-radius:3px;line-height:1.2}
+td.grip button:hover{background:var(--line);color:var(--ink)}
+td.grip button:disabled{opacity:.25}
+tr.dragging{opacity:.4}
+tr.drop-before td{box-shadow:inset 0 2px 0 var(--accent)}
+tr.drop-after td{box-shadow:inset 0 -2px 0 var(--accent)}
+.manual-hint{font-size:12px;color:var(--muted)}
 .search{flex:1 1 320px;min-width:0;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 12px}
 .search svg{flex:none;color:var(--muted)}
 .search input{border:0;background:transparent;padding:10px 0;width:100%;outline:none}
@@ -454,6 +467,16 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
           <input id="q" type="search" placeholder="게임, 몬스터, 태그, 공략 내용까지 검색 — 띄어쓰기로 여러 단어 AND" autocomplete="off">
         </label>
         <span class="count" id="count"></span>
+        <label class="sortbox" for="sortSel">정렬
+          <select id="sortSel">
+            <option value="recent">최근 추가순</option>
+            <option value="game">게임순 (→ 버전 높은순)</option>
+            <option value="version">버전 높은순</option>
+            <option value="version-asc">버전 낮은순</option>
+            <option value="name">이름순 (가나다)</option>
+            <option value="manual">직접 정한 순서</option>
+          </select>
+        </label>
         <button class="btn sm" id="deadBtn" type="button" hidden></button>
       </div>
       <div class="active-filters" id="active" hidden></div>
@@ -461,7 +484,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
       <div class="state" id="state"><strong>레퍼런스를 불러오는 중…</strong></div>
       <table id="tbl" hidden>
         <thead><tr>
-          <th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th></th>
+          <th class="grip" aria-label="순서"></th><th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th></th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -680,9 +703,78 @@ function haystack(m){
   for (const k of ["systems","pcs"]) for (const e of (m[k]||[])) parts.push(e.name,e.label,e.note);
   return parts.filter(Boolean).join(" ").toLowerCase();
 }
+/* ---------- 정렬 ---------- */
+const SORT_KEY="monster-ref-sort";
+let sortMode = (()=>{ try{ return localStorage.getItem(SORT_KEY)||"recent"; }catch{ return "recent"; } })();
+let manualIndex = new Map();
+/* 1.10 > 1.9, 2.0 > 1.10 처럼 숫자로 비교 */
+function cmpVersion(a,b){
+  const pa=String(a||"").match(/\d+|[^\d.\s]+/g)||[], pb=String(b||"").match(/\d+|[^\d.\s]+/g)||[];
+  for(let i=0;i<Math.max(pa.length,pb.length);i++){
+    const x=pa[i], y=pb[i];
+    if(x===undefined) return -1; if(y===undefined) return 1;
+    const nx=/^\d+$/.test(x), ny=/^\d+$/.test(y);
+    if(nx&&ny){ const d=Number(x)-Number(y); if(d) return d; }
+    else { const d=x.localeCompare(y,"ko"); if(d) return d; }
+  }
+  return 0;
+}
+const byName=(a,b)=>(a.name||"").localeCompare(b.name||"","ko");
+const byRecent=(a,b)=>(b.createdAt||0)-(a.createdAt||0);
+const emptyLast=(a,b,f)=>{ const ea=!f(a), eb=!f(b); return ea===eb?0:(ea?1:-1); };
+function manualSorted(arr){
+  /* 순서를 아직 안 정한 새 항목은 맨 위 (최근 추가순), 그다음 정한 순서 */
+  return arr.slice().sort((a,b)=>{
+    const ha=typeof a.order==="number", hb=typeof b.order==="number";
+    if(ha!==hb) return ha?1:-1;
+    if(!ha) return byRecent(a,b);
+    return (a.order-b.order)||byRecent(a,b);
+  });
+}
+function sortList(arr){
+  const a=arr.slice();
+  switch(sortMode){
+    case "game": return a.sort((x,y)=>emptyLast(x,y,m=>m.game)||(x.game||"").localeCompare(y.game||"","ko")||emptyLast(x,y,m=>m.version)||cmpVersion(y.version,x.version)||byName(x,y));
+    case "version": return a.sort((x,y)=>emptyLast(x,y,m=>m.version)||cmpVersion(y.version,x.version)||(x.game||"").localeCompare(y.game||"","ko")||byName(x,y));
+    case "version-asc": return a.sort((x,y)=>emptyLast(x,y,m=>m.version)||cmpVersion(x.version,y.version)||(x.game||"").localeCompare(y.game||"","ko")||byName(x,y));
+    case "name": return a.sort((x,y)=>byName(x,y)||byRecent(x,y));
+    case "manual": return manualSorted(a);
+    default: return a.sort(byRecent);
+  }
+}
+function applySortUI(){
+  const sel=$("#sortSel"); if(sel) sel.value=sortMode;
+  document.body.classList.toggle("sort-manual", sortMode==="manual" && canEdit());
+}
+function setSort(v, persistRemote){
+  sortMode=v;
+  try{ localStorage.setItem(SORT_KEY,v); }catch{}
+  applySortUI(); render();
+  /* 기본 정렬로 저장해서 다른 기기에서도 같은 순서 */
+  if(persistRemote && canEdit() && mode==="cloud" && (profile||{}).archiveSort!==v){
+    wstore.saveProfile({...profile, archiveSort:v}).catch(()=>{});
+  }
+}
+async function reorder(ids){
+  const changed=[]; ids.forEach((id,i)=>{ const m=allRefs.find(x=>x.id===id); if(m && m.order!==i) changed.push([id,i]); });
+  if(!changed.length) return;
+  changed.forEach(([id,i])=>{ const m=allRefs.find(x=>x.id===id); if(m) m.order=i; });
+  syncKind(); render();
+  try{
+    if(mode==="cloud"){
+      for(let k=0;k<changed.length;k+=400){ const b=fs.batch(); changed.slice(k,k+400).forEach(([id,i])=>b.update(COL().doc(id),{order:i})); await b.commit(); }
+    } else commit(allRefs.slice());
+  }catch(ex){ toast(errMsg(ex)); }
+}
+function moveTo(dragId, targetId, after){
+  const ids=manualSorted(monsters).map(m=>m.id).filter(id=>id!==dragId);
+  let at=ids.indexOf(targetId); if(at<0) return;
+  if(after) at++;
+  ids.splice(at,0,dragId); reorder(ids);
+}
 function visible(){
   const toks = query.toLowerCase().split(/\s+/).filter(Boolean);
-  return monsters.filter(m=>{
+  return sortList(monsters).filter(m=>{
     for (const f of filters){
       if(f===DEAD){ const i=ytId(m.link); if(!(i && linkState.get(i)==="dead")) return false; continue; }
       const [k,v]=f.split("|"); if(!vals(m,k).includes(v)) return false; }
@@ -719,6 +811,8 @@ function render(){
   }
   st.hidden=true; tbl.hidden=false;
   if(io) io.disconnect();
+  manualIndex = new Map(manualSorted(monsters).map((m,i)=>[m.id,i]));
+  applySortUI();
   $("#rows").innerHTML = list.map(rowHTML).join("");
   wireVideos($("#rows"));
   [...new Set(monsters.map(m=>ytId(m.link)).filter(Boolean))].forEach(id=>checkYt(id));
@@ -955,7 +1049,9 @@ function rowHTML(m){
   const deep = k => `<div class="cell">${(m[k]||[]).map((_,i)=>deepChip(m,k,i)).join("")}</div>`;
   let link = ""; const yid = ytId(m.link);
   if (m.link){ try{ const u=new URL(m.link); link=`<div class="linkcell"><a class="link" href="${esc(u.href)}" target="_blank" rel="noopener">${yid?"▶ 영상":"↗ 열기"}</a>${yid?`<span class="lstate" data-yt="${esc(yid)}"></span>`:""}</div>`; }catch{ link=esc(m.link); } }
-  return `<tr>
+  const pos = manualIndex.get(m.id);
+  return `<tr data-id="${esc(m.id)}" ${sortMode==="manual"?'draggable="true"':""}>
+    <td class="grip"><div class="g"><button type="button" data-mv="${esc(m.id)}|-1" ${pos===0?"disabled":""} aria-label="위로">▲</button><span class="h" title="끌어서 순서 바꾸기">⠿</span><button type="button" data-mv="${esc(m.id)}|1" ${pos===monsters.length-1?"disabled":""} aria-label="아래로">▼</button></div></td>
     <td class="name"><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}
       ${(m.game||m.version)?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version?tagBtn("version",m.version):""}</div>`:""}
       ${link}</td>
@@ -971,7 +1067,7 @@ function renderRail(){
   for (const c of CATS) counts[c.key]=new Map();
   for (const m of monsters) for (const c of CATS) for (const v of new Set(vals(m,c.key))) counts[c.key].set(v,(counts[c.key].get(v)||0)+1);
   $("#rail").innerHTML = CATS.map(c=>{
-    const arr=[...counts[c.key]].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
+    const arr=[...counts[c.key]].sort(c.key==="version" ? (a,b)=>cmpVersion(b[0],a[0]) : (a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
     return `<div class="group"><h3><i style="background:var(--${{game:"t-game",version:"t-ver",theme:"t-theme",levels:"t-level",hooks:"t-hook",looks:"t-look",weapons:"t-weapon",systems:"t-sys",pcs:"t-pc"}[c.key]})"></i>${c.label}</h3>
       <div class="chips">${arr.length?arr.map(([v,n])=>{const on=filters.has(c.key+"|"+v);return `<button type="button" class="tag ${c.cls} ${on?"on":""}" data-tag="${esc(c.key)}|${esc(v)}">${esc(v)} <span class="n">${n}</span></button>`}).join(""):`<span class="empty-note">—</span>`}</div></div>`;
   }).join("");
@@ -1295,7 +1391,7 @@ async function saveForm(m, src){
   if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
   const btn=$("#fSave"); btn.disabled=true;
   try{
-    if(m) await store.set(m.id,{...data, createdAt:m.createdAt||Date.now()});
+    if(m) await store.set(m.id,{...data, ...(typeof m.order==="number"?{order:m.order}:{}), createdAt:m.createdAt||Date.now()});
     else await store.add({...data, createdAt:Date.now()});
     closeForm(); toast(m?"저장했어요":"추가했어요");
   }catch(ex){ btn.disabled=false; err.hidden=false; err.textContent=errMsg(ex); }
@@ -1336,7 +1432,11 @@ function startPortfolio(admin){
   const q = admin ? COLW() : COLW().where("published","==",true);
   wUnsub=q.onSnapshot(snap=>{ works=sortWorks(snap.docs.map(d=>({id:d.id,...d.data()}))); worksLoaded=true; afterPort(); openWorkFromHash(); },
                       ()=>{ works=[]; worksLoaded=true; afterPort(); });
-  pUnsub=PROF().onSnapshot(d=>{ profile=(d.exists&&d.data())||{}; afterPort(); }, ()=>{});
+  pUnsub=PROF().onSnapshot(d=>{
+    profile=(d.exists&&d.data())||{};
+    if(admin && profile.archiveSort && profile.archiveSort!==sortMode){ sortMode=profile.archiveSort; try{ localStorage.setItem(SORT_KEY,sortMode); }catch{} applySortUI(); render(); }
+    afterPort();
+  }, ()=>{});
 }
 /* "이름 | 주소" 줄 목록 → [{label,url}] */
 function parseLinks(t){
@@ -1899,6 +1999,33 @@ $("#importFile").addEventListener("change", async e=>{
   }catch{ toast("불러올 수 없는 파일이에요. 백업으로 받은 ZIP이나 JSON인지 확인해 주세요"); }
   finally{ busy=false; }
 });
+
+/* ---------- 정렬 이벤트 ---------- */
+$("#sortSel").addEventListener("change", e=>setSort(e.target.value, true));
+$("#rows").addEventListener("click", e=>{
+  const b=e.target.closest("[data-mv]"); if(!b) return;
+  const [id,d]=b.dataset.mv.split("|"); const ids=manualSorted(monsters).map(m=>m.id);
+  const i=ids.indexOf(id), j=i+Number(d); if(i<0||j<0||j>=ids.length) return;
+  [ids[i],ids[j]]=[ids[j],ids[i]]; reorder(ids);
+});
+let dragId=null;
+$("#rows").addEventListener("dragstart", e=>{
+  const tr=e.target.closest("tr[data-id]"); if(!tr || sortMode!=="manual" || !canEdit()){ e.preventDefault(); return; }
+  dragId=tr.dataset.id; tr.classList.add("dragging"); e.dataTransfer.effectAllowed="move";
+  try{ e.dataTransfer.setData("text/plain", dragId); }catch{}
+});
+const clearDrop=()=>document.querySelectorAll("#rows tr.drop-before,#rows tr.drop-after").forEach(t=>t.classList.remove("drop-before","drop-after"));
+$("#rows").addEventListener("dragover", e=>{
+  if(!dragId) return; const tr=e.target.closest("tr[data-id]"); if(!tr) return;
+  e.preventDefault(); clearDrop();
+  const rc=tr.getBoundingClientRect(); tr.classList.add(e.clientY>rc.top+rc.height/2?"drop-after":"drop-before");
+});
+$("#rows").addEventListener("drop", e=>{
+  if(!dragId) return; const tr=e.target.closest("tr[data-id]"); e.preventDefault();
+  const after=tr && tr.classList.contains("drop-after"); clearDrop();
+  if(tr && tr.dataset.id!==dragId) moveTo(dragId, tr.dataset.id, after);
+});
+$("#rows").addEventListener("dragend", ()=>{ clearDrop(); document.querySelectorAll("#rows tr.dragging").forEach(t=>t.classList.remove("dragging")); dragId=null; });
 
 /* ---------- boot ---------- */
 setView(view);
