@@ -128,6 +128,8 @@ td .cell{display:flex;flex-wrap:wrap;gap:4px}
 td.game{white-space:nowrap;color:var(--muted);font-size:13px}
 td.name{min-width:150px;max-width:220px}
 td.name .nm{font-weight:700;font-size:14.5px;display:block;margin-bottom:6px;word-break:keep-all}
+td.name .en{display:block;margin:-4px 0 6px;font-size:12.5px;color:var(--muted);font-weight:500;word-break:break-word}
+.gcrumb .en{font-size:12.5px;color:var(--muted)}
 td.name .cell{margin-bottom:6px}
 td .cell .tag{white-space:normal;word-break:keep-all}
 .thumb{width:84px;height:84px;border-radius:6px;background:var(--hover);border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;padding:0}
@@ -674,7 +676,7 @@ function wireVideos(root, ob){
 
 /* ---------- filtering ---------- */
 function haystack(m){
-  const parts=[m.game,m.version,m.name,m.link,...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
+  const parts=[m.game,m.version,m.name,m.nameEn,m.link,...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
   for (const k of ["systems","pcs"]) for (const e of (m[k]||[])) parts.push(e.name,e.label,e.note);
   return parts.filter(Boolean).join(" ").toLowerCase();
 }
@@ -782,7 +784,7 @@ function renderGroups(list){
     return `<article class="gitem">
       ${thumbHTML(m,240)}
       <div class="gbody">
-        <div class="gcrumb">${m.game?tagBtn("game",m.game):""}${m.version?tagBtn("version",m.version):""}<span>›</span><b>${esc(m.name)}</b><span>›</span><span class="lbl">${esc(e.label||"공략")}</span></div>
+        <div class="gcrumb">${m.game?tagBtn("game",m.game):""}${m.version?tagBtn("version",m.version):""}<span>›</span><b>${esc(m.name)}</b>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}<span>›</span><span class="lbl">${esc(e.label||"공략")}</span></div>
         <div class="gnote ${e.note?"":"blank"}">${e.note?esc(e.note):"아직 공략 내용이 없어요."}</div>
       </div>
       <div class="gact rowact" style="opacity:1"><button type="button" class="iconbtn edit-only" data-gedit="${esc(key)}">편집</button><button type="button" class="iconbtn edit-only" data-gdel="${esc(key)}">삭제</button></div>
@@ -916,7 +918,7 @@ addEventListener("resize",acClose);
 /* ---------- 레퍼런스 텍스트 복사 ---------- */
 function refText(m){
   const j=a=>(a||[]).join(" / ");
-  const L=[`[${m.game||"-"}${m.version?" "+m.version:""}] ${kindOf(m)==="pc"?"PC ":""}${m.name}`];
+  const L=[`[${m.game||"-"}${m.version?" "+m.version:""}] ${kindOf(m)==="pc"?"PC ":""}${m.name}${m.nameEn?` (${m.nameEn})`:""}`];
   if((m.hooks||[]).length)   L.push(`후킹 이미지: ${j(m.hooks)}`);
   if((m.theme||[]).length)   L.push(`테마: ${j(m.theme)}`);
   if((m.levels||[]).length)  L.push(`레벨 테마: ${j(m.levels)}`);
@@ -954,7 +956,7 @@ function rowHTML(m){
   let link = ""; const yid = ytId(m.link);
   if (m.link){ try{ const u=new URL(m.link); link=`<div class="linkcell"><a class="link" href="${esc(u.href)}" target="_blank" rel="noopener">${yid?"▶ 영상":"↗ 열기"}</a>${yid?`<span class="lstate" data-yt="${esc(yid)}"></span>`:""}</div>`; }catch{ link=esc(m.link); } }
   return `<tr>
-    <td class="name"><span class="nm">${esc(m.name)}</span>
+    <td class="name"><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}
       ${(m.game||m.version)?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version?tagBtn("version",m.version):""}</div>`:""}
       ${link}</td>
     <td>${thumbHTML(m,240)}</td>
@@ -1091,8 +1093,9 @@ function openForm(m, copyFrom){
     <header><h2 id="fTitle">${KINDS[fKind].label} ${m?"레퍼런스 편집":copyFrom?"레퍼런스 복제":"레퍼런스 추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <form id="form" novalidate>
       <div class="field"><label for="f_game">게임 이름</label><input id="f_game" type="text" value="${esc(v?.game)}" placeholder="젠레스 존 제로" required></div>
-      <div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
       <div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>
+      <div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
+      <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${fKind==="pc"?"Ye Shunguang":"Primordial Nightmare"}" lang="en" autocomplete="off"></div>
       <div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>
       ${mediaFieldHTML("이미지")}
       <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
@@ -1143,7 +1146,7 @@ function wireMediaField(){
 function formSnapshot(m){
   const keep=(names, old)=>names.map(n=>{ const o=(old||[]).find(e=>e.name===n); return o?{...o}:{name:n,label:"공략",note:""}; });
   return { ...m,
-    game:$("#f_game").value.trim(), name:$("#f_name").value.trim(), version:$("#f_version").value.trim(),
+    game:$("#f_game").value.trim(), name:$("#f_name").value.trim(), nameEn:$("#f_nameEn").value.trim(), version:$("#f_version").value.trim(),
     hooks:splitTags($("#f_hooks").value), levels:splitTags($("#f_levels").value),
     theme:splitTags($("#f_theme").value), looks:splitTags($("#f_looks").value), weapons:splitTags($("#f_weapons").value),
     systems:keep(splitTags($("#f_systems").value), m?.systems), pcs:keep(splitTags($("#f_pcs").value), m?.pcs),
@@ -1283,7 +1286,7 @@ async function saveForm(m, src){
   const keep=(names, old)=>names.map(n=>{ const o=(old||[]).find(e=>e.name===n); return o?{...o}:{name:n,label:"공략",note:""}; });
   const data={
     kind: src ? kindOf(src) : kind,
-    game, name,
+    game, name, nameEn:$("#f_nameEn").value.trim(),
     version:$("#f_version").value.trim(), hooks:splitTags($("#f_hooks").value), levels:splitTags($("#f_levels").value),
     theme:splitTags($("#f_theme").value), looks:splitTags($("#f_looks").value), weapons:splitTags($("#f_weapons").value),
     systems:keep(splitTags($("#f_systems").value), src?.systems), pcs:keep(splitTags($("#f_pcs").value), src?.pcs),
