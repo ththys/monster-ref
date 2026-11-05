@@ -17,6 +17,9 @@
   --t-sys:#b35900;   --t-sys-bg:#fff1dc;
   --t-pc:#1864ab;    --t-pc-bg:#e3eefb;
   --t-game:#343a40;  --t-game-bg:#e9ecef;
+  --t-ver:#495057;   --t-ver-bg:#f1f3f5;
+  --t-level:#2b8a3e; --t-level-bg:#e6f4ea;
+  --t-hook:#c2255c;  --t-hook-bg:#ffe8f0;
   --shadow:0 12px 32px rgba(20,24,33,.16);
   --ok:#1e7a34; --ok-bg:#e6f4ea;
   --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
@@ -31,6 +34,9 @@
   --t-sys:#ffb35c;   --t-sys-bg:#3a2a14;
   --t-pc:#74b4ff;    --t-pc-bg:#172a42;
   --t-game:#ced4da;  --t-game-bg:#2a2e35;
+  --t-ver:#ced4da;   --t-ver-bg:#262a31;
+  --t-level:#8ce99a; --t-level-bg:#183222;
+  --t-hook:#faa2c1;  --t-hook-bg:#3a1a28;
   --shadow:0 12px 32px rgba(0,0,0,.5); --ok:#6ad08a; --ok-bg:#15301f; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121418; --panel:#1a1d23; --ink:#e8eaee; --muted:#9aa1ae; --line:#2b3039; --hover:#22262e;
@@ -41,6 +47,9 @@
   --t-sys:#ffb35c;   --t-sys-bg:#3a2a14;
   --t-pc:#74b4ff;    --t-pc-bg:#172a42;
   --t-game:#ced4da;  --t-game-bg:#2a2e35;
+  --t-ver:#ced4da;   --t-ver-bg:#262a31;
+  --t-level:#8ce99a; --t-level-bg:#183222;
+  --t-hook:#faa2c1;  --t-hook-bg:#3a1a28;
   --shadow:0 12px 32px rgba(0,0,0,.5); --ok:#6ad08a; --ok-bg:#15301f; color-scheme:dark}
 
 *{box-sizing:border-box}
@@ -98,6 +107,9 @@ button.tag:hover{border-color:var(--c)}
 .c-theme{--c:var(--t-theme);--c-bg:var(--t-theme-bg)}
 .c-look{--c:var(--t-look);--c-bg:var(--t-look-bg)}
 .c-weapon{--c:var(--t-weapon);--c-bg:var(--t-weapon-bg)}
+.c-ver{--c:var(--t-ver);--c-bg:var(--t-ver-bg)}
+.c-level{--c:var(--t-level);--c-bg:var(--t-level-bg)}
+.c-hook{--c:var(--t-hook);--c-bg:var(--t-hook-bg)}
 .c-sys{--c:var(--t-sys);--c-bg:var(--t-sys-bg)}
 .c-pc{--c:var(--t-pc);--c-bg:var(--t-pc-bg)}
 .c-game{--c:var(--t-game);--c-bg:var(--t-game-bg)}
@@ -107,7 +119,7 @@ button.tag:hover{border-color:var(--c)}
 .deep.has::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--c);margin-left:2px}
 
 .tablebox{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow-x:auto;min-width:0}
-table{border-collapse:collapse;width:100%;min-width:1080px}
+table{border-collapse:collapse;width:100%;min-width:1360px}
 th,td{text-align:left;vertical-align:top;padding:10px 10px;border-bottom:1px solid var(--line)}
 th{font-size:11px;font-family:var(--f-mono);letter-spacing:.06em;color:var(--muted);font-weight:500;background:var(--panel);position:sticky;top:0;white-space:nowrap}
 tbody tr:hover{background:var(--hover)}
@@ -432,7 +444,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
       <div class="state" id="state"><strong>레퍼런스를 불러오는 중…</strong></div>
       <table id="tbl" hidden>
         <thead><tr>
-          <th>게임</th><th>몬스터</th><th>이미지</th><th>테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th>대응 PC 도구</th><th>링크</th><th></th>
+          <th>게임</th><th>버전</th><th>몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th>대응 PC 도구</th><th>링크</th><th></th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -453,7 +465,10 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 (() => {
 const CATS = [
   {key:"game",   label:"게임",            cls:"c-game"},
+  {key:"version",label:"버전",            cls:"c-ver"},
   {key:"theme",  label:"테마",            cls:"c-theme"},
+  {key:"levels", label:"레벨 테마",        cls:"c-level"},
+  {key:"hooks",  label:"후킹 이미지",      cls:"c-hook"},
   {key:"looks",  label:"외형",            cls:"c-look"},
   {key:"weapons",label:"무기",            cls:"c-weapon"},
   {key:"systems",label:"전투 확장 시스템", cls:"c-sys", deep:true, root:"몬스터 전투 확장 시스템"},
@@ -548,7 +563,7 @@ let loaded = false;
 
 /* ---------- helpers ---------- */
 function vals(m, key){
-  if (key === "game") return m.game ? [m.game] : [];
+  if (key === "game" || key === "version") return m[key] ? [m[key]] : [];
   if (CAT[key].deep) return (m[key]||[]).map(e=>e.name);
   return m[key] || [];
 }
@@ -628,7 +643,7 @@ function wireVideos(root, ob){
 
 /* ---------- filtering ---------- */
 function haystack(m){
-  const parts=[m.game,m.name,m.link,...(m.theme||[]),...(m.looks||[]),...(m.weapons||[])];
+  const parts=[m.game,m.version,m.name,m.link,...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
   for (const k of ["systems","pcs"]) for (const e of (m[k]||[])) parts.push(e.name,e.label,e.note);
   return parts.filter(Boolean).join(" ").toLowerCase();
 }
@@ -756,7 +771,8 @@ $("#groupbox").addEventListener("click", async e=>{
 });
 
 /* ---------- 자동완성: 이미 등록된 게임·태그를 드롭다운으로 ---------- */
-const AC_SRC={w_tags:"worktags", f_game:"game", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
+const AC_SINGLE=new Set(["game","version"]);
+const AC_SRC={w_tags:"worktags", f_game:"game", f_version:"version", f_hooks:"hooks", f_levels:"levels", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
 let acBox=null, acInput=null, acItems=[], acIdx=-1;
 function acValues(cat){
   const cnt=new Map();
@@ -764,7 +780,7 @@ function acValues(cat){
   else monsters.forEach(m=>new Set(vals(m,cat)).forEach(v=>cnt.set(v,(cnt.get(v)||0)+1)));
   return [...cnt].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
 }
-function acParts(input){ return AC_SRC[input.id]==="game" ? [input.value] : input.value.split("/"); }
+function acParts(input){ return AC_SINGLE.has(AC_SRC[input.id]) ? [input.value] : input.value.split("/"); }
 function acOpen(input){
   const cat=AC_SRC[input.id]; if(!cat) return;
   const parts=acParts(input), cur=parts[parts.length-1].trim(), lc=cur.toLowerCase();
@@ -775,7 +791,7 @@ function acOpen(input){
     acBox.addEventListener("mousedown",e=>{ const b=e.target.closest("button[data-i]"); if(!b) return; e.preventDefault(); acPick(+b.dataset.i); }); }
   acInput=input; acIdx=lc?0:-1;
   const hl=v=>{ if(!lc) return esc(v); const k=v.toLowerCase().indexOf(lc); return esc(v.slice(0,k))+"<mark>"+esc(v.slice(k,k+cur.length))+"</mark>"+esc(v.slice(k+cur.length)); };
-  acBox.innerHTML=`<div class="hint">${cat==="game"?"등록된 게임":cat==="worktags"?"등록된 태그 · Enter로 추가":"등록된 "+CAT[cat].label+" · Enter로 추가"}</div>`+acItems.map(([v,n],k)=>`<button type="button" role="option" data-i="${k}" class="${k===acIdx?"on":""}"><span>${hl(v)}</span><span class="n">${n}</span></button>`).join("");
+  acBox.innerHTML=`<div class="hint">${cat==="game"?"등록된 게임":cat==="version"?"등록된 버전":cat==="worktags"?"등록된 태그 · Enter로 추가":"등록된 "+CAT[cat].label+" · Enter로 추가"}</div>`+acItems.map(([v,n],k)=>`<button type="button" role="option" data-i="${k}" class="${k===acIdx?"on":""}"><span>${hl(v)}</span><span class="n">${n}</span></button>`).join("");
   const rc=input.getBoundingClientRect();
   acBox.style.left=rc.left+"px"; acBox.style.width=Math.max(200,rc.width)+"px";
   const below=innerHeight-rc.bottom;
@@ -787,7 +803,7 @@ function acClose(){ if(acBox) acBox.hidden=true; acIdx=-1; acItems=[]; }
 function acPick(k){
   const it=acItems[k]; if(!it||!acInput) return;
   const input=acInput;
-  if(AC_SRC[input.id]==="game"){ input.value=it[0]; acClose(); return; }
+  if(AC_SINGLE.has(AC_SRC[input.id])){ input.value=it[0]; acClose(); return; }
   const parts=acParts(input).slice(0,-1).map(t=>t.trim()).filter(Boolean); parts.push(it[0]);
   input.value=parts.join(" / ")+" / ";
   input.setSelectionRange(input.value.length,input.value.length);
@@ -815,8 +831,10 @@ addEventListener("resize",acClose);
 /* ---------- 레퍼런스 텍스트 복사 ---------- */
 function refText(m){
   const j=a=>(a||[]).join(" / ");
-  const L=[`[${m.game||"-"}] ${m.name}`];
+  const L=[`[${m.game||"-"}${m.version?" "+m.version:""}] ${m.name}`];
+  if((m.hooks||[]).length)   L.push(`후킹 이미지: ${j(m.hooks)}`);
   if((m.theme||[]).length)   L.push(`테마: ${j(m.theme)}`);
+  if((m.levels||[]).length)  L.push(`레벨 테마: ${j(m.levels)}`);
   if((m.looks||[]).length)   L.push(`외형: ${j(m.looks)}`);
   if((m.weapons||[]).length) L.push(`무기: ${j(m.weapons)}`);
   for(const [k,lab] of [["systems","전투 확장 시스템"],["pcs","대응 PC 도구"]]){
@@ -852,9 +870,11 @@ function rowHTML(m){
   if (m.link){ try{ const u=new URL(m.link); link=`<div class="linkcell"><a class="link" href="${esc(u.href)}" target="_blank" rel="noopener">${yid?"▶ 영상":"↗ 열기"}</a>${yid?`<span class="lstate" data-yt="${esc(yid)}"></span>`:""}</div>`; }catch{ link=esc(m.link); } }
   return `<tr>
     <td class="game">${m.game?tagBtn("game",m.game):""}</td>
+    <td class="game">${m.version?tagBtn("version",m.version):""}</td>
     <td class="name">${esc(m.name)}</td>
     <td>${thumbHTML(m,240)}</td>
-    <td>${cells("theme")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td>
+    <td>${cells("hooks")}</td>
+    <td>${cells("theme")}</td><td>${cells("levels")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td>
     <td>${deep("systems")}</td><td>${deep("pcs")}</td>
     <td>${link}</td>
     <td><div class="rowact"><button type="button" class="iconbtn" data-copy="${esc(m.id)}" title="기획서에 붙여 넣을 텍스트로 복사">복사</button><button type="button" class="iconbtn edit-only" data-dup="${esc(m.id)}" title="같은 내용으로 새 레퍼런스 만들기">복제</button><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>
@@ -866,7 +886,7 @@ function renderRail(){
   for (const m of monsters) for (const c of CATS) for (const v of new Set(vals(m,c.key))) counts[c.key].set(v,(counts[c.key].get(v)||0)+1);
   $("#rail").innerHTML = CATS.map(c=>{
     const arr=[...counts[c.key]].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
-    return `<div class="group"><h3><i style="background:var(--${{game:"t-game",theme:"t-theme",looks:"t-look",weapons:"t-weapon",systems:"t-sys",pcs:"t-pc"}[c.key]})"></i>${c.label}</h3>
+    return `<div class="group"><h3><i style="background:var(--${{game:"t-game",version:"t-ver",theme:"t-theme",levels:"t-level",hooks:"t-hook",looks:"t-look",weapons:"t-weapon",systems:"t-sys",pcs:"t-pc"}[c.key]})"></i>${c.label}</h3>
       <div class="chips">${arr.length?arr.map(([v,n])=>{const on=filters.has(c.key+"|"+v);return `<button type="button" class="tag ${c.cls} ${on?"on":""}" data-tag="${esc(c.key)}|${esc(v)}">${esc(v)} <span class="n">${n}</span></button>`}).join(""):`<span class="empty-note">—</span>`}</div></div>`;
   }).join("");
 }
@@ -987,17 +1007,24 @@ function openForm(m, copyFrom){
     <form id="form" novalidate>
       <div class="field"><label for="f_game">게임 이름</label><input id="f_game" type="text" value="${esc(v?.game)}" placeholder="젠레스 존 제로" required></div>
       <div class="field"><label for="f_name">몬스터 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="태초의 악몽" required></div>
+      <div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>
+      <div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>
       ${mediaFieldHTML("이미지")}
-      <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마 태그</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
+      <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
+      <div class="field full"><label for="f_levels"><i style="background:var(--t-level)"></i>레벨 테마</label><input id="f_levels" type="text" value="${esc(j(v?.levels))}" placeholder="폐허 도시 / 우주 정거장"><small>등장 스테이지의 분위기 · / 로 구분</small></div>
       <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
       <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(v?.weapons))}" placeholder="에너지 / 검"></div>
       <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>상세 공략은 표에서 칩에 마우스를 올려 수정</small></div>
       <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>대응 PC 도구</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="엽빛나"></div>
       <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
       <div class="err" id="fErr" hidden></div>
-      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
+      <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
     </form></div>`;
   sc.hidden=false; setThumb(); wireAC();
+  if(m){
+    $("#fCopy").onclick=e=>copyText(refText(formSnapshot(m)), e.currentTarget);
+    $("#fDup").onclick=()=>{ if(uploading){ toast("업로드가 끝난 뒤 복제할 수 있어요"); return; } const snap=formSnapshot(m); closeForm(); openForm(null, snap); };
+  }
   $("#f_game").focus();
   $("#fClose").onclick=$("#fCancel").onclick=closeForm;
   sc.onclick=e=>{ if(e.target===sc) closeForm(); };
@@ -1026,6 +1053,16 @@ function wireMediaField(){
   d.ondragover=e=>{e.preventDefault(); d.classList.add("over");};
   d.ondragleave=()=>d.classList.remove("over");
   d.ondrop=e=>{e.preventDefault(); d.classList.remove("over"); const f=[...e.dataTransfer.files].find(f=>/^(image|video)\//.test(f.type)); if(f) upload(f);};
+}
+/* 편집 창에 지금 입력된 값 (저장 전 내용 포함) */
+function formSnapshot(m){
+  const keep=(names, old)=>names.map(n=>{ const o=(old||[]).find(e=>e.name===n); return o?{...o}:{name:n,label:"공략",note:""}; });
+  return { ...m,
+    game:$("#f_game").value.trim(), name:$("#f_name").value.trim(), version:$("#f_version").value.trim(),
+    hooks:splitTags($("#f_hooks").value), levels:splitTags($("#f_levels").value),
+    theme:splitTags($("#f_theme").value), looks:splitTags($("#f_looks").value), weapons:splitTags($("#f_weapons").value),
+    systems:keep(splitTags($("#f_systems").value), m?.systems), pcs:keep(splitTags($("#f_pcs").value), m?.pcs),
+    link:$("#f_link").value.trim(), image:formImage||"", media:formMedia||null };
 }
 function closeForm(){ acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
 document.addEventListener("paste", e=>{
@@ -1161,6 +1198,7 @@ async function saveForm(m, src){
   const keep=(names, old)=>names.map(n=>{ const o=(old||[]).find(e=>e.name===n); return o?{...o}:{name:n,label:"공략",note:""}; });
   const data={
     game, name,
+    version:$("#f_version").value.trim(), hooks:splitTags($("#f_hooks").value), levels:splitTags($("#f_levels").value),
     theme:splitTags($("#f_theme").value), looks:splitTags($("#f_looks").value), weapons:splitTags($("#f_weapons").value),
     systems:keep(splitTags($("#f_systems").value), src?.systems), pcs:keep(splitTags($("#f_pcs").value), src?.pcs),
     link:$("#f_link").value.trim(), image:formImage||"", media:formMedia||null, updatedAt:Date.now(),
