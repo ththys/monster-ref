@@ -107,6 +107,7 @@ tr.drop-after td{box-shadow:inset 0 -2px 0 var(--accent)}
 .ac button .en{color:var(--muted);font-size:12px;margin-left:6px}
 /* 이전 값 고르기 (칩) */
 .pick{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+select.gamesel{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:8px 10px;font-weight:500}
 .pick .tag{cursor:pointer;font-size:12px}
 .pick .tag.on::before{content:"✓";font-size:10px;margin-right:2px}
 .pick .pmore{border:1px dashed var(--line);background:none;border-radius:4px;padding:1px 8px;font-size:12px;color:var(--muted)}
@@ -1103,7 +1104,7 @@ function confirmNoteDelete(mid, cat, i){
 
 /* ---------- 자동완성: 이미 등록된 게임·태그를 드롭다운으로 ---------- */
 const AC_SINGLE=new Set(["game","version"]);
-const AC_SRC={w_tags:"worktags", f_game:"game", f_version:"version", f_hooks:"hooks", f_levels:"levels", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
+const AC_SRC={w_tags:"worktags", f_version:"version", f_hooks:"hooks", f_levels:"levels", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
 let acBox=null, acInput=null, acItems=[], acIdx=-1;
 function acValues(cat){
   const cnt=new Map();
@@ -1142,7 +1143,25 @@ function acPick(k){
   acOpen(input);
 }
 function acMove(d){ if(!acItems.length) return; acIdx=(acIdx+d+acItems.length)%acItems.length; acBox.querySelectorAll("button").forEach((b,k)=>b.classList.toggle("on",k===acIdx)); acBox.querySelectorAll("button")[acIdx].scrollIntoView({block:"nearest"}); }
-/* ---------- 이전에 쓴 값을 칩으로 깔아 두고 눌러서 고르기 ---------- */
+/* ---------- 게임 이름: 이전에 쓴 게임을 드롭다운으로 ---------- */
+function gameSelectHTML(cur){
+  const games=acValues("game").map(([g])=>g).sort((a,b)=>a.localeCompare(b,"ko"));
+  const known=games.includes(cur), isNew=!!cur && !known, none=!games.length;
+  return `<select id="f_gameSel" class="gamesel" ${none?"hidden":""}>
+      <option value="" ${!cur?"selected":""} disabled>게임 선택</option>
+      ${games.map(g=>`<option value="${esc(g)}" ${g===cur?"selected":""}>${esc(g)}</option>`).join("")}
+      <option value="__new__" ${isNew?"selected":""}>＋ 새 게임 직접 입력</option>
+    </select>
+    <input id="f_game" type="text" value="${esc(cur)}" placeholder="새 게임 이름" ${(isNew||none)?"":"hidden"} required style="${none?"":"margin-top:6px"}">`;
+}
+function wireGameSelect(){
+  const sel=$("#f_gameSel"), inp=$("#f_game"); if(!sel||!inp) return;
+  sel.addEventListener("change",()=>{
+    if(sel.value==="__new__"){ inp.hidden=false; inp.value=""; inp.focus(); }
+    else { inp.hidden=true; inp.value=sel.value; }
+  });
+}
+/* ---------- (사용 안 함) 이전 값 칩 ---------- */
 const PICK_IDS=["f_game","f_version","f_hooks","f_theme","f_levels","f_looks","f_weapons","f_systems","f_pcs"];
 const PICK_SHOW=14;
 const pickOpen=new Set();
@@ -1421,7 +1440,7 @@ function openForm(m, copyFrom){
   sc.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
     <header><h2 id="fTitle">${KINDS[fKind].label} ${m?"레퍼런스 편집":copyFrom?"레퍼런스 복제":"레퍼런스 추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <form id="form" novalidate>
-      <div class="field"><label for="f_game">게임 이름</label><input id="f_game" type="text" value="${esc(v?.game)}" placeholder="젠레스 존 제로" required></div>
+      <div class="field"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v?.game||"")}</div>
       <div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>
       <div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${fKind==="pc"?"Ye Shunguang":"Primordial Nightmare"}" lang="en" autocomplete="off"></div>
@@ -1438,12 +1457,12 @@ function openForm(m, copyFrom){
       <div class="err" id="fErr" hidden></div>
       <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
     </form></div>`;
-  sc.hidden=false; setThumb(); wireAC(); pickOpen.clear(); wirePickers();
+  sc.hidden=false; setThumb(); wireAC(); wireGameSelect();
   if(m){
     $("#fCopy").onclick=e=>copyText(refText(formSnapshot(m)), e.currentTarget);
     $("#fDup").onclick=()=>{ if(uploading){ toast("업로드가 끝난 뒤 복제할 수 있어요"); return; } const snap=formSnapshot(m); closeForm(); openForm(null, snap); };
   }
-  $("#f_game").focus();
+  ($("#f_game").hidden ? $("#f_gameSel") : $("#f_game")).focus();
   $("#fClose").onclick=$("#fCancel").onclick=closeForm;
   sc.onclick=e=>{ if(e.target===sc) closeForm(); };
   wireMediaField();
