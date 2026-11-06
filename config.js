@@ -19,7 +19,7 @@ window.REF_CONFIG = {
   //    첫 계정이 가득 차면 아래에 한 줄 더 추가하세요. 이전 파일은 원래 계정에서 계속 보입니다.
   //    비워 두면 작은 이미지만 데이터 안에 함께 저장합니다.
   cloudinary: [
-    { cloudName: "여기에 붙여 넣기", uploadPreset: "monster_ref" }
+    { cloudName: "evqhgyll", uploadPreset: "monster_ref" }
     // , { cloudName: "두번째계정", uploadPreset: "monster_ref" }
   ],
 

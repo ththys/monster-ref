@@ -725,8 +725,10 @@ const MB = n => (n/1048576).toFixed(1);
 function mediaUrls(md, w){
   const base = `https://res.cloudinary.com/${encodeURIComponent(md.cloud)}/${md.rt}/upload/`;
   const id = md.id, sz = `w_${w},c_limit`;
-  if (md.rt==="video") return {kind:"video", src:`${base}q_auto,${sz}/${id}.mp4`, poster:`${base}so_0,${sz}/${id}.jpg`, orig:`${base}${id}.${md.fmt||"mp4"}`};
-  if (md.anim)         return {kind:"video", src:`${base}q_auto,${sz}/${id}.mp4`, poster:`${base}pg_1,${sz}/${id}.jpg`, orig:`${base}${id}.${md.fmt||"gif"}`};
+  /* 영상·움짤은 크기 하나(SD 640px)만 만들어 썸네일과 크게 보기에 같이 씀 → 변환 크레딧 절약 */
+  const vz = "w_640,c_limit";
+  if (md.rt==="video") return {kind:"video", src:`${base}q_auto,${vz}/${id}.mp4`, poster:`${base}so_0,${vz}/${id}.jpg`, orig:`${base}${id}.${md.fmt||"mp4"}`};
+  if (md.anim)         return {kind:"video", src:`${base}q_auto,${vz}/${id}.mp4`, poster:`${base}pg_1,${vz}/${id}.jpg`, orig:`${base}${id}.${md.fmt||"gif"}`};
   return {kind:"img", src:`${base}f_auto,q_auto,${sz}/${id}`, orig:`${base}${id}.${md.fmt||"jpg"}`};
 }
 function origUrl(m){ return m.media ? mediaUrls(m.media,1).orig : (m.image||""); }
