@@ -1228,6 +1228,49 @@ function gameSelectHTML(cur){
     </select>
     <input id="f_game" type="text" value="${esc(cur)}" placeholder="새 게임 이름" ${(isNew||none)?"":"hidden"} required style="${none?"":"margin-top:6px"}">`;
 }
+/* ---------- 시스템 이름·영문 이름 드롭다운 ----------
+   시스템 레퍼런스 + 몬스터·PC의 전투 확장 시스템에서 쓴 이름을 모아서 */
+function sysNameList(){
+  const en=new Map(), names=new Set();
+  allRefs.forEach(m=>{
+    if(kindOf(m)==="system" && m.name){ names.add(m.name); if(m.nameEn && !en.has(m.name)) en.set(m.name,m.nameEn); }
+    else (m.systems||[]).forEach(e=>{ if(!e.name) return; names.add(e.name); const d=getDef(kindOf(m),"systems",e.name); if(d.nameEn && !en.has(e.name)) en.set(e.name,d.nameEn); });
+  });
+  defs.forEach(d=>{ if(d.cat==="systems" && d.name){ names.add(d.name); if(d.nameEn && !en.has(d.name)) en.set(d.name,d.nameEn); } });
+  const ko=(a,b)=>a.localeCompare(b,"ko");
+  return { names:[...names].sort(ko), ens:[...new Set([...en.values(), ...allRefs.filter(m=>kindOf(m)==="system"&&m.nameEn).map(m=>m.nameEn)])].sort((a,b)=>a.localeCompare(b)), en };
+}
+function comboHTML(id, list, cur, pickLabel, newLabel, ph, attrs){
+  const known=list.includes(cur), isNew=!!cur && !known, none=!list.length;
+  return `<select id="${id}Sel" class="gamesel" ${none?"hidden":""}>
+      <option value="" ${!cur?"selected":""} disabled>${pickLabel}</option>
+      ${list.map(x=>`<option value="${esc(x)}" ${x===cur?"selected":""}>${esc(x)}</option>`).join("")}
+      <option value="__new__" ${isNew?"selected":""}>${newLabel}</option>
+    </select>
+    <input id="${id}" type="text" value="${esc(cur)}" placeholder="${esc(ph)}" ${attrs||""} autocomplete="off" ${(isNew||none)?"":"hidden"} style="${none?"":"margin-top:6px"}">`;
+}
+function setCombo(id, val){
+  const sel=document.getElementById(id+"Sel"), inp=document.getElementById(id); if(!inp) return;
+  inp.value=val;
+  if(!sel || sel.hidden) return;
+  if([...sel.options].some(o=>o.value===val && val)){ sel.value=val; inp.hidden=true; }
+  else if(val){ sel.value="__new__"; inp.hidden=false; }
+  else { sel.value=""; inp.hidden=true; }
+}
+function wireCombo(id, onPick){
+  const sel=document.getElementById(id+"Sel"), inp=document.getElementById(id); if(!sel||!inp) return;
+  sel.addEventListener("change",()=>{
+    if(sel.value==="__new__"){ inp.hidden=false; inp.value=""; inp.focus(); }
+    else { inp.hidden=true; inp.value=sel.value; if(onPick) onPick(sel.value); }
+  });
+}
+function wireSysNames(){
+  if(!$("#f_nameSel")) return;
+  const {en}=sysNameList();
+  /* 시스템 이름을 고르면 알고 있는 영문 이름을 자동으로 (비어 있을 때만) */
+  wireCombo("f_name", v=>{ const e=en.get(v); if(e && !$("#f_nameEn").value.trim()) setCombo("f_nameEn", e); });
+  wireCombo("f_nameEn");
+}
 function wireGameSelect(){
   const sel=$("#f_gameSel"), inp=$("#f_game"); if(!sel||!inp) return;
   sel.addEventListener("change",()=>{
@@ -1524,8 +1567,10 @@ function openForm(m, copyFrom){
     <form id="form" novalidate>
       <div class="field"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v?.game||"")}</div>
       ${SYS?"":`<div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>`}
-      <div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
-      <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${K.enPh}" lang="en" autocomplete="off"></div>
+      ${SYS ? `<div class="field"><label for="f_nameSel">시스템 이름</label>${comboHTML("f_name", sysNameList().names, v?.name||"", "시스템 선택", "＋ 새 시스템 직접 입력", K.namePh, "")}</div>
+      <div class="field"><label for="f_nameEnSel">영문 이름</label>${comboHTML("f_nameEn", sysNameList().ens, v?.nameEn||"", "영문 이름 선택", "＋ 새 영문 이름 직접 입력", K.enPh, 'lang="en"')}</div>`
+      : `<div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
+      <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${K.enPh}" lang="en" autocomplete="off"></div>`}
       ${SYS?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>`}
       ${mediaFieldHTML("이미지")}
       ${SYS?`<div class="field full"><label for="f_cats"><i style="background:var(--t-pc)"></i>분류</label><input id="f_cats" type="text" value="${esc(j(v?.cats))}" placeholder="전투 / 성장 / 재화"><small>시스템 종류 · / 로 구분</small></div>
@@ -1541,7 +1586,7 @@ function openForm(m, copyFrom){
       <div class="err" id="fErr" hidden></div>
       <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
     </form></div>`;
-  sc.hidden=false; setThumb(); wireAC(); wireGameSelect();
+  sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireSysNames();
   if(m){
     $("#fCopy").onclick=e=>copyText(refText(formSnapshot(m)), e.currentTarget);
     $("#fDup").onclick=()=>{ if(uploading){ toast("업로드가 끝난 뒤 복제할 수 있어요"); return; } const snap=formSnapshot(m); closeForm(); openForm(null, snap); };
