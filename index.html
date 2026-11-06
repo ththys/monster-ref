@@ -727,7 +727,7 @@ function mediaUrls(md, w){
   const id = md.id, sz = `w_${w},c_limit`;
   /* 영상·움짤은 크기 하나(SD 640px)만 만들어 썸네일과 크게 보기에 같이 씀 → 변환 크레딧 절약 */
   const vz = "w_640,c_limit";
-  if (md.rt==="video") return {kind:"video", src:`${base}q_auto,${vz}/${id}.mp4`, poster:`${base}so_0,${vz}/${id}.jpg`, orig:`${base}${id}.${md.fmt||"mp4"}`};
+  if (md.rt==="video") return {kind:"video", src:`${base}q_auto,${vz}/${id}.mp4`, poster:`${base}so_0,${vz}/${id}.jpg`, orig:md.orig||`${base}${id}.${md.fmt||"mp4"}`};
   if (md.anim)         return {kind:"video", src:`${base}q_auto,${vz}/${id}.mp4`, poster:`${base}pg_1,${vz}/${id}.jpg`, orig:`${base}${id}.${md.fmt||"gif"}`};
   return {kind:"img", src:`${base}f_auto,q_auto,${sz}/${id}`, orig:`${base}${id}.${md.fmt||"jpg"}`};
 }
@@ -1730,6 +1730,27 @@ async function animToVideo(file, onp){
   const type=mime.split(";")[0];
   return new File([new Blob(chunks,{type})], (file.name||"clip").replace(/\.\w+$/,"")+(type.includes("mp4")?".mp4":".webm"), {type});
 }
+/* 움직이는 WEBP는 Cloudinary가 변환하면서 앞부분만 남기는 문제가 있어서,
+   브라우저에서 먼저 영상으로 바꿔 올림 (원본 WEBP도 '원본 열기'용으로 함께 저장) */
+const canConvertAnim = () => "ImageDecoder" in window && !!window.MediaRecorder && !!HTMLCanvasElement.prototype.captureStream;
+const isWebp = f => /webp/i.test(f.type||"") || /\.webp$/i.test(f.name||"");
+async function prepUpload(target, file, onp){
+  const isVid=/^video\//.test(file.type||"");
+  let rt="image", send=file, anim=false, orig="";
+  if(isVid){ rt="video"; if(file.size>VID_MAX) throw {msg:`영상이 ${MB(file.size)}MB예요. 100MB까지 올릴 수 있어요`}; }
+  else {
+    anim=await isAnimated(file);
+    if(anim && isWebp(file) && canConvertAnim()){
+      if(file.size<=IMG_MAX){ try{ const o=await cloudUpload(target, file, "image", p=>onp(`원본 저장 ${p}%`)); orig=o.secure_url||""; }catch{} }
+      send=await animToVideo(file, p=>onp(`영상 변환 ${p}%`)); rt="video"; anim=false;
+    } else if(file.size>IMG_MAX){
+      if(anim){ send=await animToVideo(file, p=>onp(`영상 변환 ${p}%`)); rt="video"; anim=false; }
+      else { const blob=await (await fetch(await shrink(file,2400))).blob(); send=new File([blob],"image.jpg",{type:"image/jpeg"}); }
+    }
+  }
+  const res=await cloudUpload(target, send, rt, p=>onp(`업로드 ${p}%`));
+  return {cloud:target.cloudName, rt:res.resource_type||rt, id:res.public_id, fmt:res.format||"", anim:(res.resource_type||rt)==="image"&&anim, bytes:res.bytes||send.size, ...(orig?{orig}:{})};
+}
 async function upload(file){
   const target=upTarget();
   if(!target) return uploadInline(file);
@@ -1737,20 +1758,7 @@ async function upload(file){
   const err=$("#fErr"), note=$("#fNotice"); err.hidden=true; note.hidden=true;
   uploading=true; setThumb("확인 중…");
   try{
-    const isVid=/^video\//.test(file.type||"");
-    let rt="image", send=file, anim=false;
-    if(isVid){
-      rt="video";
-      if(file.size>VID_MAX) throw {msg:`영상이 ${MB(file.size)}MB예요. 100MB까지 올릴 수 있어요`};
-    } else {
-      anim=await isAnimated(file);
-      if(file.size>IMG_MAX){
-        if(anim){ send=await animToVideo(file, p=>setThumb(`영상 변환 ${p}%`)); rt="video"; anim=false; }
-        else { const blob=await (await fetch(await shrink(file,2400))).blob(); send=new File([blob],"image.jpg",{type:"image/jpeg"}); }
-      }
-    }
-    const res=await cloudUpload(target, send, rt, p=>setThumb(`업로드 ${p}%`));
-    formMedia={cloud:target.cloudName, rt:res.resource_type||rt, id:res.public_id, fmt:res.format||"", anim:(res.resource_type||rt)==="image"&&anim, bytes:res.bytes||send.size};
+    formMedia=await prepUpload(target, file, t=>setThumb(t));
     formImage=null; $("#f_imgurl").value="";
     uploading=false; setThumb();
   }catch(ex){
@@ -2246,18 +2254,7 @@ async function uploadAny(file, onp){
     if(await isAnimated(file) && file.size<=MAX_ANIM_KB*1024) return {image:await readURL(file)};
     return {image:await shrink(file,1280)};
   }
-  const isVid=/^video\//.test(file.type||"");
-  let rt="image", send=file, anim=false;
-  if(isVid){ rt="video"; if(file.size>VID_MAX) throw {msg:`영상이 ${MB(file.size)}MB예요. 100MB까지 올릴 수 있어요`}; }
-  else {
-    anim=await isAnimated(file);
-    if(file.size>IMG_MAX){
-      if(anim){ send=await animToVideo(file,onp); rt="video"; anim=false; }
-      else { const blob=await (await fetch(await shrink(file,2400))).blob(); send=new File([blob],"image.jpg",{type:"image/jpeg"}); }
-    }
-  }
-  const res=await cloudUpload(target, send, rt, onp);
-  return {media:{cloud:target.cloudName, rt:res.resource_type||rt, id:res.public_id, fmt:res.format||"", anim:(res.resource_type||rt)==="image"&&anim, bytes:res.bytes||send.size}};
+  return {media:await prepUpload(target, file, t=>{ const m=/(\d+)%/.exec(t); onp(m?Number(m[1]):0); })};
 }
 function galleryFieldHTML(){
   return `<div class="field full"><label>추가 이미지 <small style="font-weight:400">· 슬라이드에서 넘겨 보고, 상세 화면에 차례로 보여요</small></label>
