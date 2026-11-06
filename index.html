@@ -686,7 +686,7 @@ const KINDS = {
   system: { label:"시스템", counter:"대응 항목",   counterPh:"", namePh:"태그 교체", guide:"설명", enPh:"Tag Switch" },
 };
 const kindOf = m => m.kind==="pc" ? "pc" : m.kind==="system" ? "system" : "monster";
-const SYS_KEYS=["game","version","cats","keywords"];
+const SYS_KEYS=["game","cats","keywords"];
 const railCats = () => CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key));
 const THEAD = {
   ref: `<th class="grip" aria-label="순서"></th><th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th>공략</th><th></th>`,
@@ -849,7 +849,7 @@ function manualSorted(arr){
 }
 function sortList(arr){
   const a=arr.slice();
-  switch(sortMode){
+  switch(kind==="system" && sortMode.startsWith("version") ? "recent" : sortMode){
     case "game": return a.sort((x,y)=>emptyLast(x,y,m=>m.game)||(x.game||"").localeCompare(y.game||"","ko")||emptyLast(x,y,m=>m.version)||cmpVersion(y.version,x.version)||byName(x,y));
     case "version": return a.sort((x,y)=>emptyLast(x,y,m=>m.version)||cmpVersion(y.version,x.version)||(x.game||"").localeCompare(y.game||"","ko")||byName(x,y));
     case "version-asc": return a.sort((x,y)=>emptyLast(x,y,m=>m.version)||cmpVersion(x.version,y.version)||(x.game||"").localeCompare(y.game||"","ko")||byName(x,y));
@@ -859,7 +859,11 @@ function sortList(arr){
   }
 }
 function applySortUI(){
-  const sel=$("#sortSel"); if(sel) sel.value=sortMode;
+  const sel=$("#sortSel");
+  if(sel){ const noVer = kind==="system";
+    sel.querySelectorAll('option[value^="version"]').forEach(o=>o.hidden=noVer);
+    sel.querySelector('option[value="game"]').textContent = noVer ? "게임순" : "게임순 (→ 버전 높은순)";
+    sel.value = (noVer && sortMode.startsWith("version")) ? "recent" : sortMode; }
   document.body.classList.toggle("sort-manual", sortMode==="manual" && canEdit());
 }
 function setSort(v, persistRemote){
@@ -1008,7 +1012,7 @@ function renderBuckets(list, mode){
       ${thumbHTML(m,240)}
       <div class="gbody">
         <div class="gcrumb"><b>${esc(m.name)}</b>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}</div>
-        <div class="cell" style="display:flex;flex-wrap:wrap;gap:4px">${byCat?(m.game?tagBtn("game",m.game):""):(m.cats||[]).map(v=>tagBtn("cats",v)).join("")}${m.version?tagBtn("version",m.version):""}${(m.keywords||[]).map(v=>tagBtn("keywords",v)).join("")}</div>
+        <div class="cell" style="display:flex;flex-wrap:wrap;gap:4px">${byCat?(m.game?tagBtn("game",m.game):""):(m.cats||[]).map(v=>tagBtn("cats",v)).join("")}${(m.keywords||[]).map(v=>tagBtn("keywords",v)).join("")}</div>
         ${(m.guide||"").trim()?`<button type="button" class="gpv" data-guide="${esc(m.id)}" style="max-width:680px"><span>${esc(guidePlain(m.guide).slice(0,300))}</span><small>전체 보기</small></button>`:""}
       </div>
       <div class="gact rowact" style="opacity:1"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div>
@@ -1367,7 +1371,7 @@ function rowHTML(m){
   const tr=`<tr data-id="${esc(m.id)}" ${sortMode==="manual"?'draggable="true"':""}>`;
   const grip=`<td class="grip"><div class="g"><button type="button" data-mv="${esc(m.id)}|-1" ${pos===0?"disabled":""} aria-label="위로">▲</button><span class="h" title="끌어서 순서 바꾸기">⠿</span><button type="button" data-mv="${esc(m.id)}|1" ${pos===monsters.length-1?"disabled":""} aria-label="아래로">▼</button></div></td>`;
   const nameTd=`<td class="name"><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}
-      ${(m.game||m.version)?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version?tagBtn("version",m.version):""}</div>`:""}
+      ${(m.game||(m.version&&kindOf(m)!=="system"))?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version&&kindOf(m)!=="system"?tagBtn("version",m.version):""}</div>`:""}
       ${link}</td>`;
   const acts=`<td><div class="rowact"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>`;
   if(kindOf(m)==="system")
@@ -1517,7 +1521,7 @@ function openForm(m, copyFrom){
     <header><h2 id="fTitle">${KINDS[fKind].label} ${m?"레퍼런스 편집":copyFrom?"레퍼런스 복제":"레퍼런스 추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <form id="form" novalidate>
       <div class="field"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v?.game||"")}</div>
-      <div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>
+      ${SYS?"":`<div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>`}
       <div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${K.enPh}" lang="en" autocomplete="off"></div>
       ${SYS?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>`}
