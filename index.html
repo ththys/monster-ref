@@ -728,6 +728,8 @@ function mediaUrls(md, w){
   /* 영상·움짤은 크기 하나(SD 640px)만 만들어 썸네일과 크게 보기에 같이 씀 → 변환 크레딧 절약 */
   const vz = "w_640,c_limit";
   if (md.rt==="video") return {kind:"video", src:`${base}q_auto,${vz}/${id}.mp4`, poster:`${base}so_0,${vz}/${id}.jpg`, orig:md.orig||`${base}${id}.${md.fmt||"mp4"}`};
+  /* 움직이는 WEBP가 이미지로 올라가 있으면 (변환 없이) 원본 그대로 보여 줌: Cloudinary 변환 시 잘리는 문제 회피 */
+  if (md.anim && /webp/i.test(md.fmt||"")) return {kind:"img", src:`${base}${id}.webp`, orig:`${base}${id}.webp`};
   if (md.anim)         return {kind:"video", src:`${base}q_auto,${vz}/${id}.mp4`, poster:`${base}pg_1,${vz}/${id}.jpg`, orig:`${base}${id}.${md.fmt||"gif"}`};
   return {kind:"img", src:`${base}f_auto,q_auto,${sz}/${id}`, orig:`${base}${id}.${md.fmt||"jpg"}`};
 }
