@@ -425,9 +425,16 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .navh{font-size:11.5px;font-weight:600;color:var(--muted);padding:10px 10px 4px}
 .navh:first-child{padding-top:4px}
 .navh:empty{padding:0;margin:4px 6px;border-top:1px solid var(--line)}
+.navtog{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:none;text-align:left;cursor:pointer;border-radius:6px}
+.navtog:hover{color:var(--ink);background:var(--hover)}
+.navtog .caret{transition:transform .15s}
+.navtog[aria-expanded="true"] .caret{transform:rotate(90deg)}
+.navgrp{display:flex;flex-direction:column;gap:2px}
 .tabs a[aria-current="page"]{color:var(--ink);background:var(--hover);box-shadow:inset 3px 0 0 var(--accent)}
 @media (max-width:860px){
   .navh{display:none}
+  .navtog{display:flex;width:auto;flex:0 0 auto;padding:9px 10px;font-size:14px}
+  .navgrp{flex-direction:row}
   .tabs a.sub{padding-left:10px}
   .tabs{flex-direction:row;overflow-x:auto;scrollbar-width:none}
   .tabs a{flex:1 0 auto;justify-content:center}
@@ -478,9 +485,14 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
   </header>
   <p class="intro" id="pIntro" hidden></p>
   <div class="contacts" id="pContacts" hidden></div>
-  <div class="pvacts pv-only"><button type="button" class="btn sm" data-pedit="profile">이름·연락처 수정</button><button type="button" class="btn sm primary" data-pedit="about">자기소개서 수정</button></div>
+  <div class="pvacts pv-only"><button type="button" class="btn sm" data-pedit="profile">이름·연락처 수정</button><button type="button" class="btn sm primary" data-pedit="about">자기소개서 수정</button><button type="button" class="btn sm" data-pedit="port">포트폴리오 수정</button></div>
   <section class="psec" id="secAbout">
+    <div class="sh" id="hAbout" hidden><h2>자기소개서</h2></div>
     <article class="doc" id="pDoc"></article>
+  </section>
+  <section class="psec" id="secPort" hidden>
+    <div class="sh"><h2>포트폴리오</h2></div>
+    <article class="doc" id="pPort"></article>
   </section>
 </section>
 <div class="wv" id="workView" hidden></div>
@@ -518,7 +530,11 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-games" data-view="sysref-games" class="sub"><span>게임별</span><span class="n" id="nSRgame"></span></a>
         <div class="navh"></div>
-        <a href="#portfolio" data-view="portfolio"><span>자기소개서</span><span class="n" id="nWork" hidden></span></a>
+        <button type="button" class="navh navtog" id="navEtc" aria-expanded="false" aria-controls="navEtcItems"><span>기타</span><span class="caret" aria-hidden="true">▸</span></button>
+        <div id="navEtcItems" class="navgrp" hidden>
+          <a href="#portfolio" data-view="portfolio" class="sub"><span>자기소개서</span><span class="n" id="nWork" hidden></span></a>
+          <a href="#works" data-view="works" class="sub"><span>포트폴리오</span></a>
+        </div>
       </nav>
       <div class="rail" id="rail" aria-label="태그 필터"></div>
     </aside>
@@ -890,8 +906,8 @@ function render(){
   $("#count").textContent = loaded ? `${list.length} / ${monsters.length}건` : "";
   const st=$("#state"), tbl=$("#tbl"), tb=$("#tablebox"), gb=$("#groupbox");
   tb.hidden=false; gb.hidden=true;
-  const pa=$("#portAdmin"); document.body.classList.toggle("v-port", sub==="portfolio");
-  if (sub==="portfolio"){ tb.hidden=true; pa.hidden=false; renderPortAdmin(); return; }
+  const pa=$("#portAdmin"), isDoc = sub==="portfolio"||sub==="works"; document.body.classList.toggle("v-port", isDoc);
+  if (isDoc){ tb.hidden=true; pa.hidden=false; renderPortAdmin(sub==="works"?"port":"about"); return; }
   pa.hidden=true;
   if (!loaded) return;
   if ((sub==="bycat"||sub==="bygame") && monsters.length && list.length){
@@ -949,6 +965,7 @@ const VIEWMAP={
   "sysref-cats":  {kind:"system", sub:"bycat"},
   "sysref-games": {kind:"system", sub:"bygame"},
   "portfolio":  {kind:null,      sub:"portfolio"},
+  "works":      {kind:null,      sub:"works"},
 };
 const VIEWS=Object.keys(VIEWMAP);
 let view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "monsters";
@@ -1821,6 +1838,8 @@ function careerHTML(c){
     ${lines.length?(bullets?`<ul>${lines.map(x=>`<li>${esc(x.replace(/^\s*[-•·*]\s+/,""))}</li>`).join("")}</ul>`:`<div class="txt">${esc(c.body)}</div>`):""}
   </div></div>`;
 }
+const DOCS={ about:{label:"자기소개서", blocks:"aboutBlocks", plain:"about"}, port:{label:"포트폴리오", blocks:"portBlocks", plain:"portText"} };
+function docBlocks(P,key){ P=P||{}; if(key==="about") return aboutBlocks(P); return Array.isArray(P.portBlocks)?P.portBlocks:[]; }
 function aboutBlocks(P){
   P=P||{};
   if(Array.isArray(P.aboutBlocks)) return P.aboutBlocks;
@@ -1849,6 +1868,12 @@ function renderPublic(){
   d.innerHTML = blocks.length ? docHTML(blocks)
     : `<p class="ph-note">${admin?"자기소개서가 비어 있어요. ‘자기소개서 수정’을 눌러 글과 이미지를 넣어 주세요.":"준비 중이에요."}</p>`;
   wireVideos(d,pio);
+  /* 포트폴리오: 내용이 있을 때만 (관리자 미리보기에서는 빈 칸도) */
+  const pb=docBlocks(P,"port"), sp=$("#secPort"), pp=$("#pPort");
+  sp.hidden = !pb.length && !admin;
+  $("#hAbout").hidden = sp.hidden;
+  pp.innerHTML = pb.length ? docHTML(pb) : `<p class="ph-note">포트폴리오가 비어 있어요. ‘포트폴리오 수정’을 눌러 작성해 주세요. 비어 있으면 방문자에게는 보이지 않아요.</p>`;
+  wireVideos(pp,pio);
 }
 function slideMediaHTML(it, big){
   if(!it) return "";
@@ -1883,7 +1908,7 @@ function shownWorks(){ if(!$("#pSlides")) return []; const list=pubWorks(); retu
 $("#publicView").addEventListener("click",e=>{
   const t=e.target.closest("[data-wedit2],[data-pedit],[data-goto-sec],[data-layout],[data-slide],[data-slideto],[data-gal],[data-ptag],[data-work]"); if(!t) return;
   if(t.dataset.wedit2){ e.stopPropagation(); openWorkForm(works.find(w=>w.id===t.dataset.wedit2)); return; }
-  if(t.dataset.pedit){ const k=t.dataset.pedit; if(k==="about") openAboutForm(); else if(k==="career") openCareerForm(); else if(k==="profile") openProfileForm(); else if(k==="addwork") openWorkForm(null); return; }
+  if(t.dataset.pedit){ const k=t.dataset.pedit; if(k==="about") openAboutForm("about"); else if(k==="port") openAboutForm("port"); else if(k==="career") openCareerForm(); else if(k==="profile") openProfileForm(); else if(k==="addwork") openWorkForm(null); return; }
   if(t.dataset.gotoSec){ const el=$("#"+t.dataset.gotoSec); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); return; }
   if(t.dataset.layout){ pubLayout=t.dataset.layout; slideIdx=0; galIdx=0; renderPublic(); return; }
   if(t.dataset.slide){ const n=shownWorks().length; slideIdx=(slideIdx+Number(t.dataset.slide)+n)%n; galIdx=0; renderSlide(shownWorks()); return; }
@@ -1939,20 +1964,21 @@ $("#workView").addEventListener("click",e=>{
 document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#workView").hidden && $("#scrim").hidden) closeWorkView(); });
 
 /* ---------- 관리자: 포트폴리오 관리 (#portfolio) ---------- */
-function renderPortAdmin(){
-  const P=profile||{}, blocks=aboutBlocks(P);
+function renderPortAdmin(key){
+  key=key||"about"; const D=DOCS[key];
+  const P=profile||{}, blocks=docBlocks(P,key);
   const nImg=blocks.filter(b=>b.t!=="text").length, nTxt=blocks.filter(b=>b.t==="text").reduce((a,b)=>a+(b.text||"").replace(/\s/g,"").length,0);
   $("#count").textContent=`글 ${nTxt.toLocaleString()}자 · 이미지 ${nImg}개`;
   if(io) io.disconnect();
   $("#portAdmin").innerHTML=`
-    <div class="ptool"><button type="button" class="btn primary edit-only" data-wabout>자기소개서 작성</button><button type="button" class="btn edit-only" data-wprof>이름·연락처</button><button type="button" class="btn" data-wpreview>방문자 화면 보기 · 바로 수정</button></div>
+    <div class="ptool"><button type="button" class="btn primary edit-only" data-wabout="${key}">${D.label} 작성</button><button type="button" class="btn edit-only" data-wprof>이름·연락처</button><button type="button" class="btn" data-wpreview>방문자 화면 보기 · 바로 수정</button></div>
     <div class="pprof"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>${esc(P.name||"이름 없음")}</b><span>${esc(P.headline||"방문자 화면 맨 위에 보일 이름·한 줄 소개·연락처를 ‘이름·연락처’에서 적어 주세요.")}</span></div></div>
-    <div class="docbox"><div class="doc">${blocks.length?docHTML(blocks):`<p class="ph-note">아직 비어 있어요. ‘자기소개서 작성’에서 글을 쓰고, 글 사이사이에 이미지·움짤을 넣을 수 있어요.</p>`}</div></div>`;
+    <div class="docbox"><div class="doc">${blocks.length?docHTML(blocks):`<p class="ph-note">아직 비어 있어요. ‘${D.label} 작성’에서 글을 쓰고, 글 사이사이에 이미지·움짤을 넣을 수 있어요.${key==="port"?" 내용이 있으면 방문자 화면에서 자기소개서 아래에 보여요.":""}</p>`}</div></div>`;
   wireVideos($("#portAdmin"));
 }
 $("#portAdmin").addEventListener("click", async e=>{
   const t=e.target.closest("[data-wabout],[data-wcareer],[data-wadd],[data-wprof],[data-wpreview],[data-wpub],[data-wmove],[data-wedit],[data-wdel],[data-zoomw]"); if(!t) return;
-  if(t.hasAttribute("data-wabout")) openAboutForm();
+  if(t.hasAttribute("data-wabout")) openAboutForm(t.dataset.wabout||"about");
   else if(t.hasAttribute("data-wcareer")) openCareerForm();
   else if(t.hasAttribute("data-wadd")) openWorkForm(null);
   else if(t.hasAttribute("data-wprof")) openProfileForm();
@@ -2039,13 +2065,14 @@ function openProfileForm(){
 }
 /* 자기소개서 편집기: 글 블록과 이미지 블록을 원하는 순서로 */
 let edBlocks=[];
-function openAboutForm(){
+function openAboutForm(key){
   if(!canEdit()) return;
-  edBlocks=aboutBlocks(profile).map(b=>({...b}));
+  key = DOCS[key] ? key : "about"; const D=DOCS[key];
+  edBlocks=docBlocks(profile,key).map(b=>({...b}));
   if(!edBlocks.length) edBlocks=[{t:"text",text:""}];
   const sc=$("#scrim");
   sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle" style="width:min(860px,100%)">
-    <header><h2 id="fTitle">자기소개서 작성</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <header><h2 id="fTitle">${D.label} 작성</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <form id="aform" novalidate style="grid-template-columns:1fr;gap:8px">
       <p class="edhint" style="margin:0">글 칸에서 <b>## 제목</b>으로 시작하는 줄은 소제목이 돼요. 이미지·움짤은 블록 사이의 <b>+ 이미지</b>로 넣거나, 글 칸에 바로 붙여 넣기(Ctrl+V)·끌어 놓기 하면 그 아래에 들어가요.</p>
       <div class="ed" id="edList"></div>
@@ -2086,7 +2113,7 @@ function openAboutForm(){
       .map(b=> b.t==="text" ? {t:"text",text:b.text} : {t:"media",media:b.media||null,image:b.image||"",caption:(b.caption||"").trim()});
     const plain=blocks.filter(b=>b.t==="text").map(b=>b.text).join("\n\n");
     const btn=$("#fSave"); btn.disabled=true;
-    try{ await wstore.saveProfile({ ...profile, aboutBlocks:blocks, about:plain, updatedAt:Date.now() }); closeForm(); toast("저장했어요"); }
+    try{ await wstore.saveProfile({ ...profile, [D.blocks]:blocks, [D.plain]:plain, updatedAt:Date.now() }); closeForm(); toast("저장했어요"); }
     catch(ex){ btn.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); }
   };
 }
@@ -2230,7 +2257,7 @@ function jsonBackup(list, wl, pf){
   const ou=o=>({...o, originalUrl:origUrl(o).startsWith("data:")?"":origUrl(o)});
   const p=pf||profile;
   return {version:5, exportedAt:new Date().toISOString(), monsters:list.map(ou), defs:[...defs.values()].map(d=>{ const o={...d}; delete o.id; return o; }), works:(wl||works).map(ou),
-          profile:{...p, aboutBlocks:(p.aboutBlocks||[]).map(b=>b.t==="text"?b:ou(b))}};
+          profile:{...p, aboutBlocks:(p.aboutBlocks||[]).map(b=>b.t==="text"?b:ou(b)), portBlocks:(p.portBlocks||[]).map(b=>b.t==="text"?b:ou(b))}};
 }
 let busy=false;
 $("#exportBtn").addEventListener("click", async ()=>{
@@ -2241,11 +2268,12 @@ $("#exportBtn").addEventListener("click", async ()=>{
     const zip=new JSZip(), failed=[];
     const list=allRefs.map(m=>({...m}));
     const wl=works.map(w=>({...w}));
-    const pf={...profile, aboutBlocks:aboutBlocks(profile).map(b=>({...b}))};
+    const pf={...profile, aboutBlocks:aboutBlocks(profile).map(b=>({...b})), portBlocks:docBlocks(profile,"port").map(b=>({...b}))};
     const hasFile=o=>o.media||(o.image&&!o.image.startsWith("data:"));
     const targets=[...list.filter(hasFile).map(o=>({o,name:`${safeName(o.game)}_${safeName(o.name)}`,label:`${o.game} · ${o.name}`})),
                    ...wl.filter(hasFile).map(o=>({o,name:`portfolio_${safeName(o.title)}`,label:`포트폴리오 · ${o.title}`})),
-                   ...pf.aboutBlocks.map((o,k)=>({o:Object.assign(o,{id:o.id||("b"+k)}),k})).filter(x=>x.o.t!=="text"&&hasFile(x.o)).map(({o,k})=>({o,name:`자기소개서_${String(k+1).padStart(2,"0")}`,label:`자기소개서 이미지 ${k+1}`}))];
+                   ...pf.aboutBlocks.map((o,k)=>({o:Object.assign(o,{id:o.id||("b"+k)}),k})).filter(x=>x.o.t!=="text"&&hasFile(x.o)).map(({o,k})=>({o,name:`자기소개서_${String(k+1).padStart(2,"0")}`,label:`자기소개서 이미지 ${k+1}`})),
+                   ...pf.portBlocks.map((o,k)=>({o:Object.assign(o,{id:o.id||("p"+k)}),k})).filter(x=>x.o.t!=="text"&&hasFile(x.o)).map(({o,k})=>({o,name:`포트폴리오_${String(k+1).padStart(2,"0")}`,label:`포트폴리오 이미지 ${k+1}`}))];
     let done=0;
     for(const {o,name,label} of targets){
       const url=origUrl(o);
@@ -2289,7 +2317,7 @@ $("#importFile").addEventListener("change", async e=>{
     /* ZIP 복원: 원본 파일을 지금 연결된 Cloudinary 계정에 다시 올림 */
     const target=upTarget(); let re=0, reFail=0;
     if(zip && target){
-      const pfb=(j.profile&&Array.isArray(j.profile.aboutBlocks))?j.profile.aboutBlocks:[];
+      const pfb=[...((j.profile&&Array.isArray(j.profile.aboutBlocks))?j.profile.aboutBlocks:[]), ...((j.profile&&Array.isArray(j.profile.portBlocks))?j.profile.portBlocks:[])];
       const withFile=[...list,...wl,...pfb].filter(m=>m.mediaFile&&zip.file(m.mediaFile));
       for(const m of withFile){
         try{
@@ -2306,18 +2334,31 @@ $("#importFile").addEventListener("change", async e=>{
         toast(`복원 중… 파일 ${re+reFail}/${withFile.length}`);
       }
     }
-    [...list,...wl,...((j.profile&&j.profile.aboutBlocks)||[])].forEach(m=>{ delete m.mediaFile; delete m.originalUrl; });
+    [...list,...wl,...((j.profile&&j.profile.aboutBlocks)||[]),...((j.profile&&j.profile.portBlocks)||[])].forEach(m=>{ delete m.mediaFile; delete m.originalUrl; });
     toast("데이터를 저장하는 중…");
     try{
       if(list.length) await store.bulk(list);
       for(const d of defList) await putDef({kind:"def", refKind:d.refKind, cat:d.cat, name:d.name, nameEn:d.nameEn||"", label:d.label||"공략", note:d.note||"", updatedAt:d.updatedAt||Date.now()});
       for(const w of wl) await wstore.set(w.id, clean(w));
-      if(j.profile && typeof j.profile==="object" && Object.keys(j.profile).length){ const pf={...j.profile}; if(Array.isArray(pf.aboutBlocks)) pf.aboutBlocks=pf.aboutBlocks.map(b=>{ const o={...b}; delete o.id; return o; }); await wstore.saveProfile(pf); }
+      if(j.profile && typeof j.profile==="object" && Object.keys(j.profile).length){ const pf={...j.profile}; for(const bk of ["aboutBlocks","portBlocks"]) if(Array.isArray(pf[bk])) pf[bk]=pf[bk].map(b=>{ const o={...b}; delete o.id; return o; }); await wstore.saveProfile(pf); }
       toast(`레퍼런스 ${list.length}건 · 작업물 ${wl.length}건을 불러왔어요${re?` · 파일 ${re}개 다시 올림`:""}${reFail?` · ${reFail}개 실패`:""}`);
     }catch(ex){ toast(errMsg(ex)); }
   }catch{ toast("불러올 수 없는 파일이에요. 백업으로 받은 ZIP이나 JSON인지 확인해 주세요"); }
   finally{ busy=false; }
 });
+
+/* ---------- 왼쪽 메뉴 '기타' 접기 (기본 접힘) ---------- */
+const ETC_KEY="monster-ref-nav-etc";
+function setEtc(open, save){
+  const b=$("#navEtc"), box=$("#navEtcItems"); if(!b||!box) return;
+  b.setAttribute("aria-expanded", open?"true":"false"); box.hidden=!open;
+  if(save){ try{ localStorage.setItem(ETC_KEY, open?"1":"0"); }catch{} }
+}
+$("#navEtc").addEventListener("click",()=>setEtc($("#navEtcItems").hidden, true));
+(()=>{ let open=false; try{ open=localStorage.getItem(ETC_KEY)==="1"; }catch{}
+  if(view==="portfolio"||view==="works") open=true;   /* 기타 안의 화면을 보고 있으면 펼침 */
+  setEtc(open, false); })();
+addEventListener("hashchange",()=>{ const v=location.hash.slice(1); if(v==="portfolio"||v==="works") setEtc(true,false); });
 
 /* ---------- 정렬 이벤트 ---------- */
 $("#sortSel").addEventListener("change", e=>setSort(e.target.value, true));
