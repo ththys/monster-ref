@@ -120,6 +120,33 @@ td.guide{min-width:150px;max-width:220px}
 .gpv small{display:block;margin-top:4px;color:var(--accent);font-weight:600;font-size:11.5px}
 .guidedoc{padding:18px 22px;max-height:65vh;overflow:auto}
 .guidedoc .doc{font-size:15px;line-height:1.85}
+/* 확장 구조 */
+.trbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.trbar select{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:7px 10px;font-weight:600;max-width:100%}
+.trbar .note{font-size:12px;color:var(--muted)}
+.trwrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;max-height:calc(100vh - 220px);min-height:200px}
+.tree{position:relative}
+.tree svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.tree path{fill:none;stroke:var(--muted);stroke-opacity:.55;stroke-width:1.6;transition:opacity .12s}
+.tree path.back{stroke-dasharray:4 4}
+.tree path.hl{stroke:var(--accent);stroke-opacity:1;stroke-width:2.4}
+.tlay{position:absolute;top:10px;font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.tnode{position:absolute;height:64px;border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:6px 10px;text-align:left;display:flex;flex-direction:column;justify-content:center;gap:1px;overflow:hidden;cursor:pointer;color:var(--ink);transition:opacity .12s,border-color .12s}
+.tnode:hover,.tnode:focus-visible{border-color:var(--accent)}
+.tnode b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tnode b small{font-weight:500;color:var(--muted);font-size:11px;margin-left:5px}
+.tnode .ext{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tnode .multi{font-size:11px;color:var(--t-sys);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tnode.root{box-shadow:inset 3px 0 0 var(--t-sys)}
+.tnode.ghost{border-style:dashed;background:var(--bg);color:var(--muted)}
+.tree.dim .tnode:not(.hl){opacity:.25}
+.tree.dim path:not(.hl){opacity:.12}
+.tree .tnode.hl{border-color:var(--accent)}
+.tlonely{display:flex;flex-direction:column;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.tlonely .cell{display:flex;flex-wrap:wrap;gap:5px}
+.tlonely small{color:var(--muted);font-size:12px}
+td.name .par{display:block;font-size:12px;color:var(--t-sys);margin:-2px 0 6px;font-weight:600}
+td.name .ext{display:block;font-size:12px;color:var(--muted);margin:-2px 0 6px}
 /* 패치 타임라인 */
 .tlbar-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .tlbar-top select{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:7px 10px;font-weight:600}
@@ -529,6 +556,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <a href="#sysref" data-view="sysref"><span>시스템</span><span class="n" id="nSR"></span></a>
         <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-games" data-view="sysref-games" class="sub"><span>게임별</span><span class="n" id="nSRgame"></span></a>
+        <a href="#sysref-tree" data-view="sysref-tree" class="sub"><span>확장 구조</span></a>
         <div class="navh"></div>
         <button type="button" class="navh navtog" id="navEtc" aria-expanded="false" aria-controls="navEtcItems"><span>기타</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navEtcItems" class="navgrp" hidden>
@@ -792,7 +820,7 @@ function wireVideos(root, ob){
 
 /* ---------- filtering ---------- */
 function haystack(m){
-  const parts=[m.game,m.version,m.name,m.nameEn,m.link,m.guide,...(m.cats||[]),...(m.keywords||[]),...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
+  const parts=[m.game,m.version,m.name,m.nameEn,m.link,m.guide,...(m.cats||[]),...(m.keywords||[]),...(m.parents||[]),m.ext,...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
   for (const k of ["systems","pcs"]) for (const e of (m[k]||[])){ const d=getDef(kindOf(m),k,e.name); parts.push(e.name,d.nameEn,d.label,d.note); }
   return parts.filter(Boolean).join(" ").toLowerCase();
 }
@@ -918,6 +946,11 @@ function render(){
   if (isDoc){ tb.hidden=true; pa.hidden=false; renderPortAdmin(sub==="works"?"port":"about"); return; }
   pa.hidden=true;
   if (!loaded) return;
+  if (sub==="tree" && monsters.length){
+    if(io) io.disconnect();
+    renderTree(list);
+    return;
+  }
   if ((sub==="bycat"||sub==="bygame") && monsters.length && list.length){
     if(io) io.disconnect();
     renderBuckets(list, sub);
@@ -972,6 +1005,7 @@ const VIEWMAP={
   "sysref":       {kind:"system", sub:"list"},
   "sysref-cats":  {kind:"system", sub:"bycat"},
   "sysref-games": {kind:"system", sub:"bygame"},
+  "sysref-tree":  {kind:"system", sub:"tree"},
   "portfolio":  {kind:null,      sub:"portfolio"},
   "works":      {kind:null,      sub:"works"},
 };
@@ -1002,6 +1036,117 @@ function renderTabs(){
 addEventListener("hashchange", ()=>{
   const v=location.hash.slice(1); if(!VIEWS.includes(v)) return;
   setView(v); groupEdit=null; hidePop(true); render(); scrollTo({top:0});
+});
+/* ---------- 시스템 확장 구조: 부모 → 자식 (부모 여러 개 가능) ---------- */
+let treeFocus="";
+const TR={CW:220, GX:74, RH:78, NH:64, TOP:36, PAD:16};
+function renderTree(list){
+  const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
+  const ko=(a,b)=>a.localeCompare(b,"ko");
+  const N=new Map();
+  const node=name=>{ if(!N.has(name)) N.set(name,{name,refs:[],parents:new Set(),kids:new Set()}); return N.get(name); };
+  list.forEach(m=>{ const n=node(m.name); n.refs.push(m); (m.parents||[]).forEach(p=>{ if(!p||p===m.name) return; n.parents.add(p); node(p).kids.add(m.name); }); });
+  const all=[...N.values()];
+  const linked=all.filter(n=>n.parents.size||n.kids.size);
+  const lonely=all.filter(n=>!n.parents.size&&!n.kids.size&&n.refs.length).sort((a,b)=>ko(a.name,b.name));
+  /* 계열(연결된 묶음) */
+  const comp=new Map(); let ci=0;
+  linked.forEach(n=>{ if(comp.has(n.name)) return; const st=[n.name]; comp.set(n.name,ci);
+    while(st.length){ const x=N.get(st.pop()); [...x.parents,...x.kids].forEach(y=>{ if(!comp.has(y)){ comp.set(y,ci); st.push(y); } }); } ci++; });
+  const fams=[...Array(ci).keys()].map(c=>{ const ns=linked.filter(n=>comp.get(n.name)===c);
+      const rs=ns.filter(n=>!n.parents.size).map(n=>n.name).sort(ko);
+      return {c,size:ns.length,label:(rs.length?rs:[ns[0].name]).join(" + ")}; })
+    .sort((a,b)=>b.size-a.size||ko(a.label,b.label));
+  if(treeFocus && !fams.some(f=>f.label===treeFocus)) treeFocus="";
+  const focusC = treeFocus ? fams.find(f=>f.label===treeFocus).c : null;
+  const shown = linked.filter(n=>focusC===null || comp.get(n.name)===focusC);
+  $("#count").textContent = `시스템 ${list.length}건 · 계열 ${fams.length}개`;
+  const bar=`<div class="trbar"><label class="sortbox" for="trFam" style="font-weight:600;color:var(--ink)">계열
+      <select id="trFam"><option value="">전체 보기 (${fams.length})</option>${fams.map(f=>`<option value="${esc(f.label)}" ${f.label===treeFocus?"selected":""}>${esc(f.label)} · ${f.size}</option>`).join("")}</select></label>
+      <span class="note">왼쪽이 기본, 오른쪽으로 갈수록 확장 · 마우스를 올리면 그 계열만 강조 · 점선 상자는 아직 등록 안 된 시스템</span></div>`;
+  const lonelyHTML = lonely.length ? `<div class="tlonely"><b style="font-size:13px">확장 관계가 없는 시스템 ${lonely.length}개</b>
+      <div class="cell">${lonely.map(n=>`<button type="button" class="tag c-sys" data-tnode="${esc(n.name)}">${esc(n.name)}</button>`).join("")}</div>
+      <small>편집에서 ‘확장 원본(부모 시스템)’을 적으면 위 구조에 들어가요.</small></div>` : "";
+  if(!shown.length){
+    gb.innerHTML = bar + `<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>아직 확장 관계가 없어요</strong><span>시스템을 편집해서 ‘확장 원본(부모 시스템)’에 예: <b>패링</b>을 적으면, 패링 → 강공 패링처럼 이어져서 보여요.</span></div>` + lonelyHTML;
+    wireTree(); return;
+  }
+  /* 단계(깊이): 부모 중 가장 깊은 것 + 1 (순환이 있어도 멈추도록) */
+  const depth=new Map(), seen=new Set();
+  const dep=name=>{ if(depth.has(name)) return depth.get(name); if(seen.has(name)) return 0; seen.add(name);
+    let d=0; N.get(name).parents.forEach(p=>{ if(N.has(p)) d=Math.max(d,dep(p)+1); }); seen.delete(name); depth.set(name,d); return d; };
+  shown.forEach(n=>dep(n.name));
+  const L=[]; shown.forEach(n=>{ const d=depth.get(n.name); (L[d]=L[d]||[]).push(n); });
+  for(let d=0;d<L.length;d++) L[d]=L[d]||[];
+  const famRank=new Map(fams.map((f,i)=>[f.c,i]));
+  const fr=n=>famRank.get(comp.get(n.name));
+  /* 세로 위치: 기본은 계열별로 나열, 확장은 부모들 높이의 평균 근처 */
+  const Y=new Map();
+  L[0].sort((a,b)=>fr(a)-fr(b)||ko(a.name,b.name));
+  let y=TR.TOP, prevF=null;
+  L[0].forEach(n=>{ if(prevF!==null && fr(n)!==prevF) y+=TR.RH*0.4; Y.set(n.name,y); y+=TR.RH; prevF=fr(n); });
+  for(let d=1; d<L.length; d++){
+    const want=n=>{ const ps=[...n.parents].filter(p=>Y.has(p)); return ps.length ? ps.reduce((s,p)=>s+Y.get(p),0)/ps.length : TR.TOP; };
+    L[d].sort((a,b)=>fr(a)-fr(b)||want(a)-want(b)||ko(a.name,b.name));
+    let last=-Infinity;
+    L[d].forEach(n=>{ const yy=Math.max(want(n), last+TR.RH); Y.set(n.name,yy); last=yy; });
+  }
+  /* 부모를 자식들 가운데로 끌어 내리기 (겹치지 않게) */
+  for(let d=L.length-2; d>=0; d--){
+    let last=-Infinity;
+    L[d].sort((a,b)=>Y.get(a.name)-Y.get(b.name)).forEach(n=>{
+      const ks=[...n.kids].filter(k=>Y.has(k)&&depth.get(k)===d+1);
+      const want = ks.length ? Math.max(Y.get(n.name), ks.reduce((s,k)=>s+Y.get(k),0)/ks.length) : Y.get(n.name);
+      const yy=Math.max(want, last+TR.RH); Y.set(n.name,yy); last=yy; });
+  }
+  /* 맨 위 빈 공간 없애기 */
+  const minY=Math.min(...Y.values()); if(minY>TR.TOP) Y.forEach((v,k)=>Y.set(k,v-(minY-TR.TOP)));
+  const X=d=>TR.PAD+d*(TR.CW+TR.GX);
+  const W=X(L.length-1)+TR.CW+TR.PAD, H=Math.max(...[...Y.values()])+TR.NH+TR.PAD;
+  const stage=d=>d===0?"기본":`${d}차 확장`;
+  const edges=[];
+  shown.forEach(n=>n.parents.forEach(p=>{ if(!Y.has(p)) return;
+    const x1=X(depth.get(p))+TR.CW, y1=Y.get(p)+TR.NH/2, x2=X(depth.get(n.name)), y2=Y.get(n.name)+TR.NH/2;
+    const back = depth.get(p)>=depth.get(n.name);
+    const cx=Math.max(30,(x2-x1)/2);
+    edges.push(`<path class="${back?"back":""}" data-f="${esc(p)}" data-t="${esc(n.name)}" d="M${x1},${y1} C${x1+cx},${y1} ${x2-cx},${y2} ${x2},${y2}"></path>`); }));
+  const box=n=>{
+    const ref=n.refs[0], ghost=!n.refs.length, d=depth.get(n.name);
+    const ext=(n.refs.find(r=>r.ext)||{}).ext||"", en=(n.refs.find(r=>r.nameEn)||{}).nameEn||"";
+    const games=[...new Set(n.refs.map(r=>r.game).filter(Boolean))];
+    const tip=[n.name, en, ext, games.length?`게임: ${games.join(", ")}`:"", n.parents.size?`부모: ${[...n.parents].join(", ")}`:"", n.kids.size?`확장: ${[...n.kids].join(", ")}`:"", ghost?"아직 등록 안 된 시스템 · 눌러서 등록":""].filter(Boolean).join("\n");
+    return `<button type="button" class="tnode ${ghost?"ghost":""} ${!n.parents.size?"root":""}" style="left:${X(d)}px;top:${Y.get(n.name)}px;width:${TR.CW}px" data-tnode="${esc(n.name)}" title="${esc(tip)}">
+      <b>${esc(n.name)}${en?`<small lang="en">${esc(en)}</small>`:""}</b>
+      ${n.parents.size>1?`<span class="multi">↳ ${esc([...n.parents].join(" + "))}</span>`:""}
+      <span class="ext">${ghost?"아직 등록 안 됨 · 눌러서 등록":esc(ext||(games.join(" · ")))}</span></button>`;
+  };
+  gb.innerHTML = bar + `<div class="trwrap"><div class="tree" id="tree" style="width:${W}px;height:${H}px">
+      ${L.map((_,d)=>`<div class="tlay" style="left:${X(d)+2}px">${stage(d)}</div>`).join("")}
+      <svg width="${W}" height="${H}" aria-hidden="true">${edges.join("")}</svg>
+      ${shown.map(box).join("")}
+    </div></div>` + lonelyHTML;
+  wireTree(N);
+}
+function wireTree(N){
+  const sel=$("#trFam"); if(sel) sel.onchange=e=>{ treeFocus=e.target.value; render(); };
+  const tree=$("#tree"); if(!tree||!N) return;
+  const lineage=name=>{ const set=new Set([name]);
+    const up=x=>N.get(x)&&N.get(x).parents.forEach(p=>{ if(!set.has(p)){ set.add(p); up(p); } });
+    const dn=x=>N.get(x)&&N.get(x).kids.forEach(k=>{ if(!set.has(k)){ set.add(k); dn(k); } });
+    up(name); dn(name); return set; };
+  const clear=()=>{ tree.classList.remove("dim"); tree.querySelectorAll(".hl").forEach(e=>e.classList.remove("hl")); };
+  const on=name=>{ clear(); const set=lineage(name); tree.classList.add("dim");
+    tree.querySelectorAll(".tnode").forEach(b=>{ if(set.has(b.dataset.tnode)) b.classList.add("hl"); });
+    tree.querySelectorAll("path").forEach(p=>{ if(set.has(p.dataset.f)&&set.has(p.dataset.t)) p.classList.add("hl"); }); };
+  tree.addEventListener("mouseover",e=>{ const b=e.target.closest(".tnode"); if(b) on(b.dataset.tnode); });
+  tree.addEventListener("mouseleave",clear);
+  tree.addEventListener("focusin",e=>{ const b=e.target.closest(".tnode"); if(b) on(b.dataset.tnode); });
+}
+$("#groupbox").addEventListener("click", e=>{
+  const b=e.target.closest("[data-tnode]"); if(!b) return;
+  const name=b.dataset.tnode, ref=monsters.find(m=>m.name===name);
+  if(ref) openGuide(ref);
+  else if(canEdit()){ openForm(null); setCombo("f_name", name); }
 });
 /* ---------- 시스템 레퍼런스: 분류별 / 게임별 ---------- */
 function renderBuckets(list, mode){
@@ -1179,10 +1324,16 @@ function confirmNoteDelete(mid, cat, i){
 
 /* ---------- 자동완성: 이미 등록된 게임·태그를 드롭다운으로 ---------- */
 const AC_SINGLE=new Set(["game","version"]);
-const AC_SRC={w_tags:"worktags", f_cats:"cats", f_keywords:"keywords", f_version:"version", f_hooks:"hooks", f_levels:"levels", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
+const AC_SRC={w_tags:"worktags", f_parents:"parents", f_cats:"cats", f_keywords:"keywords", f_version:"version", f_hooks:"hooks", f_levels:"levels", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
 let acBox=null, acInput=null, acItems=[], acIdx=-1;
 function acValues(cat){
   const cnt=new Map();
+  if(cat==="parents"){
+    const me=(document.getElementById("f_name")||{}).value||"";
+    sysNameList().names.forEach(n=>{ if(n!==me) cnt.set(n,0); });
+    allRefs.forEach(m=>(m.parents||[]).forEach(p=>{ if(p!==me) cnt.set(p,(cnt.get(p)||0)+1); }));
+    return [...cnt].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
+  }
   if(cat==="worktags") works.forEach(w=>new Set(w.tags||[]).forEach(v=>cnt.set(v,(cnt.get(v)||0)+1)));
   else monsters.forEach(m=>new Set(vals(m,cat)).forEach(v=>cnt.set(v,(cnt.get(v)||0)+1)));
   return [...cnt].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
@@ -1198,7 +1349,7 @@ function acOpen(input){
     acBox.addEventListener("mousedown",e=>{ const b=e.target.closest("button[data-i]"); if(!b) return; e.preventDefault(); acPick(+b.dataset.i); }); }
   acInput=input; acIdx=lc?0:-1;
   const hl=v=>{ if(!lc) return esc(v); const k=v.toLowerCase().indexOf(lc); return esc(v.slice(0,k))+"<mark>"+esc(v.slice(k,k+cur.length))+"</mark>"+esc(v.slice(k+cur.length)); };
-  acBox.innerHTML=`<div class="hint">${cat==="game"?"등록된 게임":cat==="version"?"등록된 버전":cat==="worktags"?"등록된 태그 · Enter로 추가":"등록된 "+CAT[cat].label+" · Enter로 추가"}</div>`+acItems.map(([v,n],k)=>{ const en=(cat==="systems"||cat==="pcs")?getDef(kind,cat,v).nameEn:""; return `<button type="button" role="option" data-i="${k}" class="${k===acIdx?"on":""}"><span>${hl(v)}${en?`<span class="en" lang="en">${esc(en)}</span>`:""}</span><span class="n">${n}</span></button>`; }).join("");
+  acBox.innerHTML=`<div class="hint">${cat==="game"?"등록된 게임":cat==="version"?"등록된 버전":cat==="worktags"?"등록된 태그 · Enter로 추가":cat==="parents"?"시스템 이름 · Enter로 추가 · 숫자는 자식 수":"등록된 "+CAT[cat].label+" · Enter로 추가"}</div>`+acItems.map(([v,n],k)=>{ const en=(cat==="systems"||cat==="pcs")?getDef(kind,cat,v).nameEn:""; return `<button type="button" role="option" data-i="${k}" class="${k===acIdx?"on":""}"><span>${hl(v)}${en?`<span class="en" lang="en">${esc(en)}</span>`:""}</span><span class="n">${n}</span></button>`; }).join("");
   const rc=input.getBoundingClientRect();
   acBox.style.left=rc.left+"px"; acBox.style.width=Math.max(200,rc.width)+"px";
   const below=innerHeight-rc.bottom;
@@ -1355,6 +1506,8 @@ function refText(m){
   const L=[`[${m.game||"-"}${m.version?" "+m.version:""}] ${{pc:"PC ",system:"시스템 "}[kindOf(m)]||""}${m.name}${m.nameEn?` (${m.nameEn})`:""}`];
   if((m.cats||[]).length)    L.push(`분류: ${j(m.cats)}`);
   if((m.keywords||[]).length) L.push(`키워드: ${j(m.keywords)}`);
+  if((m.parents||[]).length) L.push(`확장 원본: ${j(m.parents)}`);
+  if(m.ext) L.push(`확장 포인트: ${m.ext}`);
   if((m.hooks||[]).length)   L.push(`후킹 이미지: ${j(m.hooks)}`);
   if((m.theme||[]).length)   L.push(`테마: ${j(m.theme)}`);
   if((m.levels||[]).length)  L.push(`레벨 테마: ${j(m.levels)}`);
@@ -1397,6 +1550,7 @@ function openGuide(m){
   sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="gTitle" style="width:min(820px,100%)">
     <header><h2 id="gTitle">${KINDS[kindOf(m)].guide} · ${esc(m.name)}${m.nameEn?` <span style="color:var(--muted);font-weight:500;font-size:13px">${esc(m.nameEn)}</span>`:""}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <div style="padding:10px 22px 0" class="gcrumb">${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${m.version?`<span class="tag c-ver">${esc(m.version)}</span>`:""}${(m.systems||[]).map(e=>`<span class="tag c-sys">${esc(e.name)}</span>`).join("")}</div>
+    ${kindOf(m)==="system"&&((m.parents||[]).length||m.ext)?`<div style="padding:8px 22px 0;font-size:13px;line-height:1.6">${(m.parents||[]).length?`<div style="color:var(--t-sys);font-weight:600">↳ ${esc(m.parents.join(" + "))}에서 확장</div>`:""}${m.ext?`<div style="color:var(--muted)">${esc(m.ext)}</div>`:""}</div>`:""}
     <div class="guidedoc"><div class="doc">${has?aboutHTML(m.guide):`<p class="ph-note">아직 ${KINDS[kindOf(m)].guide}이 없어요.</p>`}</div></div>
     <div class="foot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px;border-top:1px solid var(--line)">
       ${has?`<button type="button" class="btn" id="gCopy" style="margin-right:auto">${KINDS[kindOf(m)].guide} 복사</button>`:""}
@@ -1417,7 +1571,7 @@ function rowHTML(m){
   const pos = manualIndex.get(m.id);
   const tr=`<tr data-id="${esc(m.id)}" ${sortMode==="manual"?'draggable="true"':""}>`;
   const grip=`<td class="grip"><div class="g"><button type="button" data-mv="${esc(m.id)}|-1" ${pos===0?"disabled":""} aria-label="위로">▲</button><span class="h" title="끌어서 순서 바꾸기">⠿</span><button type="button" data-mv="${esc(m.id)}|1" ${pos===monsters.length-1?"disabled":""} aria-label="아래로">▼</button></div></td>`;
-  const nameTd=`<td class="name"><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}
+  const nameTd=`<td class="name"><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}${kindOf(m)==="system"&&(m.parents||[]).length?`<span class="par">↳ ${esc(m.parents.join(" + "))}에서 확장</span>`:""}${kindOf(m)==="system"&&m.ext?`<span class="ext">${esc(m.ext)}</span>`:""}
       ${(m.game||(m.version&&kindOf(m)!=="system"))?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version&&kindOf(m)!=="system"?tagBtn("version",m.version):""}</div>`:""}
       ${link}</td>`;
   const acts=`<td><div class="rowact"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>`;
@@ -1576,7 +1730,9 @@ function openForm(m, copyFrom){
       ${SYS?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>`}
       ${mediaFieldHTML("이미지")}
       ${SYS?`<div class="field full"><label for="f_cats"><i style="background:var(--t-pc)"></i>분류</label><input id="f_cats" type="text" value="${esc(j(v?.cats))}" placeholder="전투 / 성장 / 재화"><small>시스템 종류 · / 로 구분</small></div>
-      <div class="field full"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc(j(v?.keywords))}" placeholder="태그 / 연계 / 게이지"><small>/ 로 구분</small></div>`:`
+      <div class="field full"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc(j(v?.keywords))}" placeholder="태그 / 연계 / 게이지"><small>/ 로 구분</small></div>
+      <div class="field full"><label for="f_parents"><i style="background:var(--t-sys)"></i>확장 원본 (부모 시스템)</label><input id="f_parents" type="text" value="${esc(j(v?.parents))}" placeholder="패링 / 가드"><small>어떤 시스템에서 확장됐는지 · 여러 개면 / 로 구분 · 기본 시스템이면 비워 두기</small></div>
+      <div class="field full"><label for="f_ext">확장 포인트</label><input id="f_ext" type="text" value="${esc(v?.ext)}" placeholder="강공격을 패링하면 상대가 더 크게 밀려남"><small>부모 시스템과 비교해 무엇이 달라졌는지 한 줄로</small></div>`:`
       <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
       <div class="field full"><label for="f_levels"><i style="background:var(--t-level)"></i>레벨 테마</label><input id="f_levels" type="text" value="${esc(j(v?.levels))}" placeholder="폐허 도시 / 우주 정거장"><small>등장 스테이지의 분위기 · / 로 구분</small></div>
       <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
@@ -1630,7 +1786,7 @@ function formSnapshot(m){
     hooks:splitTags(fv("f_hooks")), levels:splitTags(fv("f_levels")),
     theme:splitTags(fv("f_theme")), looks:splitTags(fv("f_looks")), weapons:splitTags(fv("f_weapons")),
     systems:keep(splitTags(fv("f_systems")), m?.systems), pcs:keep(splitTags(fv("f_pcs")), m?.pcs),
-    cats:splitTags(fv("f_cats")), keywords:splitTags(fv("f_keywords")),
+    cats:splitTags(fv("f_cats")), keywords:splitTags(fv("f_keywords")), parents:splitTags(fv("f_parents")), ext:fv("f_ext").trim(),
     link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null };
 }
 function closeForm(){ acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
@@ -1780,7 +1936,7 @@ async function saveForm(m, src){
     version:fv("f_version").trim(), hooks:splitTags(fv("f_hooks")), levels:splitTags(fv("f_levels")),
     theme:splitTags(fv("f_theme")), looks:splitTags(fv("f_looks")), weapons:splitTags(fv("f_weapons")),
     systems:keep(splitTags(fv("f_systems")), src?.systems), pcs:keep(splitTags(fv("f_pcs")), src?.pcs),
-    cats:splitTags(fv("f_cats")), keywords:splitTags(fv("f_keywords")),
+    cats:splitTags(fv("f_cats")), keywords:splitTags(fv("f_keywords")), parents:splitTags(fv("f_parents")), ext:fv("f_ext").trim(),
     link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null, updatedAt:Date.now(),
   };
   if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
