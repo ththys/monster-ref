@@ -97,6 +97,16 @@ tr.drop-after td{box-shadow:inset 0 -2px 0 var(--accent)}
 .pop .pen{display:flex;gap:8px;padding:10px 12px 0}
 .pop .pen input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:6px 9px;font-size:13px}
 .pop .shared{font-size:11.5px;color:var(--muted);padding:8px 12px 0}
+.srlink{margin:10px 12px 0;border:1px solid var(--t-sys);background:var(--t-sys-bg);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+.srlink .top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.srlink .top span{font-size:11px;font-weight:700;color:var(--t-sys)}
+.srlink .top small{color:var(--muted)}
+.srlink .top .btn{margin-left:auto}
+.srlink .par{color:var(--t-sys);font-weight:600}
+.srlink .sum{color:var(--ink);line-height:1.55}
+td.name .usechip{display:inline-flex;gap:4px;align-items:center;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:600;color:var(--muted);margin:0 6px 6px 0;cursor:pointer}
+td.name .usechip:hover{color:var(--ink);border-color:var(--ink)}
+.tag.linked{text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
 .gsec>header .en{font-size:13px;color:var(--muted);font-weight:500}
 .gshared{padding:12px 14px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px;background:var(--bg)}
 .gshared .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -149,6 +159,12 @@ td.guide{min-width:150px;max-width:220px}
 td.name .par{display:block;font-size:12px;color:var(--t-sys);margin:-2px 0 6px;font-weight:600}
 td.name .ext{display:block;font-size:12px;color:var(--muted);margin:-2px 0 6px}
 td.name .sim{display:block;font-size:12px;color:var(--t-theme);margin:-2px 0 6px}
+.ppick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.ppick:empty{display:none}
+.ppick .tag{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;padding:2px 4px 2px 9px}
+.ppick .tag.miss{border-style:dashed}
+.ppick .tag button{border:0;background:none;color:inherit;font-size:13px;line-height:1;padding:0 4px;border-radius:3px;cursor:pointer}
+.ppick .tag button:hover{background:var(--c-bg)}
 .sgt{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:600;color:var(--muted);margin:0 0 6px;cursor:pointer}
 .sgt:hover{color:var(--ink);border-color:var(--ink)}
 .sgt.open{color:var(--t-sys);border-color:var(--t-sys)}
@@ -1004,8 +1020,8 @@ function tagBtn(cat, v, extra=""){
   return `<button type="button" class="tag ${CAT[cat].cls} ${on?"on":""}" data-tag="${esc(cat)}|${esc(v)}" ${extra}>${esc(v)}</button>`;
 }
 function deepChip(m, cat, i){
-  const e=m[cat][i], d=getDef(kindOf(m),cat,e.name);
-  return `<button type="button" class="tag deep ${CAT[cat].cls} ${d.note?"has":""}" title="${esc(d.nameEn||"")}" data-deep="${esc(m.id)}|${cat}|${i}" aria-label="${esc(e.name)} 상세 보기">${esc(e.name)}</button>`;
+  const e=m[cat][i], d=getDef(kindOf(m),cat,e.name), sr = cat==="systems" ? sysRefFor(m.game,e.name) : null;
+  return `<button type="button" class="tag deep ${CAT[cat].cls} ${d.note?"has":""}" title="${esc([d.nameEn||(sr&&sr.nameEn)||"", sr?"시스템 레퍼런스와 연결됨":""].filter(Boolean).join(" · "))}" data-deep="${esc(m.id)}|${cat}|${i}" aria-label="${esc(e.name)} 상세 보기">${esc(e.name)}</button>`;
 }
 /* ---------- 보기 전환 (#monsters / #systems / #pcs) ---------- */
 const VIEWMAP={
@@ -1375,7 +1391,7 @@ function confirmNoteDelete(mid, cat, i){
 
 /* ---------- 자동완성: 이미 등록된 게임·태그를 드롭다운으로 ---------- */
 const AC_SINGLE=new Set(["game","version"]);
-const AC_SRC={w_tags:"worktags", f_parents:"parents", f_similar:"parents", f_cats:"cats", f_keywords:"keywords", f_version:"version", f_hooks:"hooks", f_levels:"levels", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
+const AC_SRC={w_tags:"worktags", f_similar:"parents", f_cats:"cats", f_keywords:"keywords", f_version:"version", f_hooks:"hooks", f_levels:"levels", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_systems:"systems", f_pcs:"pcs"};
 let acBox=null, acInput=null, acItems=[], acIdx=-1;
 function acValues(cat){
   const cnt=new Map();
@@ -1471,6 +1487,76 @@ function wireSysNames(){
   /* 시스템 이름을 고르면 알고 있는 영문 이름을 자동으로 (비어 있을 때만) */
   wireCombo("f_name", v=>{ const e=en.get(v); if(e && !$("#f_nameEn").value.trim()) setCombo("f_nameEn", e); });
   wireCombo("f_nameEn");
+}
+/* ---------- 부모 시스템: 같은 게임의 시스템에서 골라 넣기 ---------- */
+function curParents(){ return splitTags(($("#f_parents")||{}).value||""); }
+function setParents(arr){ const h=$("#f_parents"); if(h) h.value=[...new Set(arr)].join(" / "); drawParentPicker(); }
+function drawParentPicker(){
+  const sel=$("#f_parentsSel"), box=$("#ppick"); if(!sel||!box) return;
+  const game=(($("#f_game")||{}).value||"").trim(), me=(($("#f_name")||{}).value||"").trim();
+  const sysRefs=allRefs.filter(m=>kindOf(m)==="system" && m.name && m.name!==me);
+  const pool=game ? sysRefs.filter(m=>(m.game||"")===game) : sysRefs;
+  const en=new Map(); pool.forEach(m=>{ if(m.nameEn && !en.has(m.name)) en.set(m.name,m.nameEn); });
+  const names=[...new Set(pool.map(m=>m.name))].sort((a,b)=>a.localeCompare(b,"ko"));
+  const chosen=curParents();
+  box.innerHTML=chosen.map(n=>{ const miss=!names.includes(n);
+    return `<span class="tag c-sys ${miss?"miss":""}" title="${miss?esc(game?`${game}에 아직 등록되지 않은 시스템`:"등록되지 않은 시스템"):""}">${esc(n)}${en.get(n)?` <small style="opacity:.7">${esc(en.get(n))}</small>`:""}<button type="button" data-prm="${esc(n)}" aria-label="${esc(n)} 빼기">×</button></span>`; }).join("");
+  const left=names.filter(n=>!chosen.includes(n));
+  sel.innerHTML=`<option value="" selected>${left.length?`＋ 부모 시스템 선택${game?` (${esc(game)})`:""}`:(game?`${esc(game)}에 고를 시스템이 없어요`:"고를 시스템이 없어요")}</option>`
+    + left.map(n=>`<option value="${esc(n)}">${esc(n)}${en.get(n)?` · ${esc(en.get(n))}`:""}</option>`).join("")
+    + `<option value="__new__">＋ 직접 입력</option>`;
+}
+function wireParentPicker(){
+  const sel=$("#f_parentsSel"), nw=$("#f_parentNew"), box=$("#ppick"); if(!sel) return;
+  drawParentPicker();
+  sel.addEventListener("change",()=>{
+    const v=sel.value;
+    if(v==="__new__"){ nw.hidden=false; nw.focus(); }
+    else if(v){ setParents([...curParents(), v]); }
+    sel.value="";
+  });
+  nw.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){ e.preventDefault(); const v=nw.value.trim(); if(v){ setParents([...curParents(), ...splitTags(v)]); } nw.value=""; nw.hidden=true; }
+    else if(e.key==="Escape"){ e.stopPropagation(); nw.value=""; nw.hidden=true; }
+  });
+  nw.addEventListener("blur",()=>{ const v=nw.value.trim(); if(v) setParents([...curParents(), ...splitTags(v)]); nw.value=""; nw.hidden=true; });
+  box.addEventListener("click",e=>{ const b=e.target.closest("[data-prm]"); if(b) setParents(curParents().filter(x=>x!==b.dataset.prm)); });
+  /* 게임이나 이름이 바뀌면 고를 수 있는 목록도 바뀜 */
+  const gs=$("#f_gameSel"), gi=$("#f_game"), ns=$("#f_nameSel"), ni=$("#f_name");
+  [gs,ns].forEach(x=>x&&x.addEventListener("change",()=>setTimeout(drawParentPicker)));
+  [gi,ni].forEach(x=>x&&x.addEventListener("input",drawParentPicker));
+}
+/* ---------- 몬스터·PC의 전투 확장 시스템 ↔ 시스템 레퍼런스 연동 (게임 + 시스템 이름이 같으면) ---------- */
+function sysRefFor(game, name){
+  if(!name) return null;
+  return allRefs.find(m=>kindOf(m)==="system" && m.name===name && (m.game||"")===(game||"")) || null;
+}
+function sysUsers(sref){
+  return allRefs.filter(m=>kindOf(m)!=="system" && (m.game||"")===(sref.game||"") && (m.systems||[]).some(e=>e.name===sref.name));
+}
+function goSysRef(id){
+  const m=allRefs.find(x=>x.id===id); if(!m) return;
+  hidePop(true); closeForm();
+  if(location.hash!=="#sysref") location.hash="#sysref"; else render();
+  setTimeout(()=>openGuide(m), 60);
+}
+function goUsers(kindKey, game, name){
+  closeForm(); hidePop(true);
+  const v = kindKey==="pc" ? "pc" : "monsters";
+  setView(v);   /* 먼저 화면 종류를 바꾼 뒤 필터 (종류가 바뀌면 필터가 초기화되므로) */
+  filters.clear(); if(game) filters.add("game|"+game); filters.add("systems|"+name);
+  if(location.hash!=="#"+v) location.hash="#"+v; else render();
+}
+/* 이 시스템에서 확장된 시스템 추가: 같은 게임 + 부모가 채워진 새 창 */
+function openExtForm(parent){
+  if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
+  openForm(null);
+  const t=$("#fTitle"); if(t) t.textContent=`확장 시스템 추가 · ${parent.name}${parent.game?` (${parent.game})`:""}`;
+  if(parent.game) setCombo("f_game", parent.game);
+  setParents([parent.name]);
+  sysOpen.add(tkey(parent.game, parent.name));   /* 저장하면 부모 아래에 펼쳐서 보이게 */
+  const ns=$("#f_nameSel"); if(ns && !ns.hidden){ ns.value="__new__"; const ni=$("#f_name"); ni.hidden=false; ni.value=""; ni.focus(); }
+  else { const ni=$("#f_name"); if(ni) ni.focus(); }
 }
 function wireGameSelect(){
   const sel=$("#f_gameSel"), inp=$("#f_game"); if(!sel||!inp) return;
@@ -1598,7 +1684,9 @@ function openGuide(m){
   const sc=$("#scrim"), has=(m.guide||"").trim();
   sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="gTitle" style="width:min(820px,100%)">
     <header><h2 id="gTitle">${KINDS[kindOf(m)].guide} · ${esc(m.name)}${m.nameEn?` <span style="color:var(--muted);font-weight:500;font-size:13px">${esc(m.nameEn)}</span>`:""}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
-    <div style="padding:10px 22px 0" class="gcrumb">${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${m.version?`<span class="tag c-ver">${esc(m.version)}</span>`:""}${(m.systems||[]).map(e=>`<span class="tag c-sys">${esc(e.name)}</span>`).join("")}</div>
+    <div style="padding:10px 22px 0" class="gcrumb">${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${m.version?`<span class="tag c-ver">${esc(m.version)}</span>`:""}${(m.systems||[]).map(e=>{ const sr=sysRefFor(m.game,e.name); return sr?`<button type="button" class="tag c-sys linked" data-gosys="${esc(sr.id)}" title="시스템 레퍼런스 열기">${esc(e.name)} ↗</button>`:`<span class="tag c-sys">${esc(e.name)}</span>`; }).join("")}</div>
+    ${kindOf(m)==="system"?(()=>{ const us=sysUsers(m); if(!us.length) return "";
+      return `<div style="padding:8px 22px 0;font-size:13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span style="color:var(--muted)">이 시스템을 쓰는 곳</span>${us.map(u=>`<button type="button" class="tag ${kindOf(u)==="pc"?"c-pc":"c-game"}" data-gouse="${kindOf(u)}|${esc(u.game||"")}|${esc(m.name)}">${kindOf(u)==="pc"?"PC ":""}${esc(u.name)}</button>`).join("")}</div>`; })():""}
     ${kindOf(m)==="system"&&((m.parents||[]).length||m.ext)?`<div style="padding:8px 22px 0;font-size:13px;line-height:1.6">${(m.parents||[]).length?`<div style="color:var(--t-sys);font-weight:600">↳ ${esc(m.parents.join(" + "))}에서 확장</div>`:""}${m.ext?`<div style="color:var(--muted)">${esc(m.ext)}</div>`:""}</div>`:""}
     ${kindOf(m)==="system"&&similarOf(m).length?`<div style="padding:6px 22px 0;font-size:13px;color:var(--t-theme)">≈ 비슷한 시스템: ${esc(similarOf(m).join(", "))}</div>`:""}
     <div class="guidedoc"><div class="doc">${has?aboutHTML(m.guide):`<p class="ph-note">아직 ${KINDS[kindOf(m)].guide}이 없어요.</p>`}</div></div>
@@ -1656,11 +1744,17 @@ function rowHTML(m, g){
   const pos = manualIndex.get(m.id);
   const tr=`<tr data-id="${esc(m.id)}" class="${gp&&gp.depth?"sub":""}" ${sortMode==="manual"&&!gp?'draggable="true"':""}>`;
   const grip=`<td class="grip"><div class="g"><button type="button" data-mv="${esc(m.id)}|-1" ${pos===0?"disabled":""} aria-label="위로">▲</button><span class="h" title="끌어서 순서 바꾸기">⠿</span><button type="button" data-mv="${esc(m.id)}|1" ${pos===monsters.length-1?"disabled":""} aria-label="아래로">▼</button></div></td>`;
-  const nameTd=`<td class="name" ${gp&&gp.depth?`style="padding-left:${10+gp.depth*24}px"`:""}><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}${kindOf(m)==="system"&&(m.parents||[]).length?`<span class="par">↳ ${esc(m.parents.join(" + "))}에서 확장</span>`:""}${kindOf(m)==="system"&&m.ext?`<span class="ext">${esc(m.ext)}</span>`:""}${sims.length?`<span class="sim">≈ 비슷: ${esc(sims.join(", "))}</span>`:""}${gp&&gp.kids?`<button type="button" class="sgt ${gp.open?"open":""}" data-sgt="${esc(tkey(m.game,m.name))}" aria-expanded="${gp.open}">${gp.open?"▾":"▸"} 하위 ${gp.kids}개</button>`:""}
+  const nameTd=`<td class="name" ${gp&&gp.depth?`style="padding-left:${10+gp.depth*24}px"`:""}><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}${kindOf(m)==="system"&&(m.parents||[]).length?`<span class="par">↳ ${esc(m.parents.join(" + "))}에서 확장</span>`:""}${kindOf(m)==="system"&&m.ext?`<span class="ext">${esc(m.ext)}</span>`:""}${sims.length?`<span class="sim">≈ 비슷: ${esc(sims.join(", "))}</span>`:""}${kindOf(m)==="system"?(()=>{ const us=sysUsers(m); if(!us.length) return "";
+      const mon=us.filter(u=>kindOf(u)==="monster").length, pc=us.filter(u=>kindOf(u)==="pc").length;
+      return `${mon?`<button type="button" class="usechip" data-gouse="monster|${esc(m.game||"")}|${esc(m.name)}" title="이 시스템을 쓰는 몬스터 보기">몬스터 ${mon}</button>`:""}${pc?`<button type="button" class="usechip" data-gouse="pc|${esc(m.game||"")}|${esc(m.name)}" title="이 시스템을 쓰는 PC 보기">PC ${pc}</button>`:""}`; })():""}${gp&&gp.kids?`<button type="button" class="sgt ${gp.open?"open":""}" data-sgt="${esc(tkey(m.game,m.name))}" aria-expanded="${gp.open}">${gp.open?"▾":"▸"} 하위 ${gp.kids}개</button>`:""}
       ${(m.game||(m.version&&kindOf(m)!=="system"))?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version&&kindOf(m)!=="system"?tagBtn("version",m.version):""}</div>`:""}
       ${link}</td>`;
   const acts=`<td><div class="rowact"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>`;
-  if(kindOf(m)==="system")
+  if(kindOf(m)==="system"){
+    const actsS=`<td><div class="rowact"><button type="button" class="iconbtn edit-only" data-ext="${esc(m.id)}" title="${esc(m.name)}에서 확장된 시스템 추가">+ 확장</button><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>`;
+    return `${tr}${grip}${nameTd}<td>${thumbHTML(m,240)}</td><td>${cells("cats")}</td><td>${cells("keywords")}</td><td class="guide">${guideCell(m)}</td>${actsS}</tr>`;
+  }
+  if(false)
     return `${tr}${grip}${nameTd}<td>${thumbHTML(m,240)}</td><td>${cells("cats")}</td><td>${cells("keywords")}</td><td class="guide">${guideCell(m)}</td>${acts}</tr>`;
   return `${tr}${grip}${nameTd}
     <td>${thumbHTML(m,240)}</td>
@@ -1691,11 +1785,17 @@ function renderActive(){
 
 /* ---------- click delegation ---------- */
 document.addEventListener("click", e=>{
-  const t=e.target.closest("[data-tag],[data-clear],[data-edit],[data-del],[data-zoom],[data-deep],[data-copy],[data-dup],[data-guide],[data-guideadd]");
+  const lk=e.target.closest("[data-gosys],[data-gouse]");
+  if(lk){ e.preventDefault(); e.stopPropagation();
+    if(lk.dataset.gosys) goSysRef(lk.dataset.gosys);
+    else { const [k,g,...rest]=lk.dataset.gouse.split("|"); goUsers(k,g,rest.join("|")); }
+    return; }
+  const t=e.target.closest("[data-ext],[data-tag],[data-clear],[data-edit],[data-del],[data-zoom],[data-deep],[data-copy],[data-dup],[data-guide],[data-guideadd]");
   if(!t) return;
   if (t.dataset.tag){ const f=t.dataset.tag; filters.has(f)?filters.delete(f):filters.add(f); hidePop(true); render(); }
   else if (t.hasAttribute("data-clear")){ filters.clear(); query=""; $("#q").value=""; render(); }
   else if (t.dataset.edit){ openForm(monsters.find(m=>m.id===t.dataset.edit)); }
+  else if (t.dataset.ext){ const m=allRefs.find(x=>x.id===t.dataset.ext); if(m) openExtForm(m); }
   else if (t.dataset.guide){ const m=allRefs.find(x=>x.id===t.dataset.guide); if(m) openGuide(m); }
   else if (t.dataset.guideadd){ const m=allRefs.find(x=>x.id===t.dataset.guideadd); if(m){ openForm(m); focusGuide(); } }
   else if (t.dataset.dup){ const m=monsters.find(x=>x.id===t.dataset.dup); if(m) openForm(null, m); }
@@ -1759,6 +1859,11 @@ function drawPop(edit){
   if(!edit){
     pop.innerHTML = crumbs(x,false)
       + (n>1?`<div class="shared">같은 ${esc(x.e.name)}를 쓰는 ${KINDS[kindOf(x.m)].label} ${n}개가 이 내용을 함께 봐요</div>`:"")
+      + (()=>{ const sr = x.cat==="systems" ? sysRefFor(x.m.game, x.e.name) : null; if(!sr) return "";
+          const gp=guidePlain(sr.guide||"");
+          return `<div class="srlink"><div class="top"><span>시스템 레퍼런스</span><b>${esc(sr.name)}</b>${sr.nameEn?`<small lang="en">${esc(sr.nameEn)}</small>`:""}<button type="button" class="btn sm" data-gosys="${esc(sr.id)}">열기 ↗</button></div>
+            ${(sr.parents||[]).length?`<div class="par">↳ ${esc(sr.parents.join(" + "))}에서 확장${sr.ext?` · ${esc(sr.ext)}`:""}</div>`:(sr.ext?`<div class="par">${esc(sr.ext)}</div>`:"")}
+            ${gp?`<div class="sum">${esc(gp.slice(0,160))}${gp.length>160?"…":""}</div>`:""}</div>`; })()
       + `<div class="body ${d.note?"":"blank"}">${d.note?esc(d.note):"아직 공략 내용이 없어요. 수정을 눌러 적어 주세요."}</div>`
       + `<div class="foot"><span class="hint">${pinned?"":"칩을 클릭하면 창이 고정돼요"}</span><button type="button" class="btn sm" id="popEdit">수정</button></div>`;
     $("#popEdit").onclick=()=>{ pinned=true; drawPop(true); place(); $("#popNote").focus(); };
@@ -1816,7 +1921,12 @@ function openForm(m, copyFrom){
       ${mediaFieldHTML("이미지")}
       ${SYS?`<div class="field full"><label for="f_cats"><i style="background:var(--t-pc)"></i>분류</label><input id="f_cats" type="text" value="${esc(j(v?.cats))}" placeholder="전투 / 성장 / 재화"><small>시스템 종류 · / 로 구분</small></div>
       <div class="field full"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc(j(v?.keywords))}" placeholder="태그 / 연계 / 게이지"><small>/ 로 구분</small></div>
-      <div class="field full"><label for="f_parents"><i style="background:var(--t-sys)"></i>확장 원본 (부모 시스템)</label><input id="f_parents" type="text" value="${esc(j(v?.parents))}" placeholder="패링 / 가드"><small>어떤 시스템에서 확장됐는지 · 여러 개면 / 로 구분 · 기본 시스템이면 비워 두기</small></div>
+      <div class="field full"><label for="f_parentsSel"><i style="background:var(--t-sys)"></i>확장 원본 (부모 시스템)</label>
+        <div class="ppick" id="ppick"></div>
+        <select id="f_parentsSel" class="gamesel"></select>
+        <input id="f_parentNew" type="text" hidden placeholder="부모 시스템 이름 입력 후 Enter" style="margin-top:6px" autocomplete="off">
+        <input id="f_parents" type="hidden" value="${esc(j(v?.parents))}">
+        <small>같은 게임에 등록된 시스템에서 골라요 · 여러 개 가능 · 기본 시스템이면 비워 두기</small></div>
       <div class="field full"><label for="f_ext">확장 포인트</label><input id="f_ext" type="text" value="${esc(v?.ext)}" placeholder="강공격을 패링하면 상대가 더 크게 밀려남"><small>부모 시스템과 비교해 무엇이 달라졌는지 한 줄로</small></div>
       <div class="field full"><label for="f_similar"><i style="background:var(--t-theme)"></i>비슷한 시스템</label><input id="f_similar" type="text" value="${esc(j(v?.similar))}" placeholder="저스트 가드"><small>확장 관계는 아니지만 역할이 비슷한 시스템 · / 로 구분 · 양쪽에 자동으로 표시돼요</small></div>`:`
       <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
@@ -1830,7 +1940,7 @@ function openForm(m, copyFrom){
       <div class="err" id="fErr" hidden></div>
       <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
     </form></div>`;
-  sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireSysNames();
+  sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireSysNames(); wireParentPicker();
   if(m){
     $("#fCopy").onclick=e=>copyText(refText(formSnapshot(m)), e.currentTarget);
     $("#fDup").onclick=()=>{ if(uploading){ toast("업로드가 끝난 뒤 복제할 수 있어요"); return; } const snap=formSnapshot(m); closeForm(); openForm(null, snap); };
