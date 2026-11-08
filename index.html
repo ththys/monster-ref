@@ -130,6 +130,7 @@ td.guide{min-width:150px;max-width:220px}
 .tree path{fill:none;stroke:var(--muted);stroke-opacity:.55;stroke-width:1.6;transition:opacity .12s}
 .tree path.back{stroke-dasharray:4 4}
 .tree path.hl{stroke:var(--accent);stroke-opacity:1;stroke-width:2.4}
+.tgame{position:absolute;font-size:12px;font-weight:700;color:var(--ink);background:var(--hover);border-radius:4px;padding:2px 8px;white-space:nowrap}
 .tlay{position:absolute;top:10px;font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.02em}
 .tnode{position:absolute;height:64px;border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:6px 10px;text-align:left;display:flex;flex-direction:column;justify-content:center;gap:1px;overflow:hidden;cursor:pointer;color:var(--ink);transition:opacity .12s,border-color .12s}
 .tnode:hover,.tnode:focus-visible{border-color:var(--accent)}
@@ -566,6 +567,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-games" data-view="sysref-games" class="sub"><span>게임별</span><span class="n" id="nSRgame"></span></a>
         <a href="#sysref-tree" data-view="sysref-tree" class="sub"><span>확장 구조</span></a>
+        <a href="#sysref-all" data-view="sysref-all" class="sub"><span>톺아보기</span></a>
         <div class="navh"></div>
         <button type="button" class="navh navtog" id="navEtc" aria-expanded="false" aria-controls="navEtcItems"><span>기타</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navEtcItems" class="navgrp" hidden>
@@ -959,9 +961,9 @@ function render(){
   if (isDoc){ tb.hidden=true; pa.hidden=false; renderPortAdmin(sub==="works"?"port":"about"); return; }
   pa.hidden=true;
   if (!loaded) return;
-  if (sub==="tree" && monsters.length){
+  if ((sub==="tree"||sub==="treeall") && monsters.length){
     if(io) io.disconnect();
-    renderTree(list);
+    renderTree(list, sub==="treeall");
     return;
   }
   if ((sub==="bycat"||sub==="bygame") && monsters.length && list.length){
@@ -1019,6 +1021,7 @@ const VIEWMAP={
   "sysref-cats":  {kind:"system", sub:"bycat"},
   "sysref-games": {kind:"system", sub:"bygame"},
   "sysref-tree":  {kind:"system", sub:"tree"},
+  "sysref-all":   {kind:"system", sub:"treeall"},
   "portfolio":  {kind:null,      sub:"portfolio"},
   "works":      {kind:null,      sub:"works"},
 };
@@ -1054,103 +1057,121 @@ addEventListener("hashchange", ()=>{
 let treeFocus="";
 const TR={CW:220, GX:74, RH:78, NH:64, TOP:36, PAD:16};
 let treeGame="";
-function renderTree(list){
+/* 확장 관계는 같은 게임 안에서만 이어짐: 노드 키 = 게임 + 이름 */
+const SEP="\u0001";
+const tkey=(game,name)=>`${game||""}${SEP}${name}`;
+const tsplit=k=>{ const i=k.indexOf(SEP); return {game:k.slice(0,i), name:k.slice(i+1)}; };
+function renderTree(list, merge){
   const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
   const ko=(a,b)=>a.localeCompare(b,"ko");
-  /* 게임별로 보기 */
-  const tGames=[...new Set(list.map(m=>m.game).filter(Boolean))].sort(ko);
-  if(treeGame && !tGames.includes(treeGame)) treeGame="";
-  if(treeGame) list=list.filter(m=>m.game===treeGame);
+  /* 기본: 게임 하나씩 (확장은 그 게임 안에서만) / 톺아보기: 모든 게임을 이름으로 합쳐서 */
+  const gCount=new Map(); list.forEach(m=>{ if(m.game) gCount.set(m.game,(gCount.get(m.game)||0)+1); });
+  const tGames=[...gCount.keys()].sort((a,b)=>gCount.get(b)-gCount.get(a)||ko(a,b));
+  if(!merge){
+    if(!tGames.includes(treeGame)) treeGame=tGames[0]||"";
+    if(treeGame) list=list.filter(m=>m.game===treeGame);
+  }
+  const allG=false;
   const N=new Map();
-  const node=name=>{ if(!N.has(name)) N.set(name,{name,refs:[],parents:new Set(),kids:new Set()}); return N.get(name); };
-  list.forEach(m=>{ const n=node(m.name); n.refs.push(m); (m.parents||[]).forEach(p=>{ if(!p||p===m.name) return; n.parents.add(p); node(p).kids.add(m.name); }); });
+  const node=(game,name)=>{ const k=tkey(game,name); if(!N.has(k)) N.set(k,{key:k,name,game:game||"",refs:[],parents:new Set(),kids:new Set()}); return N.get(k); };
+  const G=m=>merge?"":(m.game||"");
+  list.forEach(m=>{ const n=node(G(m),m.name); n.refs.push(m);
+    (m.parents||[]).forEach(p=>{ if(!p||p===m.name) return; const pn=node(G(m),p); n.parents.add(pn.key); pn.kids.add(n.key); }); });
   const all=[...N.values()];
   const linked=all.filter(n=>n.parents.size||n.kids.size);
-  const lonely=all.filter(n=>!n.parents.size&&!n.kids.size&&n.refs.length).sort((a,b)=>ko(a.name,b.name));
-  /* 계열(연결된 묶음) */
+  const lonely=all.filter(n=>!n.parents.size&&!n.kids.size&&n.refs.length).sort((a,b)=>ko(a.game,b.game)||ko(a.name,b.name));
+  /* 계열(연결된 묶음) — 게임이 다르면 다른 계열 */
   const comp=new Map(); let ci=0;
-  linked.forEach(n=>{ if(comp.has(n.name)) return; const st=[n.name]; comp.set(n.name,ci);
+  linked.forEach(n=>{ if(comp.has(n.key)) return; const st=[n.key]; comp.set(n.key,ci);
     while(st.length){ const x=N.get(st.pop()); [...x.parents,...x.kids].forEach(y=>{ if(!comp.has(y)){ comp.set(y,ci); st.push(y); } }); } ci++; });
-  const fams=[...Array(ci).keys()].map(c=>{ const ns=linked.filter(n=>comp.get(n.name)===c);
+  const fams=[...Array(ci).keys()].map(c=>{ const ns=linked.filter(n=>comp.get(n.key)===c);
       const rs=ns.filter(n=>!n.parents.size).map(n=>n.name).sort(ko);
-      return {c,size:ns.length,label:(rs.length?rs:[ns[0].name]).join(" + ")}; })
-    .sort((a,b)=>b.size-a.size||ko(a.label,b.label));
+      const game=ns[0].game;
+      return {c,size:ns.length,game,label:(rs.length?rs:[ns[0].name]).join(" + ")+(allG&&game?` · ${game}`:"")}; })
+    .sort((a,b)=>ko(a.game,b.game)||b.size-a.size||ko(a.label,b.label));
   if(treeFocus && !fams.some(f=>f.label===treeFocus)) treeFocus="";
   const focusC = treeFocus ? fams.find(f=>f.label===treeFocus).c : null;
-  const shown = linked.filter(n=>focusC===null || comp.get(n.name)===focusC);
+  const shown = linked.filter(n=>focusC===null || comp.get(n.key)===focusC);
   $("#count").textContent = `시스템 ${list.length}건 · 계열 ${fams.length}개`;
-  const bar=`<div class="trbar"><label class="sortbox" for="trFam" style="font-weight:600;color:var(--ink)">계열
+  const bar=`<div class="trbar">${merge?`<b style="font-size:13px">톺아보기 · 모든 게임을 시스템 이름으로 합쳐서 봐요</b>`:`<label class="sortbox" for="trGame" style="font-weight:600;color:var(--ink)">게임
+      <select id="trGame">${tGames.map(g=>`<option value="${esc(g)}" ${g===treeGame?"selected":""}>${esc(g)} (${gCount.get(g)})</option>`).join("")}</select></label>`}
+      <label class="sortbox" for="trFam" style="font-weight:600;color:var(--ink)">계열
       <select id="trFam"><option value="">전체 보기 (${fams.length})</option>${fams.map(f=>`<option value="${esc(f.label)}" ${f.label===treeFocus?"selected":""}>${esc(f.label)} · ${f.size}</option>`).join("")}</select></label>
-      <label class="sortbox" for="trGame" style="font-weight:600;color:var(--ink)">게임
-      <select id="trGame"><option value="">모든 게임</option>${tGames.map(g=>`<option value="${esc(g)}" ${g===treeGame?"selected":""}>${esc(g)}</option>`).join("")}</select></label>
-      <span class="note">왼쪽이 기본, 오른쪽으로 갈수록 확장 · 마우스를 올리면 그 계열만 강조 · 점선 상자는 아직 등록 안 된 시스템 · 보라 점선은 비슷한 시스템</span></div>`;
+      <span class="note">${merge?"같은 이름의 시스템은 게임이 달라도 한 상자로 합쳐져요 · 게임 하나씩 보려면 ‘확장 구조’":"확장은 같은 게임 안에서만 이어져요 · 모든 게임을 한번에 보려면 ‘톺아보기’"} · 왼쪽이 기본, 오른쪽으로 갈수록 확장 · 마우스를 올리면 그 계열만 강조 · 점선 상자는 아직 등록 안 된 시스템 · 보라 점선은 비슷한 시스템</span></div>`;
   const lonelyHTML = lonely.length ? `<div class="tlonely"><b style="font-size:13px">확장 관계가 없는 시스템 ${lonely.length}개</b>
-      <div class="cell">${lonely.map(n=>`<button type="button" class="tag c-sys" data-tnode="${esc(n.name)}">${esc(n.name)}</button>`).join("")}</div>
-      <small>편집에서 ‘확장 원본(부모 시스템)’을 적으면 위 구조에 들어가요.</small></div>` : "";
+      <div class="cell">${lonely.map(n=>`<button type="button" class="tag c-sys" data-tnode="${esc(n.key)}">${esc(n.name)}${allG&&n.game?` · ${esc(n.game)}`:""}</button>`).join("")}</div>
+      <small>편집에서 ‘확장 원본(부모 시스템)’을 적으면 위 구조에 들어가요. 부모는 같은 게임의 시스템 이름으로 적어 주세요.</small></div>` : "";
   if(!shown.length){
-    gb.innerHTML = bar + `<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>아직 확장 관계가 없어요</strong><span>시스템을 편집해서 ‘확장 원본(부모 시스템)’에 예: <b>패링</b>을 적으면, 패링 → 강공 패링처럼 이어져서 보여요.</span></div>` + lonelyHTML;
+    gb.innerHTML = bar + `<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>아직 확장 관계가 없어요</strong><span>시스템을 편집해서 ‘확장 원본(부모 시스템)’에 같은 게임의 시스템 이름(예: <b>패링</b>)을 적으면, 패링 → 강공 패링처럼 이어져서 보여요.</span></div>` + lonelyHTML;
     wireTree(); return;
   }
-  /* 단계(깊이): 부모 중 가장 깊은 것 + 1 (순환이 있어도 멈추도록) */
   const depth=new Map(), seen=new Set();
-  const dep=name=>{ if(depth.has(name)) return depth.get(name); if(seen.has(name)) return 0; seen.add(name);
-    let d=0; N.get(name).parents.forEach(p=>{ if(N.has(p)) d=Math.max(d,dep(p)+1); }); seen.delete(name); depth.set(name,d); return d; };
-  shown.forEach(n=>dep(n.name));
-  const L=[]; shown.forEach(n=>{ const d=depth.get(n.name); (L[d]=L[d]||[]).push(n); });
+  const dep=k=>{ if(depth.has(k)) return depth.get(k); if(seen.has(k)) return 0; seen.add(k);
+    let d=0; N.get(k).parents.forEach(p=>{ if(N.has(p)) d=Math.max(d,dep(p)+1); }); seen.delete(k); depth.set(k,d); return d; };
+  shown.forEach(n=>dep(n.key));
+  const L=[]; shown.forEach(n=>{ const d=depth.get(n.key); (L[d]=L[d]||[]).push(n); });
   for(let d=0;d<L.length;d++) L[d]=L[d]||[];
   const famRank=new Map(fams.map((f,i)=>[f.c,i]));
-  const fr=n=>famRank.get(comp.get(n.name));
-  /* 세로 위치: 기본은 계열별로 나열, 확장은 부모들 높이의 평균 근처 */
+  const fr=n=>famRank.get(comp.get(n.key));
   const Y=new Map();
+  /* 게임이 바뀌는 곳에 제목 줄 */
+  const gameHeads=[];
   L[0].sort((a,b)=>fr(a)-fr(b)||ko(a.name,b.name));
-  let y=TR.TOP, prevF=null;
-  L[0].forEach(n=>{ if(prevF!==null && fr(n)!==prevF) y+=TR.RH*0.4; Y.set(n.name,y); y+=TR.RH; prevF=fr(n); });
+  let y=TR.TOP, prevF=null, prevG=null;
+  L[0].forEach(n=>{
+    if(allG && n.game!==prevG){ if(prevG!==null) y+=TR.RH*0.5; gameHeads.push({game:n.game||"게임 없음", y}); y+=26; prevG=n.game; prevF=fr(n); }
+    else if(prevF!==null && fr(n)!==prevF) y+=TR.RH*0.4;
+    Y.set(n.key,y); y+=TR.RH; prevF=fr(n); });
   for(let d=1; d<L.length; d++){
     const want=n=>{ const ps=[...n.parents].filter(p=>Y.has(p)); return ps.length ? ps.reduce((s,p)=>s+Y.get(p),0)/ps.length : TR.TOP; };
     L[d].sort((a,b)=>fr(a)-fr(b)||want(a)-want(b)||ko(a.name,b.name));
     let last=-Infinity;
-    L[d].forEach(n=>{ const yy=Math.max(want(n), last+TR.RH); Y.set(n.name,yy); last=yy; });
+    L[d].forEach(n=>{ const yy=Math.max(want(n), last+TR.RH); Y.set(n.key,yy); last=yy; });
   }
-  /* 부모를 자식들 가운데로 끌어 내리기 (겹치지 않게) */
   for(let d=L.length-2; d>=0; d--){
     let last=-Infinity;
-    L[d].sort((a,b)=>Y.get(a.name)-Y.get(b.name)).forEach(n=>{
+    L[d].sort((a,b)=>Y.get(a.key)-Y.get(b.key)).forEach(n=>{
       const ks=[...n.kids].filter(k=>Y.has(k)&&depth.get(k)===d+1);
-      const want = ks.length ? Math.max(Y.get(n.name), ks.reduce((s,k)=>s+Y.get(k),0)/ks.length) : Y.get(n.name);
-      const yy=Math.max(want, last+TR.RH); Y.set(n.name,yy); last=yy; });
+      const want = ks.length ? Math.max(Y.get(n.key), ks.reduce((s,k)=>s+Y.get(k),0)/ks.length) : Y.get(n.key);
+      const yy=Math.max(want, last+TR.RH); Y.set(n.key,yy); last=yy; });
   }
-  /* 맨 위 빈 공간 없애기 */
-  const minY=Math.min(...Y.values()); if(minY>TR.TOP) Y.forEach((v,k)=>Y.set(k,v-(minY-TR.TOP)));
+  /* 게임 제목은 그 게임의 첫 상자 바로 위로 */
+  gameHeads.forEach(h=>{ const ys=shown.filter(n=>(n.game||"게임 없음")===h.game).map(n=>Y.get(n.key)); if(ys.length) h.y=Math.min(...ys)-24; });
+  const minY=Math.min(...Y.values(), ...gameHeads.map(h=>h.y+24)); if(minY>TR.TOP){ const dy=minY-TR.TOP; Y.forEach((v,k)=>Y.set(k,v-dy)); gameHeads.forEach(h=>h.y-=dy); }
   const X=d=>TR.PAD+d*(TR.CW+TR.GX);
   const W=X(L.length-1)+TR.CW+TR.PAD, H=Math.max(...[...Y.values()])+TR.NH+TR.PAD;
   const stage=d=>d===0?"기본":`${d}차 확장`;
   const edges=[];
   shown.forEach(n=>n.parents.forEach(p=>{ if(!Y.has(p)) return;
-    const x1=X(depth.get(p))+TR.CW, y1=Y.get(p)+TR.NH/2, x2=X(depth.get(n.name)), y2=Y.get(n.name)+TR.NH/2;
-    const back = depth.get(p)>=depth.get(n.name);
+    const x1=X(depth.get(p))+TR.CW, y1=Y.get(p)+TR.NH/2, x2=X(depth.get(n.key)), y2=Y.get(n.key)+TR.NH/2;
+    const back = depth.get(p)>=depth.get(n.key);
     const cx=Math.max(30,(x2-x1)/2);
-    edges.push(`<path class="${back?"back":""}" data-f="${esc(p)}" data-t="${esc(n.name)}" d="M${x1},${y1} C${x1+cx},${y1} ${x2-cx},${y2} ${x2},${y2}"></path>`); }));
-  /* 비슷한 시스템: 점선 */
+    edges.push(`<path class="${back?"back":""}" data-f="${esc(p)}" data-t="${esc(n.key)}" d="M${x1},${y1} C${x1+cx},${y1} ${x2-cx},${y2} ${x2},${y2}"></path>`); }));
+  /* 비슷한 시스템: 같은 게임에 있으면 그것과, 없으면 화면에 있는 같은 이름과 점선 */
   const simDone=new Set();
   shown.forEach(n=>n.refs.forEach(r=>(r.similar||[]).forEach(o=>{
-    if(!Y.has(o) || o===n.name) return; const key=[n.name,o].sort().join("|"); if(simDone.has(key)) return; simDone.add(key);
-    const da=depth.get(n.name), db=depth.get(o); let a=n.name, b=o; if(da>db){ a=o; b=n.name; }
+    let ok=tkey(n.game,o); if(!Y.has(ok)){ const any=shown.find(x=>x.name===o); if(!any) return; ok=any.key; }
+    if(ok===n.key) return; const pair=[n.key,ok].sort().join("|"); if(simDone.has(pair)) return; simDone.add(pair);
+    let a=n.key, b=ok; if(depth.get(a)>depth.get(b)){ a=ok; b=n.key; }
     const xa=X(depth.get(a)), xb=X(depth.get(b)), ya=Y.get(a)+TR.NH/2, yb=Y.get(b)+TR.NH/2;
     if(depth.get(a)===depth.get(b)){ const x=xa+TR.CW; edges.push(`<path class="sim" data-f="${esc(a)}" data-t="${esc(b)}" d="M${x},${ya} C${x+46},${ya} ${x+46},${yb} ${x},${yb}"></path>`); }
     else { const x1=xa+TR.CW, x2=xb, cx=Math.max(30,(x2-x1)/2); edges.push(`<path class="sim" data-f="${esc(a)}" data-t="${esc(b)}" d="M${x1},${ya} C${x1+cx},${ya} ${x2-cx},${yb} ${x2},${yb}"></path>`); }
   })));
+  const nm=k=>tsplit(k).name;
   const box=n=>{
-    const ref=n.refs[0], ghost=!n.refs.length, d=depth.get(n.name);
+    const ghost=!n.refs.length, d=depth.get(n.key);
     const ext=(n.refs.find(r=>r.ext)||{}).ext||"", en=(n.refs.find(r=>r.nameEn)||{}).nameEn||"";
     const games=[...new Set(n.refs.map(r=>r.game).filter(Boolean))];
-    const tip=[n.name, en, ext, games.length?`게임: ${games.join(", ")}`:"", n.parents.size?`부모: ${[...n.parents].join(", ")}`:"", n.kids.size?`확장: ${[...n.kids].join(", ")}`:"", ghost?"아직 등록 안 된 시스템 · 눌러서 등록":""].filter(Boolean).join("\n");
-    return `<button type="button" class="tnode ${ghost?"ghost":""} ${!n.parents.size?"root":""}" style="left:${X(d)}px;top:${Y.get(n.name)}px;width:${TR.CW}px" data-tnode="${esc(n.name)}" title="${esc(tip)}">
+    const pnames=[...n.parents].map(nm), knames=[...n.kids].map(nm);
+    const tip=[n.name, en, games.length?`게임: ${games.join(", ")}`:"", ext, pnames.length?`부모: ${pnames.join(", ")}`:"", knames.length?`확장: ${knames.join(", ")}`:"", ghost?"아직 등록 안 된 시스템 · 눌러서 등록":""].filter(Boolean).join("\n");
+    return `<button type="button" class="tnode ${ghost?"ghost":""} ${!n.parents.size?"root":""}" style="left:${X(d)}px;top:${Y.get(n.key)}px;width:${TR.CW}px" data-tnode="${esc(n.key)}" title="${esc(tip)}">
       <b>${esc(n.name)}${en?`<small lang="en">${esc(en)}</small>`:""}</b>
-      ${n.parents.size>1?`<span class="multi">↳ ${esc([...n.parents].join(" + "))}</span>`:""}
-      <span class="ext">${ghost?"아직 등록 안 됨 · 눌러서 등록":esc(ext||(games.join(" · ")))}</span></button>`;
+      ${pnames.length>1?`<span class="multi">↳ ${esc(pnames.join(" + "))}</span>`:""}
+      <span class="ext">${ghost?"아직 등록 안 됨 · 눌러서 등록":esc(merge?games.join(" · "):(ext||n.game))}</span></button>`;
   };
   gb.innerHTML = bar + `<div class="trwrap"><div class="tree" id="tree" style="width:${W}px;height:${H}px">
       ${L.map((_,d)=>`<div class="tlay" style="left:${X(d)+2}px">${stage(d)}</div>`).join("")}
+      ${gameHeads.map(h=>`<div class="tgame" style="left:${TR.PAD}px;top:${h.y}px">${esc(h.game)}</div>`).join("")}
       <svg width="${W}" height="${H}" aria-hidden="true">${edges.join("")}</svg>
       ${shown.map(box).join("")}
     </div></div>` + lonelyHTML;
@@ -1174,9 +1195,9 @@ function wireTree(N){
 }
 $("#groupbox").addEventListener("click", e=>{
   const b=e.target.closest("[data-tnode]"); if(!b) return;
-  const name=b.dataset.tnode, ref=monsters.find(m=>m.name===name);
+  const {game,name}=tsplit(b.dataset.tnode), ref=monsters.find(m=>m.name===name && (!game || (m.game||"")===game));
   if(ref) openGuide(ref);
-  else if(canEdit()){ openForm(null); setCombo("f_name", name); }
+  else if(canEdit()){ openForm(null); setCombo("f_name", name); if(game) setCombo("f_game", game); }
 });
 /* ---------- 시스템 레퍼런스: 분류별 / 게임별 ---------- */
 function renderBuckets(list, mode){
@@ -1602,24 +1623,26 @@ function similarOf(m){
   return [...set];
 }
 function groupedRows(list){
-  const names=new Set(list.map(m=>m.name)), order=new Map(list.map((m,i)=>[m.id,i]));
+  /* 부모는 같은 게임의 시스템만 (다른 게임의 같은 이름과는 섞지 않음) */
+  const K=m=>tkey(m.game,m.name);
+  const keys=new Set(list.map(K)), order=new Map(list.map((m,i)=>[m.id,i]));
+  const pk=(m,p)=>tkey(m.game,p);
   const kidsOf=new Map();
-  list.forEach(m=>(m.parents||[]).forEach(p=>{ if(p!==m.name && names.has(p)){ if(!kidsOf.has(p)) kidsOf.set(p,[]); kidsOf.get(p).push(m); } }));
-  const isRoot=m=>!(m.parents||[]).some(p=>p!==m.name && names.has(p));
+  list.forEach(m=>(m.parents||[]).forEach(p=>{ const k=pk(m,p); if(p!==m.name && keys.has(k)){ if(!kidsOf.has(k)) kidsOf.set(k,[]); kidsOf.get(k).push(m); } }));
+  const isRoot=m=>!(m.parents||[]).some(p=>p!==m.name && keys.has(pk(m,p)));
   const out=[], seen=new Set();
   const walk=(m,depth,path)=>{
     seen.add(m.id);
-    const kids=(kidsOf.get(m.name)||[]).filter(k=>!path.has(k.name)).sort((a,b)=>order.get(a.id)-order.get(b.id));
-    const open=sysOpen.has(m.name);
+    const kids=(kidsOf.get(K(m))||[]).filter(k=>!path.has(K(k))).sort((a,b)=>order.get(a.id)-order.get(b.id));
+    const open=sysOpen.has(K(m));
     out.push(rowHTML(m,{depth,kids:kids.length,open}));
-    if(open) kids.forEach(k=>walk(k,depth+1,new Set([...path,k.name])));
+    if(open) kids.forEach(k=>walk(k,depth+1,new Set([...path,K(k)])));
   };
   const roots=list.filter(isRoot);
-  /* 부모를 따라 올라가도 뿌리가 없는 것(서로를 부모로 적은 경우)은 따로 맨 위에 */
-  const reach=new Set(), st=roots.map(m=>m.name);
-  while(st.length){ const n=st.pop(); if(reach.has(n)) continue; reach.add(n); (kidsOf.get(n)||[]).forEach(k=>st.push(k.name)); }
-  roots.forEach(m=>walk(m,0,new Set([m.name])));
-  list.forEach(m=>{ if(!reach.has(m.name) && !seen.has(m.id)){ reach.add(m.name); walk(m,0,new Set([m.name])); } });
+  const reach=new Set(), st=roots.map(K);
+  while(st.length){ const n=st.pop(); if(reach.has(n)) continue; reach.add(n); (kidsOf.get(n)||[]).forEach(k=>st.push(K(k))); }
+  roots.forEach(m=>walk(m,0,new Set([K(m)])));
+  list.forEach(m=>{ if(!reach.has(K(m)) && !seen.has(m.id)){ reach.add(K(m)); walk(m,0,new Set([K(m)])); } });
   return out.join("");
 }
 function rowHTML(m, g){
@@ -1633,7 +1656,7 @@ function rowHTML(m, g){
   const pos = manualIndex.get(m.id);
   const tr=`<tr data-id="${esc(m.id)}" class="${gp&&gp.depth?"sub":""}" ${sortMode==="manual"&&!gp?'draggable="true"':""}>`;
   const grip=`<td class="grip"><div class="g"><button type="button" data-mv="${esc(m.id)}|-1" ${pos===0?"disabled":""} aria-label="위로">▲</button><span class="h" title="끌어서 순서 바꾸기">⠿</span><button type="button" data-mv="${esc(m.id)}|1" ${pos===monsters.length-1?"disabled":""} aria-label="아래로">▼</button></div></td>`;
-  const nameTd=`<td class="name" ${gp&&gp.depth?`style="padding-left:${10+gp.depth*24}px"`:""}><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}${kindOf(m)==="system"&&(m.parents||[]).length?`<span class="par">↳ ${esc(m.parents.join(" + "))}에서 확장</span>`:""}${kindOf(m)==="system"&&m.ext?`<span class="ext">${esc(m.ext)}</span>`:""}${sims.length?`<span class="sim">≈ 비슷: ${esc(sims.join(", "))}</span>`:""}${gp&&gp.kids?`<button type="button" class="sgt ${gp.open?"open":""}" data-sgt="${esc(m.name)}" aria-expanded="${gp.open}">${gp.open?"▾":"▸"} 하위 ${gp.kids}개</button>`:""}
+  const nameTd=`<td class="name" ${gp&&gp.depth?`style="padding-left:${10+gp.depth*24}px"`:""}><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}${kindOf(m)==="system"&&(m.parents||[]).length?`<span class="par">↳ ${esc(m.parents.join(" + "))}에서 확장</span>`:""}${kindOf(m)==="system"&&m.ext?`<span class="ext">${esc(m.ext)}</span>`:""}${sims.length?`<span class="sim">≈ 비슷: ${esc(sims.join(", "))}</span>`:""}${gp&&gp.kids?`<button type="button" class="sgt ${gp.open?"open":""}" data-sgt="${esc(tkey(m.game,m.name))}" aria-expanded="${gp.open}">${gp.open?"▾":"▸"} 하위 ${gp.kids}개</button>`:""}
       ${(m.game||(m.version&&kindOf(m)!=="system"))?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version&&kindOf(m)!=="system"?tagBtn("version",m.version):""}</div>`:""}
       ${link}</td>`;
   const acts=`<td><div class="rowact"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>`;
@@ -2632,7 +2655,7 @@ addEventListener("hashchange",()=>{ const v=location.hash.slice(1); if(v==="port
 $("#sysGroupBtn").addEventListener("click",()=>{ sysGroup=!sysGroup; try{ localStorage.setItem(SG_KEY, sysGroup?"1":"0"); }catch{} render(); });
 $("#sysOpenAll").addEventListener("click",()=>{
   if(sysOpen.size){ sysOpen.clear(); }
-  else monsters.forEach(m=>(m.parents||[]).forEach(p=>sysOpen.add(p)));
+  else monsters.forEach(m=>(m.parents||[]).forEach(p=>sysOpen.add(tkey(m.game,p))));
   render();
 });
 /* ---------- 정렬 이벤트 ---------- */
