@@ -79,6 +79,27 @@ def main():
         check("하위 시스템 기본 접힘", pg.locator("#rows td.name", has_text="강공 패링").count() == 0
               and pg.locator("[data-sgt]").count() == 1)
 
+        # 3-1) 시스템은 고유: 같은 게임에 같은 이름이면 저장 막힘, 이름 드롭다운 없음
+        pg.click("#addBtn"); pg.wait_for_timeout(100)
+        no_dd = pg.locator("#f_nameSel").count() == 0
+        pick_or_type(pg, "f_game", "테스트 게임"); pg.fill("#f_name", "패링"); pg.wait_for_timeout(100)
+        warn = pg.is_visible("#f_nameDup")
+        pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(150)
+        check("시스템 이름 중복 막힘", no_dd and warn and pg.is_visible("#fErr")
+              and pg.locator("#rows td.name", has_text="패링").count() == 1)
+        pg.click("#fCancel"); pg.wait_for_timeout(100)
+
+        # 3-2) 몬스터의 전투 확장 시스템 추천은 같은 게임의 시스템만
+        pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
+        pg.click("#addBtn"); pick_or_type(pg, "f_game", "다른 게임")
+        pg.fill("#f_systems", ""); pg.type("#f_systems", "패"); pg.wait_for_timeout(150)
+        other = pg.locator(".ac:visible", has_text="패링").count()
+        pick_or_type(pg, "f_game", "테스트 게임")
+        pg.fill("#f_systems", ""); pg.type("#f_systems", "패"); pg.wait_for_timeout(150)
+        same = pg.locator(".ac:visible", has_text="패링").count()
+        check("몬스터 시스템 추천: 같은 게임만", other == 0 and same >= 1, f"other={other} same={same}")
+        pg.keyboard.press("Escape"); pg.click("#fCancel"); pg.wait_for_timeout(100)
+
         # 4) 게임별(→분류) 보기
         pg.goto(url + "#sysref-games"); pg.wait_for_timeout(300)
         check("게임별: 게임 → 분류", pg.locator(".gsec").count() == 1 and pg.locator(".gsub").count() >= 1)

@@ -527,6 +527,8 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .ac button mark{background:transparent;color:var(--accent);font-weight:700}
 .ac button .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .ac .hint{font-size:11px;color:var(--muted);padding:4px 10px 2px}
+.dupwarn{color:var(--t-weapon);font-size:12px;margin-top:4px;display:block}
+.dupwarn[hidden]{display:none}
 /* 우클릭 메뉴 */
 .ctx{position:fixed;z-index:90;min-width:200px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:5px;display:flex;flex-direction:column}
 .ctx button{display:flex;justify-content:space-between;align-items:center;gap:16px;border:0;background:none;text-align:left;padding:8px 10px;border-radius:6px;font-size:13.5px;color:var(--ink);cursor:pointer}
@@ -1599,6 +1601,13 @@ function acValues(cat){
     allRefs.forEach(m=>(m.parents||[]).forEach(p=>{ if(p!==me) cnt.set(p,(cnt.get(p)||0)+1); }));
     return [...cnt].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
   }
+  if(cat==="systems"){
+    /* 몬스터·PC의 전투 확장 시스템: 같은 게임의 시스템 레퍼런스에서만 */
+    const game=((document.getElementById("f_game")||{}).value||"").trim(); if(!game) return [];
+    allRefs.forEach(m=>{ if(kindOf(m)==="system" && (m.game||"")===game && m.name) cnt.set(m.name,(cnt.get(m.name)||0)+1); });
+    allRefs.forEach(m=>{ if(kindOf(m)!=="system" && (m.game||"")===game) (m.systems||[]).forEach(e=>cnt.set(e.name,(cnt.get(e.name)||0)+1)); });
+    return [...cnt].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
+  }
   if(cat==="worktags") works.forEach(w=>new Set(w.tags||[]).forEach(v=>cnt.set(v,(cnt.get(v)||0)+1)));
   else monsters.forEach(m=>new Set(vals(m,cat)).forEach(v=>cnt.set(v,(cnt.get(v)||0)+1)));
   return [...cnt].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
@@ -1666,7 +1675,7 @@ function comboHTML(id, list, cur, pickLabel, newLabel, ph, attrs){
 }
 function setCombo(id, val){
   const sel=document.getElementById(id+"Sel"), inp=document.getElementById(id); if(!inp) return;
-  inp.value=val;
+  inp.value=val; setTimeout(()=>{ if(wireSysNames.chk && $("#f_nameDup")) wireSysNames.chk(); });
   if(!sel || sel.hidden) return;
   if([...sel.options].some(o=>o.value===val && val)){ sel.value=val; inp.hidden=true; }
   else if(val){ sel.value="__new__"; inp.hidden=false; }
@@ -1679,12 +1688,18 @@ function wireCombo(id, onPick){
     else { inp.hidden=true; inp.value=sel.value; if(onPick) onPick(sel.value); }
   });
 }
-function wireSysNames(){
-  if(!$("#f_nameSel")) return;
-  const {en}=sysNameList();
-  /* 시스템 이름을 고르면 알고 있는 영문 이름을 자동으로 (비어 있을 때만) */
-  wireCombo("f_name", v=>{ const e=en.get(v); if(e && !$("#f_nameEn").value.trim()) setCombo("f_nameEn", e); });
-  wireCombo("f_nameEn");
+/* 시스템은 고유: 같은 게임에 같은 이름이 있으면 알려 주고 저장을 막음 */
+function sysDup(game, name, selfId){
+  if(!game||!name) return null;
+  return allRefs.find(m=>kindOf(m)==="system" && m.id!==selfId && (m.game||"")===game && m.name===name) || null;
+}
+function wireSysNames(selfId){
+  const w=$("#f_nameDup"); if(!w) return;
+  const chk=()=>{ const d=sysDup(($("#f_game").value||"").trim(), ($("#f_name").value||"").trim(), selfId);
+    w.hidden=!d; if(d) w.textContent=`${d.game}에 이미 ‘${d.name}’ 시스템이 있어요. 시스템은 하나만 둘 수 있어요.`; };
+  $("#f_name").addEventListener("input",chk); $("#f_game").addEventListener("input",chk);
+  const gs=$("#f_gameSel"); if(gs) gs.addEventListener("change",()=>setTimeout(chk));
+  wireSysNames.chk=chk; chk();
 }
 /* ---------- 부모 시스템: 같은 게임의 시스템에서 골라 넣기 ---------- */
 function curParents(){ return splitTags(($("#f_parents")||{}).value||""); }
@@ -1693,14 +1708,14 @@ function drawParentPicker(){
   const sel=$("#f_parentsSel"), box=$("#ppick"); if(!sel||!box) return;
   const game=(($("#f_game")||{}).value||"").trim(), me=(($("#f_name")||{}).value||"").trim();
   const sysRefs=allRefs.filter(m=>kindOf(m)==="system" && m.name && m.name!==me);
-  const pool=game ? sysRefs.filter(m=>(m.game||"")===game) : sysRefs;
+  const pool=game ? sysRefs.filter(m=>(m.game||"")===game) : [];
   const en=new Map(); pool.forEach(m=>{ if(m.nameEn && !en.has(m.name)) en.set(m.name,m.nameEn); });
   const names=[...new Set(pool.map(m=>m.name))].sort((a,b)=>a.localeCompare(b,"ko"));
   const chosen=curParents();
   box.innerHTML=chosen.map(n=>{ const miss=!names.includes(n);
     return `<span class="tag c-sys ${miss?"miss":""}" title="${miss?esc(game?`${game}에 아직 등록되지 않은 시스템`:"등록되지 않은 시스템"):""}">${esc(n)}${en.get(n)?` <small style="opacity:.7">${esc(en.get(n))}</small>`:""}<button type="button" data-prm="${esc(n)}" aria-label="${esc(n)} 빼기">×</button></span>`; }).join("");
   const left=names.filter(n=>!chosen.includes(n));
-  sel.innerHTML=`<option value="" selected>${left.length?`＋ 부모 시스템 선택${game?` (${esc(game)})`:""}`:(game?`${esc(game)}에 고를 시스템이 없어요`:"고를 시스템이 없어요")}</option>`
+  sel.innerHTML=`<option value="" selected>${left.length?`＋ 부모 시스템 선택${game?` (${esc(game)})`:""}`:(game?`${esc(game)}에 고를 시스템이 없어요`:"게임을 먼저 골라 주세요")}</option>`
     + left.map(n=>`<option value="${esc(n)}">${esc(n)}${en.get(n)?` · ${esc(en.get(n))}`:""}</option>`).join("")
     + `<option value="__new__">＋ 직접 입력</option>`;
 }
@@ -1759,8 +1774,7 @@ function openExtForm(parent){
   const t=$("#fTitle"); if(t) t.textContent=`확장 시스템 추가 · ${parent.name}${parent.game?` (${parent.game})`:""}`;
   if(parent.game) setCombo("f_game", parent.game);
   setParents([parent.name]);
-  const ns=$("#f_nameSel"); if(ns && !ns.hidden){ ns.value="__new__"; const ni=$("#f_name"); ni.hidden=false; ni.value=""; ni.focus(); }
-  else { const ni=$("#f_name"); if(ni) ni.focus(); }
+  const ni=$("#f_name"); if(ni){ ni.value=""; ni.focus(); }
 }
 function wireGameSelect(){
   const sel=$("#f_gameSel"), inp=$("#f_game"); if(!sel||!inp) return;
@@ -2139,8 +2153,8 @@ function openForm(m, copyFrom, opts){
     <form id="form" novalidate>
       <div class="field"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v?.game||"")}</div>
       ${SYS?"":`<div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>`}
-      ${SYS ? `<div class="field"><label for="f_nameSel">시스템 이름</label>${comboHTML("f_name", sysNameList().names, v?.name||"", "시스템 선택", "＋ 새 시스템 직접 입력", K.namePh, "")}</div>
-      <div class="field"><label for="f_nameEnSel">영문 이름</label>${comboHTML("f_nameEn", sysNameList().ens, v?.nameEn||"", "영문 이름 선택", "＋ 새 영문 이름 직접 입력", K.enPh, 'lang="en"')}</div>`
+      ${SYS ? `<div class="field"><label for="f_name">시스템 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${esc(K.namePh)}" autocomplete="off" required><small id="f_nameDup" class="dupwarn" hidden></small></div>
+      <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${esc(K.enPh)}" lang="en" autocomplete="off"></div>`
       : `<div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${K.enPh}" lang="en" autocomplete="off"></div>`}
       ${SYS?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>`}
@@ -2159,14 +2173,14 @@ function openForm(m, copyFrom, opts){
       <div class="field full"><label for="f_levels"><i style="background:var(--t-level)"></i>레벨 테마</label><input id="f_levels" type="text" value="${esc(j(v?.levels))}" placeholder="폐허 도시 / 우주 정거장"><small>등장 스테이지의 분위기 · / 로 구분</small></div>
       <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
       <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(v?.weapons))}" placeholder="에너지 / 검"></div>
-      <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>이미 있는 이름이면 그 내용을 그대로 불러와요 · 내용은 칩에 마우스를 올려 수정</small></div>
+      <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>같은 게임의 시스템 레퍼런스와 이어져요 · 게임을 먼저 고르면 그 게임의 시스템이 추천돼요</small></div>
       <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>${KINDS[fKind].counter}</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="${KINDS[fKind].counterPh}"></div>`}
       <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
       <div class="field full"><label for="f_guide">${K.guide}</label><textarea id="f_guide" style="min-height:220px" placeholder="${SYS?"## 규칙&#10;…&#10;&#10;## 특징&#10;- …":"## 패턴 요약&#10;…&#10;&#10;## 공략 포인트&#10;- …"}">${esc(v?.guide||"")}</textarea><small>길게 써도 돼요 · ‘## 제목’ 줄은 소제목, 빈 줄로 문단 구분</small></div>
       <div class="err" id="fErr" hidden></div>
       <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
     </form></div>`;
-  sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireSysNames(); wireParentPicker();
+  sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireSysNames(m&&!copyFrom?m.id:null); wireParentPicker();
   if(m){
     $("#fCopy").onclick=e=>copyText(refText(formSnapshot(m)), e.currentTarget);
     $("#fDup").onclick=()=>{ if(uploading){ toast("업로드가 끝난 뒤 복제할 수 있어요"); return; } const snap=formSnapshot(m); closeForm(); openForm(null, snap); };
@@ -2365,8 +2379,22 @@ async function saveForm(m, src){
     link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null, updatedAt:Date.now(),
   };
   if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
+  const isSys = data.kind==="system";
+  if(isSys){
+    const d=sysDup(game, name, m?m.id:null);
+    if(d){ err.hidden=false; err.textContent=`${game}에 이미 ‘${name}’ 시스템이 있어요. 시스템은 하나만 둘 수 있어서, 이름을 바꾸거나 있는 시스템을 편집해 주세요.`; return; }
+    if(data.parents.includes(name)) data.parents=data.parents.filter(p=>p!==name);
+  }
   const btn=$("#fSave"); btn.disabled=true;
   try{
+    /* 시스템 이름·게임을 바꾸면 그 아래 확장 시스템의 부모 이름도 같이 바꿈 */
+    if(isSys && m && kindOf(m)==="system" && (m.name!==name || (m.game||"")!==game)){
+      const kids=allRefs.filter(x=>kindOf(x)==="system" && x.id!==m.id && (x.game||"")===(m.game||"") && (x.parents||[]).includes(m.name));
+      for(const k of kids){
+        const ps=(x=>(m.game||"")===game ? x.map(p=>p===m.name?name:p) : x.filter(p=>p!==m.name))(k.parents);
+        await store.update(k.id,{parents:[...new Set(ps)], updatedAt:Date.now()});
+      }
+    }
     if(m) await store.set(m.id,{...data, ...(typeof m.order==="number"?{order:m.order}:{}), createdAt:m.createdAt||Date.now()});
     else await store.add({...data, createdAt:Date.now()});
     closeForm(); toast(m?"저장했어요":"추가했어요");
