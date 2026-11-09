@@ -527,6 +527,22 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .ac button mark{background:transparent;color:var(--accent);font-weight:700}
 .ac button .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .ac .hint{font-size:11px;color:var(--muted);padding:4px 10px 2px}
+/* 우클릭 메뉴 */
+.ctx{position:fixed;z-index:90;min-width:200px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:5px;display:flex;flex-direction:column}
+.ctx button{display:flex;justify-content:space-between;align-items:center;gap:16px;border:0;background:none;text-align:left;padding:8px 10px;border-radius:6px;font-size:13.5px;color:var(--ink);cursor:pointer}
+.ctx button:hover,.ctx button:focus-visible{background:var(--hover);outline:none}
+.ctx button small{color:var(--muted);font-size:11.5px}
+.ctx button.danger{color:var(--t-weapon)}
+.ctx .sep{height:1px;background:var(--line);margin:4px 2px}
+.ctx .head{font-size:11.5px;color:var(--muted);padding:6px 10px 4px;font-weight:600}
+/* 끌어서 구조 바꾸기 */
+#trzone{display:flex;flex-direction:column;gap:12px;border-radius:10px}
+#trzone.editable [data-tnode]:not(.ghost){cursor:grab}
+[data-tnode].dragging{opacity:.45}
+[data-tnode].drop{outline:2px dashed var(--accent);outline-offset:3px}
+[data-tnode].nodrop{outline:2px dashed var(--t-weapon);outline-offset:3px;cursor:not-allowed}
+#trzone.dropbase .trwrap,#trzone.dropbase .tlonely{background-image:repeating-linear-gradient(135deg,transparent 0 12px,color-mix(in srgb,var(--accent) 6%,transparent) 12px 24px)}
+.toast button{margin-left:10px;border:1px solid currentColor;background:none;color:inherit;border-radius:4px;padding:1px 8px;font-size:12.5px;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;font-size:13px;z-index:80}
 @media (prefers-reduced-motion:no-preference){.pop,.modal{animation:in .14s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}}}
 </style>
@@ -775,6 +791,13 @@ function vals(m, key){
 function toast(msg){
   const t=$("#toast"); t.textContent=msg; t.hidden=false;
   clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,1800);
+}
+function toastUndo(msg, undo){
+  const t=$("#toast"); t.textContent=msg;
+  const b=document.createElement("button"); b.type="button"; b.textContent="되돌리기";
+  b.onclick=async()=>{ t.hidden=true; try{ await undo(); toast("되돌렸어요"); }catch(ex){ toast(errMsg(ex)); } };
+  t.appendChild(b); t.hidden=false;
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,6000);
 }
 function imgSrc(m){ return m.image || ""; }
 /* ---------- Cloudinary ---------- */
@@ -1076,7 +1099,7 @@ addEventListener("hashchange", ()=>{
   setView(v); groupEdit=null; hidePop(true); render(); scrollTo({top:0});
 });
 /* ---------- 시스템 확장 구조: 부모 → 자식 (부모 여러 개 가능) ---------- */
-let treeFocus="";
+let treeFocus="", treeFamOf=new Map();
 const TR={CW:220, GX:74, RH:96, NH:82, TOP:36, PAD:16};
 let treeGame="";
 /* 확장 관계는 같은 게임 안에서만 이어짐: 노드 키 = 게임 + 이름 */
@@ -1113,19 +1136,21 @@ function renderTree(list, merge){
     .sort((a,b)=>ko(a.game,b.game)||b.size-a.size||ko(a.label,b.label));
   if(treeFocus && !fams.some(f=>f.label===treeFocus)) treeFocus="";
   const focusC = treeFocus ? fams.find(f=>f.label===treeFocus).c : null;
+  treeFamOf = new Map(linked.map(n=>[n.key, (fams.find(f=>f.c===comp.get(n.key))||{}).label||""]));
   const shown = linked.filter(n=>focusC===null || comp.get(n.key)===focusC);
   $("#count").textContent = `시스템 ${list.length}건 · 계열 ${fams.length}개`;
   const bar=`<div class="trbar">${merge?`<b style="font-size:13px">톺아보기 · 모든 게임을 시스템 이름으로 합쳐서 봐요</b>`:`<label class="sortbox" for="trGame" style="font-weight:600;color:var(--ink)">게임
       <select id="trGame">${tGames.map(g=>`<option value="${esc(g)}" ${g===treeGame?"selected":""}>${esc(g)} (${gCount.get(g)})</option>`).join("")}</select></label>`}
       <label class="sortbox" for="trFam" style="font-weight:600;color:var(--ink)">계열
       <select id="trFam"><option value="">전체 보기 (${fams.length})</option>${fams.map(f=>`<option value="${esc(f.label)}" ${f.label===treeFocus?"selected":""}>${esc(f.label)} · ${f.size}</option>`).join("")}</select></label>
+      ${!merge&&canEdit()?`<span class="note" style="color:var(--ink)">상자를 끌어 다른 상자에 놓으면 그 아래로 옮겨요 · Shift를 누른 채 놓으면 부모 추가 · 빈 곳에 놓으면 기본 시스템 · 우클릭으로 추가·편집</span>`:""}
       <span class="note">${merge?"같은 이름의 시스템은 게임이 달라도 한 상자로 합쳐져요 · 게임 하나씩 보려면 ‘확장 구조’":"확장은 같은 게임 안에서만 이어져요 · 모든 게임을 한번에 보려면 ‘톺아보기’"} · 왼쪽이 기본, 오른쪽으로 갈수록 확장 · 마우스를 올리면 그 계열만 강조 · 점선 상자는 아직 등록 안 된 시스템 · 보라 점선은 비슷한 시스템</span></div>`;
   const lonelyHTML = lonely.length ? `<div class="tlonely"><b style="font-size:13px">확장 관계가 없는 시스템 ${lonely.length}개</b>
       <div class="cell">${lonely.map(n=>`<button type="button" class="tag c-sys" data-tnode="${esc(n.key)}">${esc(n.name)}${allG&&n.game?` · ${esc(n.game)}`:""}</button>`).join("")}</div>
-      <small>편집에서 ‘확장 원본(부모 시스템)’을 적으면 위 구조에 들어가요. 부모는 같은 게임의 시스템 이름으로 적어 주세요.</small></div>` : "";
+      <small>${canEdit()&&!merge?"다른 시스템 위로 끌어 놓거나, ":""}편집에서 ‘확장 원본(부모 시스템)’을 적으면 위 구조에 들어가요. 부모는 같은 게임의 시스템 이름으로 적어 주세요.</small></div>` : "";
   if(!shown.length){
-    gb.innerHTML = bar + `<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>아직 확장 관계가 없어요</strong><span>시스템을 편집해서 ‘확장 원본(부모 시스템)’에 같은 게임의 시스템 이름(예: <b>패링</b>)을 적으면, 패링 → 강공 패링처럼 이어져서 보여요.</span></div>` + lonelyHTML;
-    wireTree(); return;
+    gb.innerHTML = bar + `<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>아직 확장 관계가 없어요</strong><span>시스템을 편집해서 ‘확장 원본(부모 시스템)’에 같은 게임의 시스템 이름(예: <b>패링</b>)을 적으면, 패링 → 강공 패링처럼 이어져서 보여요.${canEdit()&&!merge?" 아래 시스템을 다른 시스템 위로 끌어 놓아도 돼요.":""}</span></div><div id="trzone">` + lonelyHTML + `</div>`;
+    wireTree(N, merge); return;
   }
   const depth=new Map(), seen=new Set();
   const dep=k=>{ if(depth.has(k)) return depth.get(k); if(seen.has(k)) return 0; seen.add(k);
@@ -1193,17 +1218,25 @@ function renderTree(list, merge){
       <span class="ext">${ghost?"아직 등록 안 됨 · 눌러서 등록":esc(merge?games.join(" · "):(ext||n.game))}</span>
       ${kws.length?`<span class="kw">${kws.map(k=>"#"+esc(k)).join(" ")}</span>`:""}</button>`;
   };
-  gb.innerHTML = bar + `<div class="trwrap"><div class="tree" id="tree" style="width:${W}px;height:${H}px">
+  gb.innerHTML = bar + `<div id="trzone"><div class="trwrap"><div class="tree" id="tree" style="width:${W}px;height:${H}px">
       ${L.map((_,d)=>`<div class="tlay" style="left:${X(d)+2}px">${stage(d)}</div>`).join("")}
       ${gameHeads.map(h=>`<div class="tgame" style="left:${TR.PAD}px;top:${h.y}px">${esc(h.game)}</div>`).join("")}
       <svg width="${W}" height="${H}" aria-hidden="true">${edges.join("")}</svg>
       ${shown.map(box).join("")}
-    </div></div>` + lonelyHTML;
-  wireTree(N);
+    </div></div>` + lonelyHTML + `</div>`;
+  wireTree(N, merge);
 }
-function wireTree(N){
+function wireTree(N, merge){
   const sel=$("#trFam"); if(sel) sel.onchange=e=>{ treeFocus=e.target.value; render(); };
   const gs=$("#trGame"); if(gs) gs.onchange=e=>{ treeGame=e.target.value; treeFocus=""; render(); };
+  /* 빈 화면(관계 없음)에서도 우클릭으로 기본 시스템 추가 */
+  const wrapAll=$("#groupbox");
+  wrapAll.oncontextmenu = e=>{
+    if(!/^#sysref-(tree|all)/.test(location.hash) || !canEdit() || e.target.closest("#trzone")) return;
+    if(!e.target.closest(".trwrap,.state,.tlonely")) return;
+    e.preventDefault(); treeCtxEmpty(e, merge);
+  };
+  const zone=$("#trzone"); if(zone&&N) wireTreeEdit(zone, N, merge);
   const tree=$("#tree"); if(!tree||!N) return;
   const lineage=name=>{ const set=new Set([name]);
     const up=x=>N.get(x)&&N.get(x).parents.forEach(p=>{ if(!set.has(p)){ set.add(p); up(p); } });
@@ -1216,6 +1249,120 @@ function wireTree(N){
   tree.addEventListener("mouseover",e=>{ const b=e.target.closest(".tnode"); if(b) on(b.dataset.tnode); });
   tree.addEventListener("mouseleave",clear);
   tree.addEventListener("focusin",e=>{ const b=e.target.closest(".tnode"); if(b) on(b.dataset.tnode); });
+}
+/* ---------- 확장 구조: 우클릭 메뉴 · 끌어서 부모 바꾸기 ---------- */
+let ctxEl=null;
+function closeCtx(){ if(ctxEl){ ctxEl.remove(); ctxEl=null; } }
+function openCtx(x, y, items, head){
+  closeCtx();
+  ctxEl=document.createElement("div"); ctxEl.className="ctx"; ctxEl.setAttribute("role","menu");
+  ctxEl.innerHTML=(head?`<div class="head">${esc(head)}</div>`:"")+items.map((it,i)=> it==="-" ? `<div class="sep"></div>`
+    : `<button type="button" role="menuitem" data-ci="${i}" class="${it.danger?"danger":""}">${esc(it.label)}${it.hint?`<small>${esc(it.hint)}</small>`:""}</button>`).join("");
+  document.body.appendChild(ctxEl);
+  const w=ctxEl.offsetWidth, h=ctxEl.offsetHeight;
+  ctxEl.style.left=Math.max(8,Math.min(x, innerWidth-w-8))+"px";
+  ctxEl.style.top=Math.max(8,Math.min(y, innerHeight-h-8))+"px";
+  ctxEl.addEventListener("click",e=>{ const b=e.target.closest("[data-ci]"); if(!b) return; const it=items[+b.dataset.ci]; closeCtx(); it.run(); });
+  ctxEl.addEventListener("keydown",e=>{
+    const bs=[...ctxEl.querySelectorAll("button")], i=bs.indexOf(document.activeElement);
+    if(e.key==="ArrowDown"){ e.preventDefault(); bs[(i+1)%bs.length].focus(); }
+    else if(e.key==="ArrowUp"){ e.preventDefault(); bs[(i-1+bs.length)%bs.length].focus(); }
+  });
+  const f=ctxEl.querySelector("button"); if(f) f.focus();
+}
+document.addEventListener("mousedown",e=>{ if(ctxEl && !ctxEl.contains(e.target)) closeCtx(); }, true);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && ctxEl){ e.stopPropagation(); closeCtx(); } }, true);
+addEventListener("scroll",closeCtx,true); addEventListener("resize",closeCtx);
+addEventListener("hashchange",closeCtx);
+
+function sysRefsAt(key){ const {game,name}=tsplit(key); return allRefs.filter(m=>kindOf(m)==="system" && m.name===name && (!game || (m.game||"")===game)); }
+function addBaseSystem(game){ openForm(null); if(game) setCombo("f_game", game); }
+function registerGhost(key){ const {game,name}=tsplit(key); openForm(null); setCombo("f_name", name); if(game) setCombo("f_game", game); }
+/* 부모 바꾸기 (되돌리기 가능) */
+async function reparent(key, parents, msg){
+  const refs=sysRefsAt(key); if(!refs.length) return;
+  const before=refs.map(r=>({id:r.id, parents:[...(r.parents||[])]}));
+  try{
+    for(const r of refs) await store.update(r.id,{parents:[...new Set(parents)], updatedAt:Date.now()});
+    toastUndo(msg, async()=>{ for(const b of before) await store.update(b.id,{parents:b.parents, updatedAt:Date.now()}); });
+  }catch(ex){ toast(errMsg(ex)); }
+}
+function treeCtxEmpty(e, merge){
+  const g = merge ? "" : treeGame;
+  openCtx(e.clientX, e.clientY, [
+    {label:"+ 기본 시스템 추가", hint:g||"", run:()=>addBaseSystem(g)},
+    ...(treeFocus?[{label:"계열 선택 풀기", run:()=>{ treeFocus=""; render(); }}]:[]),
+  ]);
+}
+function treeCtxNode(e, key, N, merge){
+  const n=N.get(key), refs=n?n.refs:[], {game,name}=tsplit(key);
+  if(!refs.length){
+    openCtx(e.clientX, e.clientY, [{label:"시스템으로 등록", hint:game||"", run:()=>registerGhost(key)}], `${name} · 아직 등록 안 됨`);
+    return;
+  }
+  if(merge){
+    const items=[];
+    refs.forEach(r=>{ items.push({label:`설명 보기`, hint:r.game||"", run:()=>openGuide(r)}); items.push({label:`+ 확장 시스템 추가`, hint:r.game||"", run:()=>openExtForm(r)}); });
+    openCtx(e.clientX, e.clientY, items, name); return;
+  }
+  const ref=refs[0], fam=treeFamOf.get(key);
+  const items=[
+    {label:"+ 확장 시스템 추가", hint:`${name} 아래`, run:()=>openExtForm(ref)},
+    {label:"설명 보기", run:()=>openGuide(ref)},
+    {label:"편집", run:()=>openForm(ref)},
+    "-",
+  ];
+  if(fam) items.push(treeFocus===fam ? {label:"전체 계열 보기", run:()=>{ treeFocus=""; render(); }} : {label:"이 계열만 보기", hint:fam, run:()=>{ treeFocus=fam; render(); }});
+  if((ref.parents||[]).length) items.push({label:"기본 시스템으로 빼기", hint:`${ref.parents.join(" + ")}에서`, run:()=>reparent(key, [], `${name}을(를) 기본 시스템으로 뺐어요`)});
+  items.push("-", {label:"삭제", danger:true, run:()=>confirmDelete(ref.id)});
+  openCtx(e.clientX, e.clientY, items, name);
+}
+function wireTreeEdit(zone, N, merge){
+  zone.addEventListener("contextmenu",e=>{
+    if(!canEdit()) return;
+    e.preventDefault();
+    const b=e.target.closest("[data-tnode]");
+    if(b) treeCtxNode(e, b.dataset.tnode, N, merge); else treeCtxEmpty(e, merge);
+  });
+  if(merge || !canEdit()) return;
+  zone.classList.add("editable");
+  zone.querySelectorAll("[data-tnode]:not(.ghost)").forEach(b=>b.setAttribute("draggable","true"));
+  let drag=null;
+  const desc=key=>{ const set=new Set(), st=[key]; while(st.length){ const x=N.get(st.pop()); if(!x) continue; x.kids.forEach(k=>{ if(!set.has(k)){ set.add(k); st.push(k); } }); } return set; };
+  const clearMarks=()=>{ zone.querySelectorAll(".drop,.nodrop").forEach(x=>x.classList.remove("drop","nodrop")); zone.classList.remove("dropbase"); };
+  zone.addEventListener("dragstart",e=>{
+    const b=e.target.closest("[data-tnode]"); if(!b || b.classList.contains("ghost")){ e.preventDefault(); return; }
+    drag={key:b.dataset.tnode, bad:desc(b.dataset.tnode)}; drag.bad.add(drag.key);
+    b.classList.add("dragging"); e.dataTransfer.effectAllowed="move";
+    try{ e.dataTransfer.setData("text/plain", tsplit(drag.key).name); }catch{}
+  });
+  zone.addEventListener("dragover",e=>{
+    if(!drag) return; e.preventDefault(); clearMarks();
+    const b=e.target.closest("[data-tnode]");
+    if(b){ const bad=drag.bad.has(b.dataset.tnode); b.classList.add(bad?"nodrop":"drop"); e.dataTransfer.dropEffect="move"; }
+    else { zone.classList.add("dropbase"); e.dataTransfer.dropEffect="move"; }
+  });
+  zone.addEventListener("dragleave",e=>{ if(!zone.contains(e.relatedTarget)) clearMarks(); });
+  zone.addEventListener("drop",e=>{
+    if(!drag) return; e.preventDefault(); clearMarks();
+    const d=drag; drag=null;
+    const me=N.get(d.key), myName=tsplit(d.key).name, cur=[...(me.refs[0].parents||[])];
+    const b=e.target.closest("[data-tnode]");
+    if(!b){
+      if(!cur.length) return;
+      reparent(d.key, [], `${myName}을(를) 기본 시스템으로 뺐어요`); return;
+    }
+    const tk=b.dataset.tnode, tName=tsplit(tk).name;
+    if(d.bad.has(tk)){ toast(tk===d.key?"자기 자신 아래로는 옮길 수 없어요":"자기 하위 시스템 아래로는 옮길 수 없어요"); return; }
+    if(e.shiftKey || e.ctrlKey || e.metaKey){
+      if(cur.includes(tName)) return;
+      reparent(d.key, [...cur, tName], `${myName}에 부모 ${tName}을(를) 추가했어요`);
+    } else {
+      if(cur.length===1 && cur[0]===tName) return;
+      reparent(d.key, [tName], `${myName}을(를) ${tName} 아래로 옮겼어요`);
+    }
+  });
+  zone.addEventListener("dragend",()=>{ drag=null; clearMarks(); zone.querySelectorAll(".dragging").forEach(x=>x.classList.remove("dragging")); });
 }
 $("#groupbox").addEventListener("click", e=>{
   const b=e.target.closest("[data-tnode]"); if(!b) return;

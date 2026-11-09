@@ -90,6 +90,28 @@ def main():
         check("확장 구조: 상자 2개·선 1개", pg.locator(".tnode").count() == 2 and pg.locator("#tree path:not(.sim)").count() == 1)
         check("확장 구조: 키워드 표시", "#타이밍" in pg.inner_text(".tree"))
 
+        # 5-1) 우클릭 메뉴: 빈 곳 → 기본 시스템 추가, 상자 → 확장 추가
+        box = pg.locator("#tree").bounding_box()
+        pg.mouse.click(box["x"] + box["width"] - 10, box["y"] + box["height"] - 10, button="right"); pg.wait_for_timeout(100)
+        pg.locator(".ctx button", has_text="기본 시스템 추가").click(); pg.wait_for_timeout(100)
+        check("우클릭(빈 곳): 기본 시스템 창, 게임 채워짐", pg.locator("#f_cats").count() == 1 and pg.input_value("#f_game") == "테스트 게임")
+        pick_or_type(pg, "f_name", "회피"); pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(200)
+        pg.locator(".tnode", has_text="패링").first.click(button="right"); pg.wait_for_timeout(100)
+        items = pg.locator(".ctx button").all_inner_texts()
+        check("우클릭(상자): 메뉴 항목", any("확장 시스템 추가" in t for t in items) and any("삭제" in t for t in items), str(items))
+        pg.keyboard.press("Escape"); pg.wait_for_timeout(100)
+
+        # 5-2) 끌어서 부모 바꾸기 + 되돌리기 + 순환 막기
+        def node(name): return pg.locator(f'[data-tnode$="\u0001{name}"]')
+        def parents_of(name):
+            return pg.evaluate("n=>(JSON.parse(localStorage.getItem('monster-ref-v1')||'[]').find(m=>m.kind==='system'&&m.name===n)||{}).parents||[]", name)
+        node("강공 패링").drag_to(node("회피")); pg.wait_for_timeout(300)
+        check("드래그: 다른 부모로 옮김", parents_of("강공 패링") == ["회피"], str(parents_of("강공 패링")))
+        pg.locator("#toast button", has_text="되돌리기").click(); pg.wait_for_timeout(300)
+        check("드래그: 되돌리기", parents_of("강공 패링") == ["패링"], str(parents_of("강공 패링")))
+        node("패링").drag_to(node("강공 패링")); pg.wait_for_timeout(200)
+        check("드래그: 자기 하위로는 막힘", parents_of("패링") == [] and "하위" in pg.inner_text("#toast"))
+
         # 6) 몬스터 칩 → 시스템 레퍼런스 내용만 (메모 수정 없음)
         pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         pg.hover("[data-deep]"); pg.wait_for_timeout(400)
