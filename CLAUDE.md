@@ -17,7 +17,7 @@
 | `config.js` | `window.REF_CONFIG` — firebase 설정, cloudinary 계정 목록(새 업로드는 **마지막** 계정), 방문자 화면 제목, editors(비워 둠) |
 | `firestore.rules` | 규칙 **견본** (실제 규칙은 Firebase 콘솔에 사용자가 붙여 넣음, 관리자 이메일 2개는 콘솔에만 있음) |
 | `README.md` | 처음 설정 순서 (일부 내용이 예전 기준 — 아래 검수 목록 참고) |
-| `tests/smoke_test.py` | Playwright 스모크 테스트 (브라우저 저장 모드, 14개 항목) |
+| `tests/smoke_test.py` | Playwright 스모크 테스트 (브라우저 저장 모드, 19개 항목) |
 | `.nojekyll` | Pages가 Jekyll 처리하지 않게 |
 
 ## 2. 동작 구조
