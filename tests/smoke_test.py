@@ -62,6 +62,13 @@ def main():
         pg.fill("#f_systems", "패링"); pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(150)
         check("몬스터 추가", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)
 
+        # 1-1) 태그는 가나다순으로 보임 (넣은 순서와 상관없이)
+        pg.locator("#rows tr", has_text="테스트 보스").first.locator("[data-edit]").first.click(); pg.wait_for_timeout(100)
+        pg.fill("#f_theme", "하늘 / 가시 / 바람"); pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(150)
+        order = pg.evaluate("""()=>{ const r=[...document.querySelectorAll('#rows tr')].find(r=>r.textContent.includes('테스트 보스'));
+            return [...r.querySelectorAll('.tag')].map(t=>t.textContent.trim()).filter(t=>['하늘','가시','바람'].includes(t)); }""")
+        check("태그 가나다순", order == ["가시", "바람", "하늘"], str(order))
+
         # 2) 시스템 레퍼런스: 기본 시스템 (분류 있음, 부모 칸 없음)
         pg.goto(url + "#sysref"); pg.wait_for_timeout(300)
         pg.click("#addBtn")
