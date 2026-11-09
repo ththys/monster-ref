@@ -147,6 +147,15 @@ def main():
         node("패링").drag_to(node("강공 패링")); pg.wait_for_timeout(200)
         check("드래그: 자기 하위로는 막힘", parents_of("패링") == [] and "하위" in pg.inner_text("#toast"))
 
+        # 5-3) 확장 구조에서 상자를 누르면 이미지가 보임
+        pg.evaluate("""()=>{ const k='monster-ref-v1', d=JSON.parse(localStorage.getItem(k));
+            d.forEach(m=>{ if(m.kind==='system'&&m.name==='패링') m.image='data:image/gif;base64,R0lGODlhAQABAAAAACw='; });
+            localStorage.setItem(k, JSON.stringify(d)); }""")
+        pg.reload(); pg.wait_for_timeout(500)
+        node("패링").first.click(); pg.wait_for_timeout(150)
+        check("확장 구조: 눌러서 이미지 보기", pg.locator(".gmedia img").count() == 1)
+        pg.click("#gClose"); pg.wait_for_timeout(100)
+
         # 6) 몬스터 칩 → 시스템 레퍼런스 내용만 (메모 수정 없음)
         pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         pg.hover("[data-deep]"); pg.wait_for_timeout(400)

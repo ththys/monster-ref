@@ -527,6 +527,8 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .ac button mark{background:transparent;color:var(--accent);font-weight:700}
 .ac button .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .ac .hint{font-size:11px;color:var(--muted);padding:4px 10px 2px}
+.gmedia{margin:12px 22px 0;border-radius:10px;overflow:hidden;background:var(--bg);border:1px solid var(--line);display:flex;justify-content:center}
+.gmedia img,.gmedia video{display:block;max-width:100%;max-height:min(60vh,520px);object-fit:contain}
 .dupwarn{color:var(--t-weapon);font-size:12px;margin-top:4px;display:block}
 .dupwarn[hidden]{display:none}
 /* 우클릭 메뉴 */
@@ -1922,6 +1924,7 @@ function openGuide(m){
       return `<div style="padding:8px 22px 0;font-size:13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span style="color:var(--muted)">이 시스템을 쓰는 곳</span>${us.map(u=>`<button type="button" class="tag ${kindOf(u)==="pc"?"c-pc":"c-game"}" data-gouse="${kindOf(u)}|${esc(u.game||"")}|${esc(m.name)}">${kindOf(u)==="pc"?"PC ":""}${esc(u.name)}</button>`).join("")}</div>`; })():""}
     ${kindOf(m)==="system"&&((m.parents||[]).length||m.ext)?`<div style="padding:8px 22px 0;font-size:13px;line-height:1.6">${(m.parents||[]).length?`<div style="color:var(--t-sys);font-weight:600">↳ ${esc(m.parents.join(" + "))}에서 확장</div>`:""}${m.ext?`<div style="color:var(--muted)">${esc(m.ext)}</div>`:""}</div>`:""}
     ${kindOf(m)==="system"&&similarOf(m).length?`<div style="padding:6px 22px 0;font-size:13px;color:var(--t-theme)">≈ 비슷한 시스템: ${esc(similarOf(m).join(", "))}</div>`:""}
+    ${(m.media||m.image)?`<div class="gmedia">${mediaHTML(m, 640, true)}</div>`:""}
     <div class="guidedoc"><div class="doc">${has?aboutHTML(m.guide):`<p class="ph-note">아직 ${KINDS[kindOf(m)].guide}이 없어요.</p>`}</div></div>
     <div class="foot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px;border-top:1px solid var(--line)">
       ${has?`<button type="button" class="btn" id="gCopy" style="margin-right:auto">${KINDS[kindOf(m)].guide} 복사</button>`:""}
