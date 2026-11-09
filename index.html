@@ -166,6 +166,9 @@ td.name .sim{display:block;font-size:12px;color:var(--t-theme);margin:-2px 0 6px
 .ppick .tag.miss{border-style:dashed}
 .ppick .tag button{border:0;background:none;color:inherit;font-size:13px;line-height:1;padding:0 4px;border-radius:3px;cursor:pointer}
 .ppick .tag button:hover{background:var(--c-bg)}
+.gsub{display:flex;align-items:center;gap:8px;padding:10px 14px 6px;border-bottom:1px solid var(--line);background:var(--bg)}
+.gsub .cnt{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.gitem.kid{background:var(--bg)}
 .sgt{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:600;color:var(--muted);margin:0 0 6px;cursor:pointer}
 .sgt:hover{color:var(--ink);border-color:var(--ink)}
 .sgt.open{color:var(--t-sys);border-color:var(--t-sys)}
@@ -581,8 +584,8 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <a href="#pc-timeline" data-view="pc-timeline" class="sub"><span>패치 타임라인</span></a>
         <div class="navh">시스템 레퍼런스</div>
         <a href="#sysref" data-view="sysref"><span>시스템</span><span class="n" id="nSR"></span></a>
-        <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-games" data-view="sysref-games" class="sub"><span>게임별</span><span class="n" id="nSRgame"></span></a>
+        <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-tree" data-view="sysref-tree" class="sub"><span>확장 구조</span></a>
         <a href="#sysref-all" data-view="sysref-all" class="sub"><span>톺아보기</span></a>
         <div class="navh"></div>
@@ -850,7 +853,8 @@ function wireVideos(root, ob){
 /* ---------- filtering ---------- */
 function haystack(m){
   const parts=[m.game,m.version,m.name,m.nameEn,m.link,m.guide,...(m.cats||[]),...(m.keywords||[]),...(m.parents||[]),...(m.similar||[]),m.ext,...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
-  for (const k of ["systems","pcs"]) for (const e of (m[k]||[])){ const d=getDef(kindOf(m),k,e.name); parts.push(e.name,d.nameEn,d.label,d.note); }
+  for (const e of (m.systems||[])){ const sr=sysRefFor(m.game,e.name); parts.push(e.name, sr&&sr.nameEn, ...((sr&&sr.keywords)||[])); }
+  for (const e of (m.pcs||[])){ const d=getDef(kindOf(m),"pcs",e.name); parts.push(e.name,d.nameEn,d.label,d.note); }
   return parts.filter(Boolean).join(" ").toLowerCase();
 }
 /* ---------- 공통 항목: 같은 이름의 전투 확장 시스템·대응 항목은 내용 하나를 함께 씀 ----------
@@ -969,6 +973,7 @@ function visible(){
 
 /* ---------- render ---------- */
 function render(){
+  document.body.classList.toggle("v-sysl", kind==="system" && sub==="list");
   renderRail(); renderActive(); renderTabs();
   const list = visible();
   $("#count").textContent = loaded ? `${list.length} / ${monsters.length}건` : "";
@@ -1022,7 +1027,7 @@ function tagBtn(cat, v, extra=""){
 }
 function deepChip(m, cat, i){
   const e=m[cat][i], d=getDef(kindOf(m),cat,e.name), sr = cat==="systems" ? sysRefFor(m.game,e.name) : null;
-  return `<button type="button" class="tag deep ${CAT[cat].cls} ${d.note?"has":""}" title="${esc([d.nameEn||(sr&&sr.nameEn)||"", sr?"시스템 레퍼런스와 연결됨":""].filter(Boolean).join(" · "))}" data-deep="${esc(m.id)}|${cat}|${i}" aria-label="${esc(e.name)} 상세 보기">${esc(e.name)}</button>`;
+  return `<button type="button" class="tag deep ${CAT[cat].cls} ${(cat==="systems"?!!sr:!!d.note)?"has":""}" title="${esc([d.nameEn||(sr&&sr.nameEn)||"", sr?"시스템 레퍼런스와 연결됨":""].filter(Boolean).join(" · "))}" data-deep="${esc(m.id)}|${cat}|${i}" aria-label="${esc(e.name)} 상세 보기">${esc(e.name)}</button>`;
 }
 /* ---------- 보기 전환 (#monsters / #systems / #pcs) ---------- */
 const VIEWMAP={
@@ -1221,28 +1226,54 @@ $("#groupbox").addEventListener("click", e=>{
 /* ---------- 시스템 레퍼런스: 분류별 / 게임별 ---------- */
 function renderBuckets(list, mode){
   const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
-  const byCat = mode==="bycat", label = byCat ? "분류" : "게임", cls = byCat ? CAT.cats.cls : CAT.game.cls;
-  const groups=new Map(), none=[];
-  list.forEach(m=>{ const ks = byCat ? (m.cats||[]) : (m.game?[m.game]:[]); if(!ks.length) none.push(m); ks.forEach(k=>{ if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(m); }); });
-  const arr=[...groups].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0],"ko"));
-  if(none.length) arr.push([`${label} 없음`, none]);
-  $("#count").textContent=`${label} ${groups.size}개 · 시스템 ${list.length}건`;
-  const card=m=>`<article class="gitem slim">
+  const ko=(a,b)=>a.localeCompare(b,"ko");
+  const byCat = mode==="bycat";
+  /* 부모-자식 (같은 게임 안에서만) */
+  const K=m=>tkey(m.game,m.name), keys=new Set(list.map(K)), order=new Map(list.map((m,i)=>[m.id,i]));
+  const kidsOf=new Map();
+  list.forEach(m=>(m.parents||[]).forEach(p=>{ const k=tkey(m.game,p); if(p!==m.name && keys.has(k)){ if(!kidsOf.has(k)) kidsOf.set(k,[]); kidsOf.get(k).push(m); } }));
+  const isRoot=m=>!(m.parents||[]).some(p=>p!==m.name && keys.has(tkey(m.game,p)));
+  const roots=list.filter(isRoot);
+  const descN=(m,path=new Set([K(m)]))=>(kidsOf.get(K(m))||[]).filter(k=>!path.has(K(k))).reduce((n,k)=>n+1+descN(k,new Set([...path,K(k)])),0);
+  const card=(m,depth,path)=>{
+    const kids=(kidsOf.get(K(m))||[]).filter(k=>!path.has(K(k))).sort((a,b)=>order.get(a.id)-order.get(b.id));
+    const open=sysOpen.has(K(m)), total=descN(m);
+    return `<article class="gitem slim ${depth?"kid":""}" style="${depth?`margin-left:${depth*28}px`:""}">
       ${thumbHTML(m,240)}
       <div class="gbody">
-        <div class="gcrumb"><b>${esc(m.name)}</b>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}</div>
-        <div class="cell" style="display:flex;flex-wrap:wrap;gap:4px">${byCat?(m.game?tagBtn("game",m.game):""):(m.cats||[]).map(v=>tagBtn("cats",v)).join("")}${(m.keywords||[]).map(v=>tagBtn("keywords",v)).join("")}</div>
-        ${(m.guide||"").trim()?`<button type="button" class="gpv" data-guide="${esc(m.id)}" style="max-width:680px"><span>${esc(guidePlain(m.guide).slice(0,300))}</span><small>전체 보기</small></button>`:""}
+        <div class="gcrumb">${depth?`<span style="color:var(--muted)">└</span>`:""}<b>${esc(m.name)}</b>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}</div>
+        ${depth&&m.ext?`<div class="ext" style="font-size:12.5px;color:var(--muted)">${esc(m.ext)}</div>`:""}
+        <div class="cell" style="display:flex;flex-wrap:wrap;gap:4px">${byCat&&m.game?tagBtn("game",m.game):""}${(m.keywords||[]).map(v=>tagBtn("keywords",v)).join("")}</div>
+        ${kids.length?`<button type="button" class="sgt ${open?"open":""}" data-bsg="${esc(K(m))}" aria-expanded="${open}" style="align-self:flex-start">${open?"▾":"▸"} 하위 시스템 ${total}개</button>`:""}
       </div>
-      <div class="gact rowact" style="opacity:1"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div>
-    </article>`;
-  gb.innerHTML = `<div class="gindex">${arr.map(([name,its],k)=>`<button type="button" class="tag ${cls}" data-gjump="${k}">${esc(name)} <span class="n">${its.length}</span></button>`).join("")}</div>`
-    + arr.map(([name,its],k)=>`<section class="gsec" id="gsec-${k}">
-        <header><h2><span class="tag ${cls}">${esc(name)}</span></h2><span class="cnt">${its.length}건</span></header>
-        ${its.map(card).join("")}
+      <div class="gact rowact" style="opacity:1"><button type="button" class="iconbtn edit-only" data-ext="${esc(m.id)}">+ 확장</button><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div>
+    </article>` + (open ? kids.map(k=>card(k,depth+1,new Set([...path,K(k)]))).join("") : "");
+  };
+  const cards=arr=>arr.sort((a,b)=>order.get(a.id)-order.get(b.id)).map(m=>card(m,0,new Set([K(m)]))).join("");
+  const catGroups=arr=>{ const g=new Map(), none=[];
+    arr.forEach(m=>{ const cs=m.cats||[]; if(!cs.length) none.push(m); cs.forEach(c=>{ if(!g.has(c)) g.set(c,[]); g.get(c).push(m); }); });
+    const out=[...g].sort((a,b)=>b[1].length-a[1].length||ko(a[0],b[0])); if(none.length) out.push(["분류 없음",none]); return out; };
+  let secs;
+  if(byCat){
+    secs=catGroups(roots).map(([name,its])=>({name,cls:CAT.cats.cls,n:its.length,body:cards(its)}));
+    $("#count").textContent=`분류 ${secs.filter(x=>x.name!=="분류 없음").length}개 · 기본 시스템 ${roots.length}개 · 전체 ${list.length}건`;
+  } else {
+    const g=new Map(); roots.forEach(m=>{ const k=m.game||"게임 없음"; if(!g.has(k)) g.set(k,[]); g.get(k).push(m); });
+    secs=[...g].sort((a,b)=>(a[0]==="게임 없음")-(b[0]==="게임 없음")||b[1].length-a[1].length||ko(a[0],b[0])).map(([name,its])=>({name,cls:CAT.game.cls,n:its.length,
+      body:catGroups(its).map(([c,cits])=>`<div class="gsub"><span class="tag ${CAT.cats.cls}">${esc(c)}</span><span class="cnt">${cits.length}</span></div>${cards(cits)}`).join("")}));
+    $("#count").textContent=`게임 ${secs.length}개 · 기본 시스템 ${roots.length}개 · 전체 ${list.length}건`;
+  }
+  gb.innerHTML = `<div class="gindex">${secs.map((x,k)=>`<button type="button" class="tag ${x.cls}" data-gjump="${k}">${esc(x.name)} <span class="n">${x.n}</span></button>`).join("")}</div>`
+    + secs.map((x,k)=>`<section class="gsec" id="gsec-${k}">
+        <header><h2><span class="tag ${x.cls}">${esc(x.name)}</span></h2><span class="cnt">기본 시스템 ${x.n}개</span></header>
+        ${x.body}
       </section>`).join("");
   wireVideos(gb);
 }
+$("#groupbox").addEventListener("click", e=>{
+  const b=e.target.closest("[data-bsg]"); if(!b) return;
+  const k=b.dataset.bsg; sysOpen.has(k)?sysOpen.delete(k):sysOpen.add(k); render();
+});
 /* ---------- 패치 타임라인: 게임 하나를 골라 패치(버전) 순서로 ---------- */
 let tlGame="";
 function renderTimeline(list){
@@ -1294,7 +1325,8 @@ function wireTl(){
 $("#groupbox").addEventListener("click", e=>{
   const t=e.target.closest("[data-tldef],[data-tlmon]"); if(!t) return;
   if(t.dataset.tldef){ const k=t.dataset.tldef.indexOf("|"); const cat=t.dataset.tldef.slice(0,k), name=t.dataset.tldef.slice(k+1);
-    if(canEdit()) openDefForm(kind,cat,name,null); }
+    if(cat==="systems"){ const sr=sysRefFor(tlGame,name); if(sr) goSysRef(sr.id); else addSysRef(tlGame,name); }
+    else if(canEdit()) openDefForm(kind,cat,name,null); }
   else { const m=allRefs.find(x=>x.id===t.dataset.tlmon); if(m) openGuide(m); }
 });
 function renderGroups(list){
@@ -1320,7 +1352,22 @@ function renderGroups(list){
     </article>`;
   };
   gb.innerHTML = `<div class="gindex">${arr.map(([name,its],k)=>`<button type="button" class="tag ${c.cls}" data-gjump="${k}">${esc(name)} <span class="n">${its.length}</span></button>`).join("")}</div>`
-    + arr.map(([name,its],k)=>{ const d=getDef(kind,cat,name); return `<section class="gsec" id="gsec-${k}">
+    + arr.map(([name,its],k)=>{ const d=getDef(kind,cat,name);
+      if(cat==="systems"){
+        const gs=[...new Set(its.map(x=>x.m.game||""))];
+        const refs=gs.map(g=>({g, sr:sysRefFor(g,name)}));
+        const en=(refs.find(x=>x.sr&&x.sr.nameEn)||{sr:{}}).sr.nameEn||"";
+        return `<section class="gsec" id="gsec-${k}">
+        <header><h2><span class="tag ${c.cls}">${esc(name)}</span>${en?`<span class="en" lang="en">${esc(en)}</span>`:""}</h2><span class="cnt">${its.length}건</span><span class="sp"></span>
+          <button type="button" class="btn sm" data-goto="${esc(cat)}|${esc(name)}">${KL} 표에서 보기</button></header>
+        ${refs.map(({g,sr})=>{ const gp=sr?guidePlain(sr.guide||""):"";
+          return `<div class="gshared"><div class="top">${g?`<span class="tag c-game">${esc(g)}</span>`:""}<small>${sr?"시스템 레퍼런스":"시스템 레퍼런스에 없음"}</small><span class="sp" style="flex:1"></span>
+            ${sr?`<button type="button" class="btn sm" data-gosys="${esc(sr.id)}">열기 ↗</button>`:`<button type="button" class="btn sm edit-only" data-addsys="${esc(g)}|${esc(name)}">시스템 레퍼런스에 추가</button>`}</div>
+            ${sr?`${(sr.parents||[]).length?`<div class="gnote" style="color:var(--t-sys)">↳ ${esc(sr.parents.join(" + "))}에서 확장${sr.ext?` · ${esc(sr.ext)}`:""}</div>`:""}
+              <div class="gnote ${gp?"":"blank"}">${gp?esc(gp.slice(0,400))+(gp.length>400?"…":""):"설명이 아직 없어요."}</div>`:""}</div>`; }).join("")}
+        ${its.map(item).join("")}
+      </section>`; }
+      return `<section class="gsec" id="gsec-${k}">
         <header><h2><span class="tag ${c.cls}">${esc(name)}</span>${d.nameEn?`<span class="en" lang="en">${esc(d.nameEn)}</span>`:""}</h2><span class="cnt">${its.length}건</span><span class="sp"></span>
           <button type="button" class="btn sm edit-only" data-dedit="${esc(cat)}|${esc(name)}">편집</button>
           <button type="button" class="btn sm" data-goto="${esc(cat)}|${esc(name)}">${KL} 표에서 보기</button></header>
@@ -1333,7 +1380,8 @@ function renderGroups(list){
 $("#groupbox").addEventListener("click", e=>{
   const t=e.target.closest("[data-dedit],[data-gedit],[data-gdel],[data-gjump],[data-goto]"); if(!t) return;
   if(t.dataset.dedit){ const k=t.dataset.dedit.indexOf("|"); openDefForm(kind, t.dataset.dedit.slice(0,k), t.dataset.dedit.slice(k+1), null); }
-  else if(t.dataset.gedit){ const [mid,cat,i]=t.dataset.gedit.split("|"); const m=allRefs.find(x=>x.id===mid); if(m&&m[cat]&&m[cat][+i]) openDefForm(kindOf(m), cat, m[cat][+i].name, m); }
+  else if(t.dataset.gedit){ const [mid,cat,i]=t.dataset.gedit.split("|"); const m=allRefs.find(x=>x.id===mid);
+    if(m&&m[cat]&&m[cat][+i]){ if(cat==="systems") openForm(m); else openDefForm(kindOf(m), cat, m[cat][+i].name, m); } }
   else if(t.dataset.gdel){ const [mid,cat,i]=t.dataset.gdel.split("|"); confirmNoteDelete(mid,cat,+i); }
   else if(t.dataset.gjump){ const sec=$("#gsec-"+t.dataset.gjump); if(sec) sec.scrollIntoView({behavior:"smooth",block:"start"}); }
   else if(t.dataset.goto){ filters.add(t.dataset.goto); location.hash=listHash(); }
@@ -1530,6 +1578,13 @@ function wireParentPicker(){
   [gi,ni].forEach(x=>x&&x.addEventListener("input",drawParentPicker));
 }
 /* ---------- 몬스터·PC의 전투 확장 시스템 ↔ 시스템 레퍼런스 연동 (게임 + 시스템 이름이 같으면) ---------- */
+/* 몬스터·PC에서 쓴 시스템을 시스템 레퍼런스에 바로 등록 */
+function addSysRef(game, name){
+  if(!canEdit()) return;
+  hidePop(true); closeForm();
+  const go=()=>{ openForm(null); if(game) setCombo("f_game", game); setCombo("f_name", name); };
+  if(location.hash!=="#sysref"){ location.hash="#sysref"; setTimeout(go,80); } else go();
+}
 function sysRefFor(game, name){
   if(!name) return null;
   return allRefs.find(m=>kindOf(m)==="system" && m.name===name && (m.game||"")===(game||"")) || null;
@@ -1557,7 +1612,6 @@ function openExtForm(parent){
   const t=$("#fTitle"); if(t) t.textContent=`확장 시스템 추가 · ${parent.name}${parent.game?` (${parent.game})`:""}`;
   if(parent.game) setCombo("f_game", parent.game);
   setParents([parent.name]);
-  sysOpen.add(tkey(parent.game, parent.name));   /* 저장하면 부모 아래에 펼쳐서 보이게 */
   const ns=$("#f_nameSel"); if(ns && !ns.hidden){ ns.value="__new__"; const ni=$("#f_name"); ni.hidden=false; ni.value=""; ni.focus(); }
   else { const ni=$("#f_name"); if(ni) ni.focus(); }
 }
@@ -1654,6 +1708,11 @@ function refText(m){
   for(const [k,lab] of [["systems","전투 확장 시스템"],["pcs","대응 PC 도구"]]){
     for(const e of (m[k]||[])){
       const d=getDef(kindOf(m),k,e.name);
+      if(k==="systems"){ const sr=sysRefFor(m.game,e.name); const gp=sr?guidePlain(sr.guide||""):"";
+        L.push(`${lab}: ${e.name}${sr&&sr.nameEn?` (${sr.nameEn})`:""}`);
+        if(sr&&sr.ext) L.push(`  └ ${sr.ext}`);
+        if(gp) L.push(gp.split("\n").map(x=>"    "+x).join("\n"));
+        continue; }
       L.push(`${k==="pcs"?KINDS[kindOf(m)].counter:lab}: ${e.name}${d.nameEn?` (${d.nameEn})`:""}`);
       if(d.note) L.push(`  └ ${d.label||"공략"}\n`+d.note.split("\n").map(x=>"    "+x).join("\n"));
     }
@@ -1788,9 +1847,10 @@ function renderActive(){
 
 /* ---------- click delegation ---------- */
 document.addEventListener("click", e=>{
-  const lk=e.target.closest("[data-gosys],[data-gouse]");
+  const lk=e.target.closest("[data-gosys],[data-gouse],[data-addsys]");
   if(lk){ e.preventDefault(); e.stopPropagation();
-    if(lk.dataset.gosys) goSysRef(lk.dataset.gosys);
+    if(lk.dataset.addsys){ const i=lk.dataset.addsys.indexOf("|"); addSysRef(lk.dataset.addsys.slice(0,i), lk.dataset.addsys.slice(i+1)); }
+    else if(lk.dataset.gosys) goSysRef(lk.dataset.gosys);
     else { const [k,g,...rest]=lk.dataset.gouse.split("|"); goUsers(k,g,rest.join("|")); }
     return; }
   const t=e.target.closest("[data-ext],[data-tag],[data-clear],[data-edit],[data-del],[data-zoom],[data-deep],[data-copy],[data-dup],[data-guide],[data-guideadd]");
@@ -1859,6 +1919,20 @@ function drawPop(edit){
   const x=entryFor(popKey); if(!x){hidePop(true);return;}
   editing=edit;
   const d=getDef(kindOf(x.m),x.cat,x.e.name), n=usersOf(kindOf(x.m),x.cat,x.e.name).length;
+  if(x.cat==="systems"){
+    /* 전투 확장 시스템: 따로 메모하지 않고 시스템 레퍼런스 내용만 */
+    editing=false;
+    const sr=sysRefFor(x.m.game, x.e.name), gp=sr?guidePlain(sr.guide||""):"";
+    pop.innerHTML = `<div class="crumb c-sys"><span class="root">전투 확장 시스템</span><span class="sep">›</span><b>${esc(x.e.name)}</b>${sr&&sr.nameEn?`<span class="en" lang="en">${esc(sr.nameEn)}</span>`:""}<span class="sep">›</span><span>${esc(x.m.game||"-")}</span><span class="sep">›</span><span>${esc(x.m.name)}</span></div>`
+      + (sr ? `<div class="srlink" style="margin:10px 12px"><div class="top"><span>시스템 레퍼런스</span><b>${esc(sr.name)}</b>${sr.nameEn?`<small lang="en">${esc(sr.nameEn)}</small>`:""}</div>
+            ${(sr.parents||[]).length?`<div class="par">↳ ${esc(sr.parents.join(" + "))}에서 확장${sr.ext?` · ${esc(sr.ext)}`:""}</div>`:(sr.ext?`<div class="par">${esc(sr.ext)}</div>`:"")}
+            ${(sr.keywords||[]).length?`<div class="par" style="color:var(--t-theme)">${sr.keywords.map(k=>"#"+esc(k)).join(" ")}</div>`:""}
+            ${gp?`<div class="sum" style="white-space:pre-wrap">${esc(gp.slice(0,400))}${gp.length>400?"…":""}</div>`:`<div class="sum" style="color:var(--muted)">설명이 아직 없어요.</div>`}</div>
+          <div class="foot"><span class="hint">${pinned?"":"칩을 클릭하면 창이 고정돼요"}</span><button type="button" class="btn sm" data-gosys="${esc(sr.id)}">시스템 레퍼런스 열기 ↗</button></div>`
+        : `<div class="body blank">${esc(x.m.game||"이 게임")}의 시스템 레퍼런스에 ‘${esc(x.e.name)}’이(가) 아직 없어요. 등록하면 여기에 그 내용이 보여요.</div>
+          <div class="foot"><span class="hint">게임 이름과 시스템 이름이 같으면 연결돼요</span><button type="button" class="btn sm primary edit-only" data-addsys="${esc(x.m.game||"")}|${esc(x.e.name)}">시스템 레퍼런스에 추가</button></div>`);
+    pop.hidden=false; return;
+  }
   if(!edit){
     pop.innerHTML = crumbs(x,false)
       + (n>1?`<div class="shared">같은 ${esc(x.e.name)}를 쓰는 ${KINDS[kindOf(x.m)].label} ${n}개가 이 내용을 함께 봐요</div>`:"")
