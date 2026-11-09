@@ -17,7 +17,7 @@
 | `config.js` | `window.REF_CONFIG` — firebase 설정, cloudinary 계정 목록(새 업로드는 **마지막** 계정), 방문자 화면 제목, editors(비워 둠) |
 | `firestore.rules` | 규칙 **견본** (실제 규칙은 Firebase 콘솔에 사용자가 붙여 넣음, 관리자 이메일 2개는 콘솔에만 있음) |
 | `README.md` | 처음 설정 순서 (일부 내용이 예전 기준 — 아래 검수 목록 참고) |
-| `tests/smoke_test.py` | Playwright 스모크 테스트 (브라우저 저장 모드, 24개 항목) |
+| `tests/smoke_test.py` | Playwright 스모크 테스트 (브라우저 저장 모드, 26개 항목) |
 | `.nojekyll` | Pages가 Jekyll 처리하지 않게 |
 
 ## 2. 동작 구조
@@ -36,7 +36,7 @@
 | `portfolio/{id}` | 예전 "작업물 카드" 기능용. 지금 화면에서는 안 씀 |
 
 몬스터/PC 필드: `game, version, name, nameEn, hooks[], theme[], levels[], looks[], weapons[], systems[{name,label,note}], pcs[{name,label,note}], guide(공략), link, image|media, order, createdAt, updatedAt`
-시스템 필드: `kind:"system", game, name, nameEn, media, cats[](분류, 기본 시스템만), keywords[], parents[](부모 시스템 이름, **같은 게임 안**), ext(확장 포인트), similar[], guide(설명), link`
+시스템 필드: `kind:"system", game, name, nameEn, media, cats[](분류, 기본 시스템만), keywords[], parents[](부모 시스템 이름, **같은 게임 안**), ext(확장 포인트), similar[], guide(설명), link, variants[{src(출처), diff(무엇이 다른지), image|media}](연출 변형)`
 `media`: `{cloud, rt:"image"|"video", id, fmt, anim, bytes, orig?}`
 
 localStorage 키: `monster-ref-v1`(로컬 모드 데이터), `-defs`, `-profile`, `-works`, `-sort`, `-sysgroup`, `-nav-etc`
@@ -64,6 +64,7 @@ localStorage 키: `monster-ref-v1`(로컬 모드 데이터), `-defs`, `-profile`
 7. 게임 이름은 **드롭다운**(모든 레퍼런스에서 쓴 게임 공유) + "새 게임 직접 입력". 다른 칸은 입력 + 자동완성. 칸 아래에 칩을 깔아 두는 방식은 사용자가 거절함.
 8. 시스템 레퍼런스에는 **버전 칸 없음**.
 11. **태그는 가나다순으로 보여 준다** (넣은 순서 아님). 불러올 때 `tagSort()`로 정렬 — 테마·후킹·레벨·외형·무기·분류·키워드·비슷한 시스템, 전투 확장 시스템·대응 도구(이름 기준). 부모 목록은 정렬 안 함.
+12. **연출 변형**: 규칙은 같고 보여 주는 것(이펙트·카메라·소리·모션)만 다르면 확장이 아니라 그 시스템의 `variants`에 기록한다. 규칙이 바뀌면 확장. 설명 창에 카드로, 구조도 상자에 "연출 N" 표시.
 9. 방문자 화면은 **직접 쓴 글+이미지**(구글 슬라이드 아님). 섹션은 자기소개서 하나 (+ 포트폴리오 내용 있을 때만).
 10. 무료로 운영: Firebase Spark, Cloudinary Free(월 25크레딧, 계정 추가로 확장), GitHub Pages.
 
@@ -79,7 +80,7 @@ localStorage 키: `monster-ref-v1`(로컬 모드 데이터), `-defs`, `-profile`
 
 ### 실수했던 곳 (조심)
 
-- 같은 이름의 CSS 클래스 충돌: 메뉴 화살표에 `.car`를 썼다가 경력 카드 `.car`와 겹침 → 새 클래스는 검색 후 사용
+- 같은 이름의 CSS 클래스 충돌: 메뉴 화살표에 `.car`를 썼다가 경력 카드 `.car`와 겹침, 구조도 끌기 표시에 `.drop`을 썼다가 업로드 칸 `.drop`과 겹침 → 새 클래스는 검색 후 사용
 - `rowHTML`에서 변수를 선언 전에 써서 저장이 조용히 실패(TDZ) → 저장 실패 토스트가 뜨면 콘솔부터
 - 템플릿 리터럴 안에 폼 칸을 조건부로 넣을 때 `${조건?`…`:``}` 경계를 잘못 잘라 칸이 다른 분기로 들어감
 - 시스템 창에는 버전 칸이 없는데 `formSnapshot`이 `$("#f_version").value`를 읽어 **시스템 복제가 조용히 실패**했음 → 창마다 없는 칸은 `fv(id)`로 읽기
@@ -96,6 +97,7 @@ localStorage 키: `monster-ref-v1`(로컬 모드 데이터), `-defs`, `-profile`
 6. **확장 구조 (11-09)**: 부모(여러 개)·확장 포인트·비슷한 시스템, 구조도, 같은 게임 안에서만 연결, 톺아보기 분리, 부모 선택 드롭다운, `+ 확장`, 기본/확장 창 분리, 게임별(→분류)·분류별 접힌 보기, 몬스터 시스템은 시스템 레퍼런스 연동만
 7. **구조도 편집 (11-09)**: 확장 구조에서 우클릭 메뉴, 끌어 놓기로 부모 바꾸기(되돌리기 포함)
 8. **시스템 고유화 (11-10)**: 시스템 이름 드롭다운 제거·중복 막기, 몬스터·PC 시스템 추천은 같은 게임만, 부모 선택도 게임을 골라야 목록이 나옴. 메뉴 이름 "시스템 및 확장", 시스템 창은 게임 한 줄 + 이름·영문 이름 한 줄, 시스템 복제 고침, 태그 가나다순, 설명 창(`openGuide`) 위에 이미지·영상 표시(확장 구조에서 상자를 누르면 보임)
+9. **연출 변형 (11-10)**: 시스템마다 연출 변형 목록(움짤·출처·차이 한 줄, 여러 개 끌어 놓기, 순서 바꾸기), 설명 창 카드, 구조도 개수 표시, 검색에 포함. 구조도 끌기 표시 클래스를 `.tdrop/.tnodrop`으로 바꿈(업로드 칸 `.drop`과 충돌)
 
 ## 7. 검수가 더 필요한 것
 

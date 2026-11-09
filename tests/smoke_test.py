@@ -103,6 +103,20 @@ def main():
         pg.click("#fSave"); pg.wait_for_timeout(200)
         check("시스템 복제", dup_ok and pg.locator("#rows td.name", has_text="패링 (복사본)").count() == 1)
 
+        # 3-1c) 연출 변형: 움짤 + 출처 + 차이를 여러 개 기록
+        png = os.path.join(tmp, "v.png")
+        open(png, "wb").write(bytes.fromhex("89504e470d0a1a0a0000000d4948445200000001000000010806000000"
+            "1f15c4890000000d49444154789c6360f80f0000010101005a4d6a4f0000000049454e44ae426082"))
+        pid = pg.evaluate("()=>JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.kind==='system'&&m.name==='패링').id")
+        pg.locator(f'#rows [data-edit="{pid}"]').first.click(); pg.wait_for_timeout(100)
+        pg.set_input_files("#v_files", png); pg.wait_for_timeout(400)
+        pg.locator('#varEdit [data-vf="src"]').first.fill("보스 A")
+        pg.locator('#varEdit [data-vf="diff"]').first.fill("성공 순간 멈춤")
+        pg.click("#vText"); pg.locator('#varEdit [data-vf="diff"]').nth(1).fill("붉은 섬광")
+        pg.click("#fSave"); pg.wait_for_timeout(200)
+        vs = pg.evaluate("()=>(JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.kind==='system'&&m.name==='패링')||{}).variants||[]")
+        check("연출 변형 저장", len(vs) == 2 and vs[0].get("src") == "보스 A" and bool(vs[0].get("image")) and vs[1].get("diff") == "붉은 섬광", str(vs)[:120])
+
         # 3-2) 몬스터의 전투 확장 시스템 추천은 같은 게임의 시스템만
         pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         pg.click("#addBtn"); pick_or_type(pg, "f_game", "다른 게임")
@@ -154,6 +168,7 @@ def main():
         pg.reload(); pg.wait_for_timeout(500)
         node("패링").first.click(); pg.wait_for_timeout(150)
         check("확장 구조: 눌러서 이미지 보기", pg.locator(".gmedia img").count() == 1)
+        check("연출 변형: 설명 창·구조도 개수", pg.locator(".vcard").count() == 2 and "연출 2" in pg.inner_text("#tree"))
         pg.click("#gClose"); pg.wait_for_timeout(100)
 
         # 6) 몬스터 칩 → 시스템 레퍼런스 내용만 (메모 수정 없음)

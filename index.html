@@ -527,6 +527,27 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .ac button mark{background:transparent;color:var(--accent);font-weight:700}
 .ac button .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .ac .hint{font-size:11px;color:var(--muted);padding:4px 10px 2px}
+.varedit{display:flex;flex-direction:column;gap:8px}
+.vrow{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg)}
+.vth{width:120px;height:72px;border-radius:6px;overflow:hidden;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
+.vth img,.vth video{width:100%;height:100%;object-fit:cover;display:block}
+.vtx{display:flex;flex-direction:column;gap:6px;min-width:0}
+.vbtn{display:flex;flex-direction:column;gap:4px}
+.vadd{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px;padding:6px;border-radius:8px;border:1px dashed transparent}
+.field.vover .vadd,.vadd:hover{border-color:var(--line)}
+.field.vover{outline:2px dashed var(--accent);outline-offset:4px;border-radius:8px}
+.vview{margin:14px 22px 0}
+.vview h3{font-size:14px;margin:0 0 8px;display:flex;align-items:baseline;gap:8px}
+.vview h3 span{color:var(--t-sys)}
+.vview h3 small{font-weight:400;color:var(--muted);font-size:12px}
+.vgrid{display:grid;align-items:start;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.vcard{margin:0;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--panel)}
+.vmed{aspect-ratio:16/10;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.vmed img,.vmed video{width:100%;height:100%;object-fit:contain;display:block}
+.vcard figcaption{padding:8px 10px;display:flex;flex-direction:column;gap:3px;font-size:12.5px;line-height:1.45}
+.vcard figcaption span{color:var(--muted)}
+.vcnt{position:absolute;top:6px;right:8px;font-size:10.5px;font-weight:600;color:var(--t-sys);background:color-mix(in srgb,var(--t-sys) 12%,transparent);border-radius:999px;padding:1px 7px}
+@media (max-width:560px){ .vrow{grid-template-columns:80px 1fr auto} .vth{width:80px;height:56px} }
 .gmedia{margin:12px 22px 0;border-radius:10px;overflow:hidden;background:var(--bg);border:1px solid var(--line);display:flex;justify-content:center}
 .gmedia img,.gmedia video{display:block;max-width:100%;max-height:min(60vh,520px);object-fit:contain}
 .dupwarn{color:var(--t-weapon);font-size:12px;margin-top:4px;display:block}
@@ -543,8 +564,8 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 #trzone{display:flex;flex-direction:column;gap:12px;border-radius:10px}
 #trzone.editable [data-tnode]:not(.ghost){cursor:grab}
 [data-tnode].dragging{opacity:.45}
-[data-tnode].drop{outline:2px dashed var(--accent);outline-offset:3px}
-[data-tnode].nodrop{outline:2px dashed var(--t-weapon);outline-offset:3px;cursor:not-allowed}
+[data-tnode].tdrop{outline:2px dashed var(--accent);outline-offset:3px}
+[data-tnode].tnodrop{outline:2px dashed var(--t-weapon);outline-offset:3px;cursor:not-allowed}
 #trzone.dropbase .trwrap,#trzone.dropbase .tlonely{background-image:repeating-linear-gradient(135deg,transparent 0 12px,color-mix(in srgb,var(--accent) 6%,transparent) 12px 24px)}
 .toast button{margin-left:10px;border:1px solid currentColor;background:none;color:inherit;border-radius:4px;padding:1px 8px;font-size:12.5px;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;font-size:13px;z-index:80}
@@ -889,7 +910,7 @@ function wireVideos(root, ob){
 
 /* ---------- filtering ---------- */
 function haystack(m){
-  const parts=[m.game,m.version,m.name,m.nameEn,m.link,m.guide,...(m.cats||[]),...(m.keywords||[]),...(m.parents||[]),...(m.similar||[]),m.ext,...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
+  const parts=[m.game,m.version,m.name,m.nameEn,m.link,m.guide,...(m.cats||[]),...(m.keywords||[]),...(m.parents||[]),...(m.similar||[]),m.ext,...(m.variants||[]).flatMap(x=>[x.src,x.diff]),...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
   for (const e of (m.systems||[])){ const sr=sysRefFor(m.game,e.name); parts.push(e.name, sr&&sr.nameEn, ...((sr&&sr.keywords)||[])); }
   for (const e of (m.pcs||[])){ const d=getDef(kindOf(m),"pcs",e.name); parts.push(e.name,d.nameEn,d.label,d.note); }
   return parts.filter(Boolean).join(" ").toLowerCase();
@@ -1226,8 +1247,9 @@ function renderTree(list, merge){
     const kws=[...new Set(n.refs.flatMap(r=>r.keywords||[]))];
     const pnames=[...n.parents].map(nm), knames=[...n.kids].map(nm);
     const tip=[n.name, en, games.length?`게임: ${games.join(", ")}`:"", kws.length?`키워드: ${kws.join(", ")}`:"", ext, pnames.length?`부모: ${pnames.join(", ")}`:"", knames.length?`확장: ${knames.join(", ")}`:"", ghost?"아직 등록 안 된 시스템 · 눌러서 등록":""].filter(Boolean).join("\n");
-    return `<button type="button" class="tnode ${ghost?"ghost":""} ${!n.parents.size?"root":""}" style="left:${X(d)}px;top:${Y.get(n.key)}px;width:${TR.CW}px" data-tnode="${esc(n.key)}" title="${esc(tip)}">
-      <b>${esc(n.name)}${en?`<small lang="en">${esc(en)}</small>`:""}</b>
+    const vn=n.refs.reduce((a,r)=>a+(r.variants||[]).length,0);
+    return `<button type="button" class="tnode ${ghost?"ghost":""} ${!n.parents.size?"root":""}" style="left:${X(d)}px;top:${Y.get(n.key)}px;width:${TR.CW}px" data-tnode="${esc(n.key)}" title="${esc(tip)}${vn?`\n연출 변형 ${vn}개`:""}">
+      ${vn?`<span class="vcnt">연출 ${vn}</span>`:""}<b>${esc(n.name)}${en?`<small lang="en">${esc(en)}</small>`:""}</b>
       ${pnames.length>1?`<span class="multi">↳ ${esc(pnames.join(" + "))}</span>`:""}
       <span class="ext">${ghost?"아직 등록 안 됨 · 눌러서 등록":esc(merge?games.join(" · "):(ext||n.game))}</span>
       ${kws.length?`<span class="kw">${kws.map(k=>"#"+esc(k)).join(" ")}</span>`:""}</button>`;
@@ -1343,7 +1365,7 @@ function wireTreeEdit(zone, N, merge){
   zone.querySelectorAll("[data-tnode]:not(.ghost)").forEach(b=>b.setAttribute("draggable","true"));
   let drag=null;
   const desc=key=>{ const set=new Set(), st=[key]; while(st.length){ const x=N.get(st.pop()); if(!x) continue; x.kids.forEach(k=>{ if(!set.has(k)){ set.add(k); st.push(k); } }); } return set; };
-  const clearMarks=()=>{ zone.querySelectorAll(".drop,.nodrop").forEach(x=>x.classList.remove("drop","nodrop")); zone.classList.remove("dropbase"); };
+  const clearMarks=()=>{ zone.querySelectorAll(".tdrop,.tnodrop").forEach(x=>x.classList.remove("tdrop","tnodrop")); zone.classList.remove("dropbase"); };
   zone.addEventListener("dragstart",e=>{
     const b=e.target.closest("[data-tnode]"); if(!b || b.classList.contains("ghost")){ e.preventDefault(); return; }
     drag={key:b.dataset.tnode, bad:desc(b.dataset.tnode)}; drag.bad.add(drag.key);
@@ -1353,7 +1375,7 @@ function wireTreeEdit(zone, N, merge){
   zone.addEventListener("dragover",e=>{
     if(!drag) return; e.preventDefault(); clearMarks();
     const b=e.target.closest("[data-tnode]");
-    if(b){ const bad=drag.bad.has(b.dataset.tnode); b.classList.add(bad?"nodrop":"drop"); e.dataTransfer.dropEffect="move"; }
+    if(b){ const bad=drag.bad.has(b.dataset.tnode); b.classList.add(bad?"tnodrop":"tdrop"); e.dataTransfer.dropEffect="move"; }
     else { zone.classList.add("dropbase"); e.dataTransfer.dropEffect="move"; }
   });
   zone.addEventListener("dragleave",e=>{ if(!zone.contains(e.relatedTarget)) clearMarks(); });
@@ -1925,11 +1947,12 @@ function openGuide(m){
     ${kindOf(m)==="system"&&((m.parents||[]).length||m.ext)?`<div style="padding:8px 22px 0;font-size:13px;line-height:1.6">${(m.parents||[]).length?`<div style="color:var(--t-sys);font-weight:600">↳ ${esc(m.parents.join(" + "))}에서 확장</div>`:""}${m.ext?`<div style="color:var(--muted)">${esc(m.ext)}</div>`:""}</div>`:""}
     ${kindOf(m)==="system"&&similarOf(m).length?`<div style="padding:6px 22px 0;font-size:13px;color:var(--t-theme)">≈ 비슷한 시스템: ${esc(similarOf(m).join(", "))}</div>`:""}
     ${(m.media||m.image)?`<div class="gmedia">${mediaHTML(m, 640, true)}</div>`:""}
+    ${kindOf(m)==="system"?varsViewHTML(m):""}
     <div class="guidedoc"><div class="doc">${has?aboutHTML(m.guide):`<p class="ph-note">아직 ${KINDS[kindOf(m)].guide}이 없어요.</p>`}</div></div>
     <div class="foot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px;border-top:1px solid var(--line)">
       ${has?`<button type="button" class="btn" id="gCopy" style="margin-right:auto">${KINDS[kindOf(m)].guide} 복사</button>`:""}
       <button type="button" class="btn edit-only" id="gEdit">편집</button><button type="button" class="btn primary" id="gClose">닫기</button></div></div>`;
-  sc.hidden=false;
+  sc.hidden=false; wireVideos(sc);
   $("#fClose").onclick=$("#gClose").onclick=closeForm;
   sc.onclick=ev=>{ if(ev.target===sc) closeForm(); };
   if(has) $("#gCopy").onclick=ev=>copyText(`[${m.game||"-"}${m.version?" "+m.version:""}] ${m.name} ${KINDS[kindOf(m)].guide}\n\n${m.guide}`, ev.currentTarget);
@@ -2158,6 +2181,7 @@ function openForm(m, copyFrom, opts){
   formMedia = v && v.media ? v.media : null; uploading = false;
   const j = a => (a||[]).join(" / ");
   const SYS = fKind==="system", K=KINDS[fKind];
+  formVars = SYS ? (v?.variants||[]).map(x=>({...x})) : []; varBusy=0;
   /* 시스템: 기본 시스템 창과 확장 시스템 창을 따로 (확장 = 부모가 있는 시스템) */
   const EXT = SYS && (!!(opts&&opts.ext) || (v?.parents||[]).length>0);
   const sc=$("#scrim");
@@ -2190,6 +2214,7 @@ function openForm(m, copyFrom, opts){
       <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>${KINDS[fKind].counter}</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="${KINDS[fKind].counterPh}"></div>`}
       <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
       <div class="field full"><label for="f_guide">${K.guide}</label><textarea id="f_guide" style="min-height:220px" placeholder="${SYS?"## 규칙&#10;…&#10;&#10;## 특징&#10;- …":"## 패턴 요약&#10;…&#10;&#10;## 공략 포인트&#10;- …"}">${esc(v?.guide||"")}</textarea><small>길게 써도 돼요 · ‘## 제목’ 줄은 소제목, 빈 줄로 문단 구분</small></div>
+      ${SYS?varFieldHTML():""}
       <div class="err" id="fErr" hidden></div>
       <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
     </form></div>`;
@@ -2202,8 +2227,63 @@ function openForm(m, copyFrom, opts){
   $("#fClose").onclick=$("#fCancel").onclick=closeForm;
   sc.onclick=e=>{ if(e.target===sc) closeForm(); };
   wireMediaField();
-  
+  if(SYS) wireVars();
   $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m, v); };
+}
+/* ---------- 연출 변형: 같은 시스템(규칙 그대로), 보여 주는 것만 다른 사례 ---------- */
+let formVars=[], varBusy=0;
+function cleanVars(){
+  return formVars.filter(x=>!x.busy && (x.image||x.media||(x.src||"").trim()||(x.diff||"").trim()))
+    .map(x=>({ src:(x.src||"").trim(), diff:(x.diff||"").trim(), ...(x.media?{media:x.media}:{}), ...(x.image?{image:x.image}:{}) }));
+}
+function varFieldHTML(){
+  return `<div class="field full"><label>연출 변형 <small style="font-weight:400">· 규칙은 같고 보여 주는 것(이펙트·카메라·소리·모션)만 다른 사례 · 규칙이 바뀌면 ‘+ 확장’으로</small></label>
+    <div class="varedit" id="varEdit"></div>
+    <div class="vadd" id="varDrop"><label class="btn sm" for="v_files" style="font-weight:500">움짤·영상 추가</label><input id="v_files" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm,video/quicktime" hidden>
+      <button type="button" class="btn sm" id="vText">글로만 추가</button><small>여러 개 한 번에 · 이 칸 위로 끌어 놓아도 돼요</small></div></div>`;
+}
+function varThumb(x){ return x.busy ? `<span>${esc(x.busy)}</span>` : (x.media||x.image) ? mediaHTML(x,240) : `<span>이미지 없음</span>`; }
+function drawVars(){
+  const el=$("#varEdit"); if(!el) return;
+  el.innerHTML = formVars.map((x,k)=>`<div class="vrow" data-vk="${k}">
+      <div class="vth" data-vth="${k}">${varThumb(x)}</div>
+      <div class="vtx"><input type="text" data-vf="src" value="${esc(x.src||"")}" placeholder="출처 · 예) 보스 A 2페이즈" aria-label="출처">
+        <input type="text" data-vf="diff" value="${esc(x.diff||"")}" placeholder="무엇이 다른지 · 예) 성공 순간 0.2초 멈춤 + 붉은 섬광" aria-label="무엇이 다른지"></div>
+      <div class="vbtn"><button type="button" class="iconbtn" data-vup="${k}" title="위로" aria-label="위로" ${k?"":"disabled"}>↑</button><button type="button" class="iconbtn" data-vrm="${k}" title="빼기" aria-label="빼기">✕</button></div>
+    </div>`).join("") || `<small style="color:var(--muted)">아직 없어요</small>`;
+  el.querySelectorAll("video.lazyv").forEach(v=>{ v.src=v.dataset.src; v.muted=true; v.play().catch(()=>{}); });
+  const sv=$("#fSave"); if(sv) sv.disabled = uploading || varBusy>0;
+}
+async function addVarFiles(files){
+  for(const f of [...files].filter(f=>/^(image|video)\//.test(f.type))){
+    const slot={busy:"올리는 중", src:"", diff:""}; formVars.push(slot); varBusy++; drawVars();
+    try{
+      const it=await uploadAny(f, p=>{ slot.busy=`${p}%`; const t=document.querySelector(`[data-vth="${formVars.indexOf(slot)}"]`); if(t) t.innerHTML=`<span>${p}%</span>`; });
+      delete slot.busy; Object.assign(slot,it);
+    }catch(ex){ formVars.splice(formVars.indexOf(slot),1); toast(cloudErr(ex)); }
+    varBusy--; drawVars();
+  }
+}
+function wireVars(){
+  drawVars();
+  $("#v_files").onchange=e=>{ addVarFiles(e.target.files); e.target.value=""; };
+  $("#vText").onclick=()=>{ formVars.push({src:"",diff:""}); drawVars(); const ins=$("#varEdit").querySelectorAll('[data-vf="src"]'); if(ins.length) ins[ins.length-1].focus(); };
+  const z=$("#varEdit").parentElement;
+  z.addEventListener("dragover",e=>{ e.preventDefault(); e.stopPropagation(); z.classList.add("vover"); });
+  z.addEventListener("dragleave",e=>{ if(!z.contains(e.relatedTarget)) z.classList.remove("vover"); });
+  z.addEventListener("drop",e=>{ e.preventDefault(); e.stopPropagation(); z.classList.remove("vover"); addVarFiles(e.dataTransfer.files); });
+  $("#varEdit").addEventListener("input",e=>{ const i=e.target.closest("[data-vf]"), row=e.target.closest("[data-vk]"); if(i&&row) formVars[+row.dataset.vk][i.dataset.vf]=i.value; });
+  $("#varEdit").addEventListener("click",e=>{
+    const rm=e.target.closest("[data-vrm]"), up=e.target.closest("[data-vup]");
+    if(rm){ const k=+rm.dataset.vrm; if(formVars[k].busy) return; formVars.splice(k,1); drawVars(); }
+    else if(up){ const k=+up.dataset.vup; if(k>0){ [formVars[k-1],formVars[k]]=[formVars[k],formVars[k-1]]; drawVars(); } }
+  });
+}
+function varsViewHTML(m){
+  const vs=m.variants||[]; if(!vs.length) return "";
+  return `<div class="vview"><h3>연출 변형 <span>${vs.length}</span><small>규칙은 같고 보여 주는 것만 달라요</small></h3>
+    <div class="vgrid">${vs.map(x=>`<figure class="vcard">${(x.media||x.image)?`<div class="vmed">${mediaHTML(x,480)}</div>`:""}
+      <figcaption>${x.src?`<b>${esc(x.src)}</b>`:""}${x.diff?`<span>${esc(x.diff)}</span>`:""}</figcaption></figure>`).join("")}</div></div>`;
 }
 function mediaFieldHTML(label){
   return `<div class="field full"><label>${label}</label>
@@ -2236,7 +2316,8 @@ function formSnapshot(m){
     theme:splitTags(fv("f_theme")), looks:splitTags(fv("f_looks")), weapons:splitTags(fv("f_weapons")),
     systems:keep(splitTags(fv("f_systems")), m?.systems), pcs:keep(splitTags(fv("f_pcs")), m?.pcs),
     cats:tagsOr("f_cats",m?.cats), keywords:splitTags(fv("f_keywords")), parents:tagsOr("f_parents",m?.parents), similar:splitTags(fv("f_similar")), ext:textOr("f_ext",m?.ext),
-    link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null };
+    link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null,
+    variants: $("#varEdit") ? cleanVars() : (m?.variants||[]) };
 }
 function closeForm(){ acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
 document.addEventListener("paste", e=>{
@@ -2390,8 +2471,9 @@ async function saveForm(m, src){
     systems:keep(splitTags(fv("f_systems")), src?.systems), pcs:keep(splitTags(fv("f_pcs")), src?.pcs),
     cats:tagsOr("f_cats",src?.cats), keywords:splitTags(fv("f_keywords")), parents:tagsOr("f_parents",src?.parents), similar:splitTags(fv("f_similar")), ext:textOr("f_ext",src?.ext),
     link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null, updatedAt:Date.now(),
+    variants: $("#varEdit") ? cleanVars() : (src?.variants||[]),
   };
-  if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
+  if(uploading || varBusy>0){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
   const isSys = data.kind==="system";
   if(isSys){
     const d=sysDup(game, name, m?m.id:null);
