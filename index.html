@@ -527,6 +527,44 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .ac button mark{background:transparent;color:var(--accent);font-weight:700}
 .ac button .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .ac .hint{font-size:11px;color:var(--muted);padding:4px 10px 2px}
+/* 아이디어 보드 */
+.ibar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.iseg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.iseg a{padding:6px 14px;font-size:13px;color:var(--muted);text-decoration:none;border-right:1px solid var(--line)}
+.iseg a:last-child{border-right:0}
+.iseg a.on{background:var(--ink);color:var(--panel);font-weight:600}
+.ibar .note{font-size:12px;color:var(--muted)}
+#idrop{border-radius:12px;min-height:200px;transition:outline-color .12s}
+#idrop.over{outline:2px dashed var(--accent);outline-offset:6px}
+.iboard{columns:300px auto;column-gap:14px}
+.icard{break-inside:avoid;margin:0 0 14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);cursor:zoom-in;transition:transform .12s,box-shadow .12s}
+.icard:hover,.icard:focus-visible{transform:translateY(-2px);box-shadow:var(--shadow);outline:none}
+.imed{position:relative;background:var(--bg)}
+.imed img,.imed video{display:block;width:100%;height:auto}
+.inoimg{padding:28px 16px;font-size:13px;color:var(--muted);line-height:1.5}
+.itype{font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 8px;letter-spacing:.02em}
+.imed .itype{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);color:#fff}
+.itype.pattern{--ic:var(--t-sys)} .itype.image{--ic:var(--t-theme)}
+.ifoot .itype{background:var(--ic);color:#fff}
+.icard figcaption{padding:8px 10px;display:flex;flex-direction:column;gap:5px}
+.icard figcaption b{font-size:13.5px}
+.imeta{display:flex;flex-wrap:wrap;gap:4px}
+.iempty{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:40px 20px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;color:var(--muted);font-size:13.5px}
+.iempty strong{color:var(--ink);font-size:15px}
+.ilb{position:relative;max-width:min(1200px,100%)}
+.lightbox .ilb img,.lightbox .ilb video{max-height:calc(100vh - 230px)}
+.ilb .ifoot{width:min(900px,100%);display:flex;flex-direction:column;gap:8px;align-items:center}
+.ihead{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;color:#fff}
+.ihead b{font-size:15px}
+.icnt{color:#aab;font-size:12px}
+.imemo{color:#e3e5ea;font-size:13.5px;line-height:1.6;max-height:22vh;overflow:auto;text-align:left;width:100%;background:rgba(255,255,255,.06);border-radius:8px;padding:10px 14px}
+.imemo *{color:inherit}
+.inav{position:fixed;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;border-radius:10px;background:rgba(255,255,255,.12);color:#fff;font-size:34px;line-height:1;cursor:pointer;z-index:2}
+.inav:hover{background:rgba(255,255,255,.25)} .inav.prev{left:12px} .inav.next{right:12px}
+.iradio{display:flex;gap:8px}
+.iradio label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13.5px;font-weight:500}
+.iradio label:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+@media (max-width:560px){ .iboard{columns:2;column-gap:8px} .icard{margin-bottom:8px} .inav{width:34px;height:52px;font-size:26px} }
 .varedit{display:flex;flex-direction:column;gap:8px}
 .vrow{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg)}
 .vth{width:120px;height:72px;border-radius:6px;overflow:hidden;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
@@ -629,6 +667,10 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-tree" data-view="sysref-tree" class="sub"><span>확장 구조</span></a>
         <a href="#sysref-all" data-view="sysref-all" class="sub"><span>톺아보기</span></a>
+        <div class="navh">아이디어</div>
+        <a href="#ideas" data-view="ideas"><span>전체</span><span class="n" id="nIdea"></span></a>
+        <a href="#ideas-pattern" data-view="ideas-pattern" class="sub"><span>개별 패턴</span><span class="n" id="nIdeaP"></span></a>
+        <a href="#ideas-image" data-view="ideas-image" class="sub"><span>이미지</span><span class="n" id="nIdeaI"></span></a>
         <div class="navh"></div>
         <button type="button" class="navh navtog" id="navEtc" aria-expanded="false" aria-controls="navEtcItems"><span>기타</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navEtcItems" class="navgrp" hidden>
@@ -795,10 +837,14 @@ const KINDS = {
   monster:{ label:"몬스터", counter:"대응 PC 도구", counterPh:"엽빛나", namePh:"태초의 악몽", guide:"공략", enPh:"Primordial Nightmare" },
   pc:     { label:"PC",    counter:"대응 몬스터",  counterPh:"태초의 악몽", namePh:"엽빛나", guide:"공략", enPh:"Ye Shunguang" },
   system: { label:"시스템", counter:"대응 항목",   counterPh:"", namePh:"태그 교체", guide:"설명", enPh:"Tag Switch" },
+  idea:   { label:"아이디어", counter:"",         counterPh:"", namePh:"폐허 위 거대한 실루엣", guide:"메모", enPh:"" },
 };
-const kindOf = m => m.kind==="pc" ? "pc" : m.kind==="system" ? "system" : "monster";
-const SYS_KEYS=["game","cats","keywords"];
-const railCats = () => CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key));
+const kindOf = m => m.kind==="pc" ? "pc" : m.kind==="system" ? "system" : m.kind==="idea" ? "idea" : "monster";
+const SYS_KEYS=["game","cats","keywords"], IDEA_KEYS=["keywords","game"];
+const railCats = () => kind==="idea" ? IDEA_KEYS.map(k=>CAT[k]) : CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key));
+/* 아이디어 분류: 개별 패턴 / 이미지 */
+const ITYPES={pattern:"개별 패턴", image:"이미지"};
+const ideaTypeOf = m => m.type==="pattern" ? "pattern" : "image";
 const THEAD = {
   ref: `<th class="grip" aria-label="순서"></th><th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th>공략</th><th></th>`,
   system: `<th class="grip" aria-label="순서"></th><th id="thName">시스템 및 확장</th><th>이미지</th><th>분류</th><th>키워드</th><th>설명</th><th></th>`,
@@ -1041,6 +1087,7 @@ function render(){
   if (isDoc){ tb.hidden=true; pa.hidden=false; renderPortAdmin(sub==="works"?"port":"about"); return; }
   pa.hidden=true;
   if (!loaded) return;
+  if (sub==="board"){ if(io) io.disconnect(); renderIdeas(list); return; }
   if ((sub==="tree"||sub==="treeall") && monsters.length){
     if(io) io.disconnect();
     renderTree(list, sub==="treeall");
@@ -1102,6 +1149,9 @@ const VIEWMAP={
   "sysref-games": {kind:"system", sub:"bygame"},
   "sysref-tree":  {kind:"system", sub:"tree"},
   "sysref-all":   {kind:"system", sub:"treeall"},
+  "ideas":         {kind:"idea", sub:"board"},
+  "ideas-pattern": {kind:"idea", sub:"board", type:"pattern"},
+  "ideas-image":   {kind:"idea", sub:"board", type:"image"},
   "portfolio":  {kind:null,      sub:"portfolio"},
   "works":      {kind:null,      sub:"works"},
 };
@@ -1116,7 +1166,7 @@ function setView(v){
   syncKind();
   const q=$("#q"); if(q) q.placeholder=`게임, ${KINDS[kind].label}, 태그, 공략 내용까지 검색 — 띄어쓰기로 여러 단어 AND`;
 }
-const listHash = () => kind==="pc" ? "#pc" : kind==="system" ? "#sysref" : "#monsters";
+const listHash = () => kind==="pc" ? "#pc" : kind==="system" ? "#sysref" : kind==="idea" ? "#ideas" : "#monsters";
 let groupEdit = null;   /* "monsterId|cat|index" */
 function renderTabs(){
   document.querySelectorAll(".tabs a").forEach(a=>a.setAttribute("aria-current", a.dataset.view===view?"page":"false"));
@@ -1128,6 +1178,8 @@ function renderTabs(){
   $("#nSR").textContent=SR.length; $("#nSRcat").textContent=new Set(SR.flatMap(m=>m.cats||[])).size; $("#nSRgame").textContent=new Set(SR.map(m=>m.game).filter(Boolean)).size;
   $("#nPC").textContent=P.length; $("#nPCSys").textContent=distinct(P,"systems"); $("#nPCCnt").textContent=distinct(P,"pcs");
   $("#nWork").textContent=works.length;
+  const ID=of("idea"); $("#nIdea").textContent=ID.length;
+  $("#nIdeaP").textContent=ID.filter(m=>ideaTypeOf(m)==="pattern").length; $("#nIdeaI").textContent=ID.filter(m=>ideaTypeOf(m)==="image").length;
 }
 addEventListener("hashchange", ()=>{
   const v=location.hash.slice(1); if(!VIEWS.includes(v)) return;
@@ -2073,7 +2125,7 @@ document.addEventListener("click", e=>{
 });
 $("#lightbox").addEventListener("click",e=>{ if(e.target.id==="lightbox"||e.target.id==="lbClose"){ $("#lightbox").hidden=true; $("#lightbox").innerHTML=""; } });
 $("#q").addEventListener("input", e=>{ query=e.target.value; render(); });
-$("#addBtn").addEventListener("click", ()=>openForm(null));
+$("#addBtn").addEventListener("click", ()=> kind==="idea" ? openIdeaForm(null) : openForm(null));
 $("#deadBtn").addEventListener("click", ()=>{ filters.has(DEAD)?filters.delete(DEAD):filters.add(DEAD); render(); });
 
 /* ---------- popover (hover detail) ---------- */
@@ -2173,6 +2225,7 @@ addEventListener("scroll",()=>{ if(!pinned) hidePop(false); else place(); },true
 let formImage = null, formMedia = null, uploading = false;
 function openForm(m, copyFrom, opts){
   if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
+  if((m && kindOf(m)==="idea") || (!m && !copyFrom && kind==="idea")) return openIdeaForm(m);
   hidePop(true);
   /* 복제: 원본 내용을 채운 새 레퍼런스 (공략 메모·이미지도 그대로) */
   const v = copyFrom ? {...copyFrom, name: copyFrom.name+" (복사본)"} : m;
@@ -2229,6 +2282,123 @@ function openForm(m, copyFrom, opts){
   wireMediaField();
   if(SYS) wireVars();
   $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m, v); };
+}
+/* =====================================================================
+   아이디어 보드: 전반적인 연출·느낌을 살릴 큰 이미지 (분류: 개별 패턴 / 이미지)
+   ===================================================================== */
+const ideaType = () => (VIEWMAP[view]||{}).type || "";
+function renderIdeas(list){
+  const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
+  const t=ideaType(), shown=t ? list.filter(m=>ideaTypeOf(m)===t) : list;
+  const all=monsters.length, ed=canEdit();
+  $("#count").textContent = `${shown.length} / ${t?monsters.filter(m=>ideaTypeOf(m)===t).length:all}건`;
+  const seg=[["ideas","전체"],["ideas-pattern","개별 패턴"],["ideas-image","이미지"]]
+    .map(([h,l])=>`<a href="#${h}" class="${view===h?"on":""}">${l}</a>`).join("");
+  const bar=`<div class="ibar"><nav class="iseg" aria-label="아이디어 분류">${seg}</nav>
+    <span class="note">${ed?"이미지·영상을 이 화면 위로 끌어 놓으면 바로 카드가 생겨요 (여러 개 가능) · ":""}카드를 누르면 크게 보고 ← → 로 넘겨요</span></div>`;
+  let body;
+  if(!all) body=`<div class="iempty"><strong>아직 아이디어가 없어요</strong><span>전반적인 연출이나 느낌을 살릴 만한 큰 이미지를 모아 두는 곳이에요.${ed?" ‘+ 레퍼런스 추가’를 누르거나, 이미지를 여기로 끌어 놓아 주세요.":""}</span></div>`;
+  else if(!shown.length) body=`<div class="iempty"><strong>조건에 맞는 아이디어가 없어요</strong>${filters.size||query?`<button class="btn sm" type="button" data-clear>필터 모두 해제</button>`:""}</div>`;
+  else body=`<div class="iboard">${shown.map(m=>{
+      const md=(m.media||m.image)?mediaHTML(m,640):`<div class="inoimg">${esc((m.guide||m.name||"").slice(0,80))}</div>`;
+      return `<figure class="icard" data-idea="${esc(m.id)}" tabindex="0" role="button" aria-label="${esc(m.name||"아이디어")} 크게 보기">
+        <div class="imed">${md}<span class="itype ${ideaTypeOf(m)}">${ITYPES[ideaTypeOf(m)]}</span></div>
+        ${(m.name||m.game||(m.keywords||[]).length)?`<figcaption>${m.name?`<b>${esc(m.name)}</b>`:""}<span class="imeta">${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</span></figcaption>`:""}
+      </figure>`; }).join("")}</div>`;
+  gb.innerHTML = bar + `<div id="idrop">${body}</div>`;
+  wireVideos(gb);
+  ideaList = shown;
+}
+let ideaList=[], ideaBusy=0;
+function ideaLB(id){
+  const i=ideaList.findIndex(x=>x.id===id); const m=ideaList[i] || allRefs.find(x=>x.id===id); if(!m) return;
+  const lb=$("#lightbox"), o=origUrl(m), n=ideaList.length, ed=canEdit();
+  lb.innerHTML=`<div class="lb ilb">
+      ${n>1?`<button type="button" class="inav prev" data-inav="-1" aria-label="이전">‹</button><button type="button" class="inav next" data-inav="1" aria-label="다음">›</button>`:""}
+      ${(m.media||m.image)?mediaHTML(m,1280,true):""}
+      <div class="ifoot">
+        <div class="ihead"><span class="itype ${ideaTypeOf(m)}">${ITYPES[ideaTypeOf(m)]}</span>${m.name?`<b>${esc(m.name)}</b>`:""}${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}${i>=0&&n>1?`<span class="icnt">${i+1} / ${n}</span>`:""}</div>
+        ${(m.guide||"").trim()?`<div class="imemo">${aboutHTML(m.guide)}</div>`:""}
+        <div class="lbbar">${m.link?`<a href="${esc(m.link)}" target="_blank" rel="noopener">링크 열기</a>`:""}${o&&!o.startsWith("data:")?`<a href="${esc(o)}" target="_blank" rel="noopener">원본 열기</a>`:""}
+          ${ed?`<button type="button" id="ibEdit">편집</button><button type="button" id="ibDel">삭제</button>`:""}<button type="button" id="lbClose">닫기</button></div>
+      </div></div>`;
+  lb.hidden=false; lb.dataset.idea=m.id;
+  lb.querySelectorAll("video").forEach(v=>{ v.muted=true; v.play().catch(()=>{}); });
+  lb.querySelectorAll("[data-inav]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); ideaStep(+b.dataset.inav); });
+  if(ed){ $("#ibEdit").onclick=()=>{ ideaLBClose(); openIdeaForm(m); }; $("#ibDel").onclick=()=>{ ideaLBClose(); confirmDelete(m.id); }; }
+}
+function ideaLBClose(){ const lb=$("#lightbox"); lb.hidden=true; lb.innerHTML=""; delete lb.dataset.idea; }
+function ideaStep(d){
+  const lb=$("#lightbox"), n=ideaList.length; if(!n) return;
+  const i=ideaList.findIndex(x=>x.id===lb.dataset.idea);
+  ideaLB(ideaList[((i<0?0:i)+d+n)%n].id);
+}
+document.addEventListener("keydown",e=>{
+  const lb=$("#lightbox"); if(lb.hidden || !lb.dataset.idea || !lb.querySelector(".ilb") || !$("#scrim").hidden) return;
+  if(e.key==="ArrowLeft"){ e.preventDefault(); ideaStep(-1); } else if(e.key==="ArrowRight"){ e.preventDefault(); ideaStep(1); }
+});
+$("#groupbox").addEventListener("click",e=>{ const c=e.target.closest("[data-idea]"); if(c) ideaLB(c.dataset.idea); });
+$("#groupbox").addEventListener("keydown",e=>{ const c=e.target.closest("[data-idea]"); if(c && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); ideaLB(c.dataset.idea); } });
+/* 화면 위로 파일을 끌어 놓으면 바로 아이디어 카드로 */
+const hasFiles = e => [...((e.dataTransfer&&e.dataTransfer.types)||[])].includes("Files");
+$("#groupbox").addEventListener("dragover",e=>{ if(sub!=="board"||!canEdit()||!hasFiles(e)) return; e.preventDefault(); const z=$("#idrop"); if(z) z.classList.add("over"); });
+$("#groupbox").addEventListener("dragleave",e=>{ const z=$("#idrop"); if(z && !$("#groupbox").contains(e.relatedTarget)) z.classList.remove("over"); });
+$("#groupbox").addEventListener("drop",e=>{ if(sub!=="board"||!canEdit()||!hasFiles(e)) return; e.preventDefault(); const z=$("#idrop"); if(z) z.classList.remove("over"); quickAddIdeas(e.dataTransfer.files); });
+async function quickAddIdeas(files){
+  const fs=[...files].filter(f=>/^(image|video)\//.test(f.type)); if(!fs.length) return;
+  const type=ideaType()||"image"; let ok=0;
+  for(let i=0;i<fs.length;i++){
+    const tag=fs.length>1?` ${i+1}/${fs.length}`:"";
+    try{
+      toast(`올리는 중${tag}`); ideaBusy++;
+      const it=await uploadAny(fs[i], p=>toast(`올리는 중${tag} · ${p}%`));
+      await store.add({kind:"idea", type, name:"", game:"", keywords:[], link:"", guide:"", image:it.image||"", media:it.media||null, createdAt:Date.now(), updatedAt:Date.now()});
+      ok++;
+    }catch(ex){ toast(cloudErr(ex)); }
+    finally{ ideaBusy--; }
+  }
+  if(ok) toast(`${ITYPES[type]} ${ok}개 추가했어요 · 카드를 눌러 제목·메모를 적을 수 있어요`);
+}
+function openIdeaForm(m){
+  if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
+  hidePop(true);
+  const v=m||{}, type=m?ideaTypeOf(m):(ideaType()||"image");
+  formImage = v.image||null; formMedia = v.media||null; uploading=false;
+  const sc=$("#scrim");
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+    <header><h2 id="fTitle">아이디어 ${m?"편집":"추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <form id="form" novalidate>
+      <div class="field full"><label>분류</label><div class="iradio" role="radiogroup" aria-label="분류">
+        ${Object.entries(ITYPES).map(([k,l])=>`<label><input type="radio" name="i_type" value="${k}" ${k===type?"checked":""}><span>${l}</span></label>`).join("")}</div>
+        <small>개별 패턴: 하나의 공격·연출 패턴 · 이미지: 전반적인 분위기·느낌</small></div>
+      ${mediaFieldHTML("큰 이미지")}
+      <div class="field"><label for="f_name">제목 <small style="font-weight:400">· 없어도 돼요</small></label><input id="f_name" type="text" value="${esc(v.name)}" placeholder="${KINDS.idea.namePh}" autocomplete="off"></div>
+      <div class="field"><label for="f_gameSel">게임 <small style="font-weight:400">· 없어도 돼요</small></label>${gameSelectHTML(v.game||"")}</div>
+      <div class="field full"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc((v.keywords||[]).join(" / "))}" placeholder="웅장함 / 붉은 하늘 / 슬로우"><small>/ 로 구분</small></div>
+      <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v.link)}" placeholder="https://"></div>
+      <div class="field full"><label for="f_guide">메모</label><textarea id="f_guide" style="min-height:120px" placeholder="어떤 느낌을 살리고 싶은지, 어디에 쓸 수 있을지">${esc(v.guide||"")}</textarea></div>
+      <div class="err" id="fErr" hidden></div>
+      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
+    </form></div>`;
+  sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireMediaField();
+  $("#fClose").onclick=$("#fCancel").onclick=closeForm;
+  sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  $("#form").onsubmit=async e=>{
+    e.preventDefault();
+    const err=$("#fErr");
+    if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
+    const data={ kind:"idea", type:(document.querySelector('input[name="i_type"]:checked')||{}).value||"image",
+      name:fv("f_name").trim(), game:fv("f_game").trim(), keywords:splitTags(fv("f_keywords")), link:fv("f_link").trim(), guide:fv("f_guide"),
+      image:formImage||"", media:formMedia||null, updatedAt:Date.now() };
+    if(!data.image && !data.media && !data.name && !data.guide.trim()){ err.hidden=false; err.textContent="이미지나 제목·메모 중 하나는 넣어 주세요."; return; }
+    const b=$("#fSave"); b.disabled=true;
+    try{
+      if(m) await store.set(m.id,{...data, createdAt:m.createdAt||Date.now()});
+      else await store.add({...data, createdAt:Date.now()});
+      closeForm(); toast(m?"저장했어요":"추가했어요");
+    }catch(ex){ b.disabled=false; err.hidden=false; err.textContent=errMsg(ex); }
+  };
+  $("#f_name").focus();
 }
 /* ---------- 연출 변형: 같은 시스템(규칙 그대로), 보여 주는 것만 다른 사례 ---------- */
 let formVars=[], varBusy=0;

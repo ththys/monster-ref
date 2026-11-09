@@ -183,6 +183,33 @@ def main():
         if pg.locator("#tlGameSel").count(): pg.select_option("#tlGameSel", "테스트 게임"); pg.wait_for_timeout(200)
         check("패치 타임라인", pg.locator(".tlbar").count() >= 1)
 
+        # 7-1) 아이디어 보드: 추가(개별 패턴) → 분류별 보기 → 끌어 놓기로 바로 추가 → 크게 보기·넘기기
+        pg.goto(url + "#ideas"); pg.wait_for_timeout(300)
+        check("아이디어: 빈 화면", pg.locator(".iempty").count() == 1)
+        pg.click("#addBtn"); pg.wait_for_timeout(100)
+        pg.check('input[name="i_type"][value="pattern"]')
+        pg.set_input_files("#f_file", png); pg.wait_for_timeout(300)
+        pg.fill("#f_name", "거대 실루엣"); pg.fill("#f_keywords", "웅장함")
+        pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(200)
+        check("아이디어: 추가", pg.locator(".icard").count() == 1 and "거대 실루엣" in pg.inner_text(".iboard") and pg.inner_text("#nIdeaP").strip() == "1")
+        pg.goto(url + "#ideas-image"); pg.wait_for_timeout(200)
+        check("아이디어: 분류별 보기", pg.locator(".icard").count() == 0)
+        pg.evaluate("""async (b64)=>{ const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+            const dt=new DataTransfer(); dt.items.add(new File([bin],"mood.png",{type:"image/png"}));
+            const gb=document.getElementById("groupbox");
+            gb.dispatchEvent(new DragEvent("dragover",{dataTransfer:dt,bubbles:true,cancelable:true}));
+            gb.dispatchEvent(new DragEvent("drop",{dataTransfer:dt,bubbles:true,cancelable:true})); }""",
+            __import__("base64").b64encode(open(png,"rb").read()).decode())
+        pg.wait_for_timeout(500)
+        check("아이디어: 끌어 놓기로 바로 추가", pg.locator(".icard").count() == 1 and pg.inner_text("#nIdeaI").strip() == "1")
+        pg.goto(url + "#ideas"); pg.wait_for_timeout(200)
+        pg.locator(".icard").first.click(); pg.wait_for_timeout(150)
+        first = pg.inner_text(".ilb .icnt") if pg.locator(".ilb .icnt").count() else ""
+        pg.keyboard.press("ArrowRight"); pg.wait_for_timeout(150)
+        second = pg.inner_text(".ilb .icnt") if pg.locator(".ilb .icnt").count() else ""
+        check("아이디어: 크게 보기·넘기기", pg.is_visible(".ilb") and first == "1 / 2" and second == "2 / 2", f"{first}->{second}")
+        pg.keyboard.press("Escape"); pg.wait_for_timeout(100)
+
         # 8) 새로고침 후 유지
         pg.reload(); pg.wait_for_timeout(500); pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         check("새로고침 후 데이터 유지", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)
