@@ -1,0 +1,122 @@
+"""레퍼런스 아카이브 스모크 테스트 (브라우저 저장 모드)
+
+실제 Firebase·Cloudinary 없이, config.js를 비운 '이 브라우저에만 저장' 모드로
+주요 흐름을 한 번씩 눌러 봅니다. 수정할 때마다 돌리세요.
+
+    pip install playwright && python -m playwright install chromium
+    python tests/smoke_test.py            # 저장소 루트에서
+
+성공하면 마지막 줄에 "OK"가 찍히고, 실패하면 어디서 깨졌는지 보여 줍니다.
+"""
+import http.server, os, shutil, socketserver, sys, tempfile, threading
+from playwright.sync_api import sync_playwright
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+EMPTY_CONFIG = 'window.REF_CONFIG = { firebase:{}, cloudinary:[], portfolio:{title:"자기소개서"}, editors:[] };\n'
+
+
+def serve(dirpath):
+    class Quiet(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, *a): pass
+    handler = lambda *a, **k: Quiet(*a, directory=dirpath, **k)
+    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    return httpd, httpd.server_address[1]
+
+
+def pick_or_type(pg, base, value):
+    """게임·시스템 이름처럼 '드롭다운 + 직접 입력'인 칸 채우기"""
+    sel = f"#{base}Sel"
+    if pg.locator(sel).count() and pg.is_visible(sel):
+        opts = pg.eval_on_selector_all(f"{sel} option", "os=>os.map(o=>o.value)")
+        if value in opts:
+            pg.select_option(sel, value); return
+        pg.select_option(sel, "__new__")
+    pg.fill(f"#{base}", value)
+
+
+def main():
+    tmp = tempfile.mkdtemp()
+    shutil.copy(os.path.join(ROOT, "index.html"), tmp)
+    open(os.path.join(tmp, "config.js"), "w", encoding="utf-8").write(EMPTY_CONFIG)
+    httpd, port = serve(tmp)
+    url = f"http://127.0.0.1:{port}/index.html"
+    errors, checks = [], []
+
+    def check(name, ok, detail=""):
+        checks.append((name, ok, detail))
+        print(("PASS " if ok else "FAIL ") + name + (f" — {detail}" if detail and not ok else ""))
+
+    exe = "/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None
+    with sync_playwright() as p:
+        b = p.chromium.launch(executable_path=exe) if exe else p.chromium.launch()
+        pg = b.new_page(viewport={"width": 1400, "height": 900})
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        pg.route("**/fonts.g*/**", lambda r: r.abort())
+        pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
+        pg.evaluate("localStorage.clear()"); pg.reload(); pg.wait_for_timeout(600)
+
+        # 1) 몬스터 추가
+        pg.click("#addBtn"); pick_or_type(pg, "f_game", "테스트 게임")
+        pg.fill("#f_version", "1.0"); pg.fill("#f_name", "테스트 보스"); pg.fill("#f_nameEn", "Test Boss")
+        pg.fill("#f_systems", "패링"); pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(150)
+        check("몬스터 추가", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)
+
+        # 2) 시스템 레퍼런스: 기본 시스템 (분류 있음, 부모 칸 없음)
+        pg.goto(url + "#sysref"); pg.wait_for_timeout(300)
+        pg.click("#addBtn")
+        check("기본 시스템 창에 부모 칸 없음", pg.locator("#f_parentsSel").count() == 0 and pg.locator("#f_cats").count() == 1)
+        pick_or_type(pg, "f_name", "패링"); pick_or_type(pg, "f_game", "테스트 게임")
+        pg.fill("#f_cats", "전투"); pg.fill("#f_keywords", "타이밍"); pg.fill("#f_guide", "## 규칙\n타이밍 맞춰 막기")
+        pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(150)
+
+        # 3) + 확장: 확장 시스템 창 (부모·게임 채워짐, 분류 없음)
+        pg.locator("#rows tr", has_text="패링").first.locator("[data-ext]").click(); pg.wait_for_timeout(100)
+        check("확장 창: 부모·게임 채워짐", pg.input_value("#f_parents") == "패링" and pg.input_value("#f_game") == "테스트 게임")
+        check("확장 창: 분류 없음", pg.locator("#f_cats").count() == 0)
+        pick_or_type(pg, "f_name", "강공 패링"); pg.fill("#f_ext", "더 밀려남")
+        pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(150)
+        check("하위 시스템 기본 접힘", pg.locator("#rows td.name", has_text="강공 패링").count() == 0
+              and pg.locator("[data-sgt]").count() == 1)
+
+        # 4) 게임별(→분류) 보기
+        pg.goto(url + "#sysref-games"); pg.wait_for_timeout(300)
+        check("게임별: 게임 → 분류", pg.locator(".gsec").count() == 1 and pg.locator(".gsub").count() >= 1)
+        pg.click("[data-bsg]"); pg.wait_for_timeout(100)
+        check("게임별: 펼치면 하위 보임", pg.locator(".gitem.kid").count() == 1)
+
+        # 5) 확장 구조
+        pg.goto(url + "#sysref-tree"); pg.wait_for_timeout(300)
+        check("확장 구조: 상자 2개·선 1개", pg.locator(".tnode").count() == 2 and pg.locator("#tree path:not(.sim)").count() == 1)
+        check("확장 구조: 키워드 표시", "#타이밍" in pg.inner_text(".tree"))
+
+        # 6) 몬스터 칩 → 시스템 레퍼런스 내용만 (메모 수정 없음)
+        pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
+        pg.hover("[data-deep]"); pg.wait_for_timeout(400)
+        txt = pg.inner_text("#pop")
+        check("몬스터 시스템 칩 → 시스템 레퍼런스 연동", "시스템 레퍼런스" in txt and "타이밍" in txt and pg.locator("#popEdit").count() == 0, txt[:80])
+        pg.mouse.move(5, 5); pg.wait_for_timeout(300)
+
+        # 7) 패치 타임라인
+        pg.goto(url + "#timeline"); pg.wait_for_timeout(300)
+        if pg.locator("#tlGameSel").count(): pg.select_option("#tlGameSel", "테스트 게임"); pg.wait_for_timeout(200)
+        check("패치 타임라인", pg.locator(".tlbar").count() >= 1)
+
+        # 8) 새로고침 후 유지
+        pg.reload(); pg.wait_for_timeout(500); pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
+        check("새로고침 후 데이터 유지", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)
+
+        # 9) 폰 너비에서 가로 넘침 없음
+        pg.set_viewport_size({"width": 390, "height": 800}); pg.wait_for_timeout(200)
+        check("폰 너비 가로 넘침 없음", not pg.evaluate("document.documentElement.scrollWidth>innerWidth"))
+        b.close()
+    httpd.shutdown()
+
+    check("페이지 스크립트 오류 없음", not errors, "; ".join(errors[:3]))
+    failed = [c for c in checks if not c[1]]
+    print("OK" if not failed else f"FAILED {len(failed)}/{len(checks)}")
+    sys.exit(1 if failed else 0)
+
+
+if __name__ == "__main__":
+    main()
