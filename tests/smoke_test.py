@@ -89,6 +89,13 @@ def main():
               and pg.locator("#rows td.name", has_text="패링").count() == 1)
         pg.click("#fCancel"); pg.wait_for_timeout(100)
 
+        # 3-1b) 시스템 복제: 편집 창 → 복제 → 저장하면 하나 더 생김
+        pg.locator("#rows tr", has_text="패링").first.locator("[data-edit]").first.click(); pg.wait_for_timeout(100)
+        pg.click("#fDup"); pg.wait_for_timeout(150)
+        dup_ok = "복제" in pg.inner_text("#fTitle") and "복사본" in pg.input_value("#f_name")
+        pg.click("#fSave"); pg.wait_for_timeout(200)
+        check("시스템 복제", dup_ok and pg.locator("#rows td.name", has_text="패링 (복사본)").count() == 1)
+
         # 3-2) 몬스터의 전투 확장 시스템 추천은 같은 게임의 시스템만
         pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         pg.click("#addBtn"); pick_or_type(pg, "f_game", "다른 게임")

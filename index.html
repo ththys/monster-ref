@@ -601,7 +601,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <a href="#pc-counters" data-view="pc-counters" class="sub"><span>대응 몬스터</span><span class="n" id="nPCCnt"></span></a>
         <a href="#pc-timeline" data-view="pc-timeline" class="sub"><span>패치 타임라인</span></a>
         <div class="navh">시스템 레퍼런스</div>
-        <a href="#sysref" data-view="sysref"><span>시스템</span><span class="n" id="nSR"></span></a>
+        <a href="#sysref" data-view="sysref"><span>시스템 및 확장</span><span class="n" id="nSR"></span></a>
         <a href="#sysref-games" data-view="sysref-games" class="sub"><span>게임별</span><span class="n" id="nSRgame"></span></a>
         <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-tree" data-view="sysref-tree" class="sub"><span>확장 구조</span></a>
@@ -768,7 +768,7 @@ const SYS_KEYS=["game","cats","keywords"];
 const railCats = () => CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key));
 const THEAD = {
   ref: `<th class="grip" aria-label="순서"></th><th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th>공략</th><th></th>`,
-  system: `<th class="grip" aria-label="순서"></th><th id="thName">시스템</th><th>이미지</th><th>분류</th><th>키워드</th><th>설명</th><th></th>`,
+  system: `<th class="grip" aria-label="순서"></th><th id="thName">시스템 및 확장</th><th>이미지</th><th>분류</th><th>키워드</th><th>설명</th><th></th>`,
 };
 function syncKind(){
   monsters = allRefs.filter(m=>kindOf(m)===kind);
@@ -777,7 +777,7 @@ function syncKind(){
   if(head && head.dataset.k!==want){ head.innerHTML=`<tr>${THEAD[want]}</tr>`; head.dataset.k=want; }
   CAT.pcs.label = K.counter; CAT.pcs.root = K.counter;
   CAT.systems.root = `${K.label} 전투 확장 시스템`;
-  const th=$("#thName"); if(th) th.textContent=K.label;
+  const th=$("#thName"); if(th) th.textContent = kind==="system" ? "시스템 및 확장" : K.label;
   const tc=$("#thCounter"); if(tc) tc.textContent=K.counter;
 }
 let filters = new Set();   // "cat|value"
@@ -2151,7 +2151,7 @@ function openForm(m, copyFrom, opts){
   sc.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
     <header><h2 id="fTitle">${EXT?(m?"확장 시스템 편집":"확장 시스템 추가"):`${KINDS[fKind].label} ${m?"레퍼런스 편집":copyFrom?"레퍼런스 복제":"레퍼런스 추가"}`}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <form id="form" novalidate>
-      <div class="field"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v?.game||"")}</div>
+      <div class="field${SYS?" full":""}"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v?.game||"")}</div>
       ${SYS?"":`<div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>`}
       ${SYS ? `<div class="field"><label for="f_name">시스템 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${esc(K.namePh)}" autocomplete="off" required><small id="f_nameDup" class="dupwarn" hidden></small></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${esc(K.enPh)}" lang="en" autocomplete="off"></div>`
@@ -2218,7 +2218,7 @@ function wireMediaField(){
 function formSnapshot(m){
   const keep=(names, old)=>names.map(n=>{ const o=(old||[]).find(e=>e.name===n); return o?{...o}:{name:n,label:"공략",note:""}; });
   return { ...m,
-    game:$("#f_game").value.trim(), name:$("#f_name").value.trim(), nameEn:$("#f_nameEn").value.trim(), version:$("#f_version").value.trim(),
+    game:$("#f_game").value.trim(), name:$("#f_name").value.trim(), nameEn:$("#f_nameEn").value.trim(), version:fv("f_version").trim(),
     hooks:splitTags(fv("f_hooks")), levels:splitTags(fv("f_levels")),
     theme:splitTags(fv("f_theme")), looks:splitTags(fv("f_looks")), weapons:splitTags(fv("f_weapons")),
     systems:keep(splitTags(fv("f_systems")), m?.systems), pcs:keep(splitTags(fv("f_pcs")), m?.pcs),
