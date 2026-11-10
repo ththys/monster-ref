@@ -240,6 +240,12 @@ def main():
         pg.reload(); pg.wait_for_timeout(500); pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         check("새로고침 후 데이터 유지", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)
 
+        # 8-1) 왼쪽 메뉴: 기본은 접힘, 지금 보는 화면 묶음만 펼침, 눌러서 펼치기
+        pg.evaluate("localStorage.removeItem('monster-ref-nav-open')"); pg.goto(url + "#monsters"); pg.reload(); pg.wait_for_timeout(400)
+        hid = pg.evaluate("()=>['mon','pc','sys','game','idea'].map(k=>document.getElementById('navg-'+k).hidden)")
+        pg.click('.navtog[data-grp="sys"]'); pg.wait_for_timeout(100)
+        check("메뉴 기본 접힘·눌러서 펼치기", hid == [False, True, True, True, True] and pg.is_visible('a[data-view="sysref-tree"]'), str(hid))
+
         # 9) 폰 너비에서 가로 넘침 없음
         pg.set_viewport_size({"width": 390, "height": 800}); pg.wait_for_timeout(200)
         check("폰 너비 가로 넘침 없음", not pg.evaluate("document.documentElement.scrollWidth>innerWidth"))

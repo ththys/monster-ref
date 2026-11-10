@@ -487,6 +487,8 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .navtog .caret{transition:transform .15s}
 .navtog[aria-expanded="true"] .caret{transform:rotate(90deg)}
 .navgrp{display:flex;flex-direction:column;gap:2px}
+.tabs .navtog[data-grp]{font-size:13px;color:var(--ink);padding:9px 10px;margin-top:2px}
+.tabs .navtog[data-grp]:first-child{margin-top:0}
 .tabs a[aria-current="page"]{color:var(--ink);background:var(--hover);box-shadow:inset 3px 0 0 var(--accent)}
 @media (max-width:860px){
   .navh{display:none}
@@ -681,30 +683,40 @@ span.mention{color:var(--t-sys);font-weight:600}
   <div class="main">
     <aside class="side">
       <nav class="tabs" aria-label="보기">
-        <div class="navh">몬스터 레퍼런스</div>
+        <button type="button" class="navh navtog" data-grp="mon" aria-expanded="false" aria-controls="navg-mon"><span>몬스터 레퍼런스</span><span class="caret" aria-hidden="true">▸</span></button>
+        <div id="navg-mon" class="navgrp" hidden>
         <a href="#monsters" data-view="monsters"><span>몬스터</span><span class="n" id="nMon"></span></a>
         <a href="#systems" data-view="systems" class="sub"><span>전투 확장 시스템</span><span class="n" id="nSys"></span></a>
         <a href="#pcs" data-view="pcs" class="sub"><span>대응 PC 도구</span><span class="n" id="nPc"></span></a>
         <a href="#timeline" data-view="timeline" class="sub"><span>패치 타임라인</span></a>
-        <div class="navh">PC 레퍼런스</div>
+        </div>
+        <button type="button" class="navh navtog" data-grp="pc" aria-expanded="false" aria-controls="navg-pc"><span>PC 레퍼런스</span><span class="caret" aria-hidden="true">▸</span></button>
+        <div id="navg-pc" class="navgrp" hidden>
         <a href="#pc" data-view="pc"><span>PC</span><span class="n" id="nPC"></span></a>
         <a href="#pc-systems" data-view="pc-systems" class="sub"><span>전투 확장 시스템</span><span class="n" id="nPCSys"></span></a>
         <a href="#pc-counters" data-view="pc-counters" class="sub"><span>대응 몬스터</span><span class="n" id="nPCCnt"></span></a>
         <a href="#pc-timeline" data-view="pc-timeline" class="sub"><span>패치 타임라인</span></a>
-        <div class="navh">시스템 레퍼런스</div>
+        </div>
+        <button type="button" class="navh navtog" data-grp="sys" aria-expanded="false" aria-controls="navg-sys"><span>시스템 레퍼런스</span><span class="caret" aria-hidden="true">▸</span></button>
+        <div id="navg-sys" class="navgrp" hidden>
         <a href="#sysref" data-view="sysref"><span>시스템 및 확장</span><span class="n" id="nSR"></span></a>
         <a href="#sysref-games" data-view="sysref-games" class="sub"><span>게임별</span><span class="n" id="nSRgame"></span></a>
         <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-tree" data-view="sysref-tree" class="sub"><span>확장 구조</span></a>
         <a href="#sysref-all" data-view="sysref-all" class="sub"><span>톺아보기</span></a>
-        <div class="navh">게임</div>
+        </div>
+        <button type="button" class="navh navtog" data-grp="game" aria-expanded="false" aria-controls="navg-game"><span>게임</span><span class="caret" aria-hidden="true">▸</span></button>
+        <div id="navg-game" class="navgrp" hidden>
         <a href="#games" data-view="games"><span>게임 정리</span><span class="n" id="nGame"></span></a>
-        <div class="navh">아이디어</div>
+        </div>
+        <button type="button" class="navh navtog" data-grp="idea" aria-expanded="false" aria-controls="navg-idea"><span>아이디어</span><span class="caret" aria-hidden="true">▸</span></button>
+        <div id="navg-idea" class="navgrp" hidden>
         <a href="#ideas" data-view="ideas"><span>전체</span><span class="n" id="nIdea"></span></a>
         <a href="#ideas-pattern" data-view="ideas-pattern" class="sub"><span>개별 패턴</span><span class="n" id="nIdeaP"></span></a>
         <a href="#ideas-image" data-view="ideas-image" class="sub"><span>이미지</span><span class="n" id="nIdeaI"></span></a>
+        </div>
         <div class="navh"></div>
-        <button type="button" class="navh navtog" id="navEtc" aria-expanded="false" aria-controls="navEtcItems"><span>기타</span><span class="caret" aria-hidden="true">▸</span></button>
+        <button type="button" class="navh navtog" id="navEtc" data-grp="etc" aria-expanded="false" aria-controls="navEtcItems"><span>기타</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navEtcItems" class="navgrp" hidden>
           <a href="#portfolio" data-view="portfolio" class="sub"><span>자기소개서</span><span class="n" id="nWork" hidden></span></a>
           <a href="#works" data-view="works" class="sub"><span>포트폴리오</span></a>
@@ -3516,18 +3528,22 @@ $("#importFile").addEventListener("change", async e=>{
   finally{ busy=false; }
 });
 
-/* ---------- 왼쪽 메뉴 '기타' 접기 (기본 접힘) ---------- */
-const ETC_KEY="monster-ref-nav-etc";
-function setEtc(open, save){
-  const b=$("#navEtc"), box=$("#navEtcItems"); if(!b||!box) return;
-  b.setAttribute("aria-expanded", open?"true":"false"); box.hidden=!open;
-  if(save){ try{ localStorage.setItem(ETC_KEY, open?"1":"0"); }catch{} }
+/* ---------- 왼쪽 메뉴: 묶음마다 접기 (기본 모두 접힘, 지금 보는 화면의 묶음만 펼침) ---------- */
+const NAV_KEY="monster-ref-nav-open";
+let navOpen=(()=>{ try{ return new Set(JSON.parse(localStorage.getItem(NAV_KEY)||"[]")); }catch{ return new Set(); } })();
+const grpBox = b => document.getElementById(b.getAttribute("aria-controls"));
+function setGrp(b, open){ const box=grpBox(b); if(!box) return; b.setAttribute("aria-expanded", open?"true":"false"); box.hidden=!open; }
+function syncNav(){
+  const cur=document.querySelector(`.tabs a[data-view="${view}"]`), curBox=cur&&cur.closest(".navgrp");
+  document.querySelectorAll(".tabs .navtog[data-grp]").forEach(b=>setGrp(b, navOpen.has(b.dataset.grp) || grpBox(b)===curBox));
 }
-$("#navEtc").addEventListener("click",()=>setEtc($("#navEtcItems").hidden, true));
-(()=>{ let open=false; try{ open=localStorage.getItem(ETC_KEY)==="1"; }catch{}
-  if(view==="portfolio"||view==="works") open=true;   /* 기타 안의 화면을 보고 있으면 펼침 */
-  setEtc(open, false); })();
-addEventListener("hashchange",()=>{ const v=location.hash.slice(1); if(v==="portfolio"||v==="works") setEtc(true,false); });
+document.querySelectorAll(".tabs .navtog[data-grp]").forEach(b=>b.addEventListener("click",()=>{
+  const open=grpBox(b).hidden; setGrp(b, open);
+  if(open) navOpen.add(b.dataset.grp); else navOpen.delete(b.dataset.grp);
+  try{ localStorage.setItem(NAV_KEY, JSON.stringify([...navOpen])); }catch{}
+}));
+syncNav();
+addEventListener("hashchange", ()=>setTimeout(syncNav));
 
 $("#sysGroupBtn").addEventListener("click",()=>{ sysGroup=!sysGroup; try{ localStorage.setItem(SG_KEY, sysGroup?"1":"0"); }catch{} render(); });
 $("#sysOpenAll").addEventListener("click",()=>{
