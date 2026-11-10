@@ -561,6 +561,53 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .hins:hover img,.hins:hover video{transform:scale(1.04)}
 .hnone{color:var(--muted);font-size:14px;margin:0}
 @media (max-width:860px){ .hstats{grid-template-columns:repeat(3,1fr)} .hinsp{grid-template-columns:repeat(2,1fr)} }
+/* 게임 정리: 글쓰기 화면 */
+.modal.gwrite{width:min(1080px,100%);height:calc(100vh - 32px);max-height:none;padding:0;display:flex;flex-direction:column}
+.gwrite>header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.gwrite>header h2{margin:0;font-size:15px}
+.gwhb{display:flex;align-items:center;gap:8px}
+.gwsave{font-size:12px;color:var(--muted)}
+.gwform{display:flex!important;flex-direction:column;flex:1;min-height:0;padding:0!important;gap:0!important}
+.gwdraft{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 16px;background:color-mix(in srgb,var(--accent) 10%,var(--panel));font-size:13px}
+.gwmeta{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 16px 8px;border-bottom:1px solid var(--line)}
+.gwmeta .field{margin:0}
+.gwmeta .full{grid-column:1/-1}
+.gwone{width:100%;font-size:17px!important;font-weight:500;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;background:none!important;padding:8px 2px!important}
+.gwmore summary{font-size:12.5px;color:var(--muted);cursor:pointer;padding:2px 0}
+.gwmorein{display:grid;grid-template-columns:1fr;gap:8px;padding-top:8px}
+.gwtool{display:flex;flex-wrap:wrap;gap:2px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:3}
+.gwtool button{border:0;background:none;color:var(--ink);font-size:13px;padding:6px 9px;border-radius:6px;cursor:pointer}
+.gwtool button:hover{background:var(--hover)}
+.gwtool .gwlink{margin-left:auto;border:1px solid var(--line);font-size:12px}
+.gwsep{width:1px;height:18px;background:var(--line);margin:0 4px}
+.gwwrap{position:relative;flex:1;overflow:auto;background:var(--panel)}
+.gwwrap.over{outline:2px dashed var(--accent);outline-offset:-6px}
+.gwed{max-width:760px;margin:0 auto;padding:28px 24px 40vh;min-height:100%;outline:none;cursor:text}
+.gwed>p:only-child:has(br:only-child)::before{color:var(--muted);pointer-events:none;content:"여기에 이어서 쓰세요. 사진은 붙여 넣기(Ctrl+V)·끌어 놓기·‘사진 넣기’로 커서 자리에 들어가요. ## 를 치고 띄우면 제목, - 는 목록, > 는 인용.";position:absolute}
+.gwed figure.gimg .gim{cursor:pointer}
+.gwed figure.sel .gim{outline:3px solid var(--accent);outline-offset:2px;border-radius:10px}
+.gwed figcaption:empty::before{content:"사진 설명 (선택)";color:var(--muted)}
+.gup{display:block;padding:40px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg);border-radius:10px}
+.gwfig{position:absolute;z-index:4;display:flex;gap:2px;align-items:center;background:var(--ink);border-radius:8px;padding:4px;box-shadow:var(--shadow)}
+.gwfig button{border:0;background:none;color:var(--panel);font-size:12.5px;padding:5px 9px;border-radius:5px;cursor:pointer}
+.gwfig button:hover,.gwfig button.on{background:rgba(255,255,255,.18)}
+.gwfig .gwsep{background:rgba(255,255,255,.25)}
+/* 글 본문 (쓰기·보기 같은 모양) */
+.gpdoc{display:block!important;font-size:16.5px;line-height:1.9;max-width:none}
+.gpdoc>*{margin:0 0 16px}
+.gpdoc p{white-space:pre-wrap}
+.gpdoc h2{font-size:25px;letter-spacing:-.01em;line-height:1.35;margin:34px 0 14px}
+.gpdoc h3{font-size:20px;line-height:1.4;margin:28px 0 10px}
+.gpdoc>h2:first-child,.gpdoc>h3:first-child{margin-top:0}
+.gpdoc blockquote{margin:0 0 16px;padding:4px 0 4px 16px;border-left:3px solid var(--line);color:var(--muted)}
+.gpdoc ul,.gpdoc ol{padding-left:24px}
+.gpdoc hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.gpdoc a{color:var(--accent)}
+.gpdoc figure{margin:22px auto;display:flex;flex-direction:column;gap:6px}
+.gpdoc figure.sz-s{width:40%} .gpdoc figure.sz-m{width:70%} .gpdoc figure.sz-l{width:100%}
+.gpdoc figure img,.gpdoc figure video{width:100%;border-radius:10px;display:block;background:var(--hover)}
+.gpdoc figcaption{font-size:13px;color:var(--muted);text-align:center}
+@media (max-width:640px){ .gwmeta{grid-template-columns:1fr} .gwed{padding:20px 14px 40vh} .gpdoc figure.sz-s{width:60%} .gpdoc figure.sz-m{width:85%} }
 /* 게임 정리: 블로그 글 보기 */
 .modal.gpost{width:min(900px,100%);padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
 .gpost>header{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line)}
@@ -572,8 +619,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .gpbody h1{margin:0;font-size:30px;letter-spacing:-.02em;line-height:1.25}
 .gplead{margin:0;font-size:18px;line-height:1.6;color:var(--ink);font-weight:500;padding-left:14px;border-left:3px solid var(--accent)}
 .gpmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--muted);padding-bottom:14px;border-bottom:1px solid var(--line)}
-.gpbody .doc{max-width:none;font-size:16px;line-height:1.95}
-.gpbody .doc h3{font-size:21px;margin-top:22px}
+.gpbody .doc{max-width:none}
 .gpside{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
 .gpside .gnbar{padding:0}
 .gpone{font-size:16px!important;font-weight:500}
@@ -2391,7 +2437,7 @@ const HK={monster:{l:"몬스터",h:"#monsters",c:"c-game"}, pc:{l:"PC",h:"#pc",c
 let homeQ="", homeSeed=Math.random();
 const homeRefs = () => allRefs.filter(m=>HK[kindOf(m)]);
 function homeThumb(m){
-  const fi=(m.media||m.image)?m:(kindOf(m)==="game"?gameBlocks(m).find(b=>b.media||b.image):null);
+  const fi=(m.media||m.image)?m:(kindOf(m)==="game"?gameFirstPic(m):null);
   return fi?mediaHTML({media:fi.media,image:fi.image},640):`<span class="hini">${esc(((m.name||m.game||"?")+"").slice(0,1))}</span>`;
 }
 function homeItem(m){
@@ -2481,6 +2527,100 @@ function linkAll(text, g){
 }
 /* 블로그처럼: 글·이미지 블록 (예전에 guide만 있던 정리는 글 블록 하나로) */
 const gameBlocks = m => Array.isArray(m.blocks)&&m.blocks.length ? m.blocks : ((m.guide||"").trim() ? [{t:"text",text:m.guide}] : []);
+/* ---------- 게임 정리 글(블로그형): 저장은 정리된 HTML, 사진은 figure의 data-media/data-image ---------- */
+const GW_KEEP=new Set(["P","H2","H3","B","STRONG","I","EM","U","S","STRIKE","UL","OL","LI","BLOCKQUOTE","BR","HR","A","FIGURE"]);
+const GW_DROP=new Set(["SCRIPT","STYLE","IFRAME","OBJECT","EMBED","LINK","META","TITLE","HEAD","NOSCRIPT","TEMPLATE","SVG","CANVAS","FORM","INPUT","BUTTON","SELECT","TEXTAREA"]);
+const GW_BLOCK=new Set(["P","H1","H2","H3","H4","H5","H6","UL","OL","LI","BLOCKQUOTE","HR","FIGURE","DIV","TABLE","SECTION","ARTICLE","HEADER","FOOTER","PRE"]);
+function gwMediaOf(fig){
+  const dm=fig.getAttribute("data-media"), di=fig.getAttribute("data-image");
+  if(dm){ try{ const o=JSON.parse(dm); if(o && typeof o.id==="string" && o.cloud) return {media:o}; }catch{} }
+  if(di && /^(https:\/\/|data:image\/)/.test(di)) return {image:di};
+  return null;
+}
+function gwFigure(doc, md, size, cap){
+  const f=doc.createElement("figure"); f.className="gimg sz-"+(["s","m","l"].includes(size)?size:"l");
+  if(md.media) f.setAttribute("data-media", JSON.stringify(md.media)); else f.setAttribute("data-image", md.image);
+  const g=doc.createElement("div"); g.className="gim"; f.appendChild(g);
+  const c=doc.createElement("figcaption"); c.textContent=cap||""; f.appendChild(c);
+  return f;
+}
+function gwSanitize(html){
+  const doc=document.implementation.createHTMLDocument(""), root=doc.createElement("div"); root.innerHTML=html||"";
+  const clean=(node, out)=>{
+    [...node.childNodes].forEach(n=>{
+      if(n.nodeType===3){ out.appendChild(doc.createTextNode(n.data)); return; }
+      if(n.nodeType!==1) return;
+      const t=n.tagName;
+      if(GW_DROP.has(t)) return;
+      if(t==="FIGURE"){
+        const md=gwMediaOf(n); if(!md) return;
+        const size=((n.className||"").match(/\bsz-([sml])\b/)||[])[1]||"l";
+        const cap=(n.querySelector("figcaption")||{}).textContent||"";
+        out.appendChild(gwFigure(doc, md, size, cap.trim())); return;
+      }
+      if(t==="IMG"){   /* 밖에서 붙여 넣은 그림: https 주소면 사진으로 */
+        const src=n.getAttribute("src")||"";
+        if(/^(https:\/\/|data:image\/)/.test(src)) out.appendChild(gwFigure(doc,{image:src},"l",n.getAttribute("alt")||""));
+        return;
+      }
+      if(t==="H1") { const h=doc.createElement("h2"); clean(n,h); out.appendChild(h); return; }
+      if(/^H[4-6]$/.test(t)) { const h=doc.createElement("h3"); clean(n,h); out.appendChild(h); return; }
+      if(t==="DIV"||t==="SECTION"||t==="ARTICLE"){
+        const hasBlock=[...n.children].some(c=>GW_BLOCK.has(c.tagName));
+        if(hasBlock){ clean(n,out); return; }
+        const p=doc.createElement("p"); clean(n,p); if(!p.childNodes.length) p.appendChild(doc.createElement("br")); out.appendChild(p); return;
+      }
+      if(!GW_KEEP.has(t)){ clean(n,out); return; }
+      const e=doc.createElement(t==="STRONG"?"B":t==="EM"?"I":t==="STRIKE"?"S":t);
+      if(t==="A"){ const h=n.getAttribute("href")||""; if(!/^https?:\/\//i.test(h)){ clean(n,out); return; } e.setAttribute("href",h); e.setAttribute("target","_blank"); e.setAttribute("rel","noopener"); }
+      clean(n,e); out.appendChild(e);
+    });
+  };
+  const out=doc.createElement("div"); clean(root,out);
+  /* 맨 바깥의 맨 글자·인라인 요소는 문단으로 묶음 */
+  const fin=doc.createElement("div"); let para=null;
+  [...out.childNodes].forEach(n=>{
+    const block = n.nodeType===1 && GW_BLOCK.has(n.tagName);
+    if(block){ para=null; fin.appendChild(n); }
+    else { if(n.nodeType===3 && !n.data.trim() && !para) return; if(!para){ para=doc.createElement("p"); fin.appendChild(para); } para.appendChild(n); }
+  });
+  return fin.innerHTML;
+}
+function gwFill(root, w, big){ root.querySelectorAll("figure.gimg").forEach(f=>{ const md=gwMediaOf(f), g=f.querySelector(".gim"); if(md&&g){ g.innerHTML=mediaHTML(md,w,big); g.setAttribute("contenteditable","false"); } }); }
+function gwMentions(root, g){
+  const M=mentionRe(g); if(!M) return;
+  const byName=new Map(gameSysRefs(g).map(m=>[m.name,m])), re=new RegExp("@("+M.names.map(reEsc).join("|")+")","g");
+  const walk=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode:n=>n.parentElement.closest("a,figcaption,.gim")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const nodes=[]; while(walk.nextNode()) nodes.push(walk.currentNode);
+  nodes.forEach(t=>{
+    const txt=t.data; re.lastIndex=0; if(!re.test(txt)) return; re.lastIndex=0;
+    const frag=document.createDocumentFragment(); let last=0, x;
+    while((x=re.exec(txt))){ frag.appendChild(document.createTextNode(txt.slice(last,x.index))); const m=byName.get(x[1]);
+      const b=document.createElement("button"); b.type="button"; b.className="tag c-sys linked mention"; b.dataset.gosys=m.id; b.dataset.msys=m.id; b.textContent=x[1]+" ↗"; frag.appendChild(b); last=x.index+x[0].length; }
+    frag.appendChild(document.createTextNode(txt.slice(last))); t.replaceWith(frag);
+  });
+}
+function gwRelink(html, g){
+  const box=document.createElement("div"); box.innerHTML=gwSanitize(html); let n=0;
+  const walk=document.createTreeWalker(box, NodeFilter.SHOW_TEXT); const ts=[]; while(walk.nextNode()) ts.push(walk.currentNode);
+  ts.forEach(t=>{ const x=linkAll(t.data,g); if(x.n){ t.data=x.text; n+=x.n; } });
+  return {html:box.innerHTML, n};
+}
+const gwPlain = html => { const d=document.createElement("div"); d.innerHTML=gwSanitize(html); d.querySelectorAll("p,h2,h3,li,blockquote,figcaption").forEach(e=>e.append("\n")); return d.textContent.replace(/\n{3,}/g,"\n\n").trim(); };
+function blocksToHTML(blocks){
+  const doc=document.implementation.createHTMLDocument(""), d=doc.createElement("div");
+  blocks.forEach(b=>{
+    if(b.t==="text"){ const x=doc.createElement("div"); x.innerHTML=aboutHTML(b.text||""); [...x.childNodes].forEach(c=>d.appendChild(c)); }
+    else if(b.media||b.image) d.appendChild(gwFigure(doc, b.media?{media:b.media}:{image:b.image}, "l", b.caption||""));
+  });
+  return gwSanitize(d.innerHTML);
+}
+const gameHTML = m => m.html ? gwSanitize(m.html) : blocksToHTML(gameBlocks(m));
+function gameFirstPic(m){
+  if(m.media||m.image) return m;
+  if(m.html){ const d=document.createElement("div"); d.innerHTML=gwSanitize(m.html); const f=d.querySelector("figure.gimg"); const md=f&&gwMediaOf(f); return md||null; }
+  return gameBlocks(m).find(b=>b.media||b.image)||null;
+}
 function gameDocHTML(m){
   return gameBlocks(m).map(b=>{
     if(b.t==="text") return mentionHTML(aboutHTML(b.text), m.game);
@@ -2495,7 +2635,7 @@ function renderGames(list){
   $("#count").textContent = `${list.length} / ${monsters.length}건`;
   const cnt=g=>{ const c=gameCounts(g); return [["몬스터",c.monster],["PC",c.pc],["시스템",c.system],["아이디어",c.idea]].filter(x=>x[1]).map(([l,n])=>`${l} ${n}`).join(" · "); };
   const card=m=>`<article class="gncard" data-gnote="${esc(m.id)}" tabindex="0" role="button" aria-label="${esc(m.game)} 정리 보기">
-      <div class="gcover">${(()=>{ const fi=(m.media||m.image)?m:gameBlocks(m).find(b=>b.media||b.image); return fi?mediaHTML({media:fi.media,image:fi.image},640):`<span>${esc((m.game||"?").slice(0,1))}</span>`; })()}</div>
+      <div class="gcover">${(()=>{ const fi=gameFirstPic(m); return fi?mediaHTML({media:fi.media,image:fi.image},640):`<span>${esc((m.game||"?").slice(0,1))}</span>`; })()}</div>
       <div class="gnbody"><b>${esc(m.game)}</b>${m.oneLine?`<p class="gquote">${mentionHTML(esc(m.oneLine), m.game, true)}</p>`:""}
         ${(m.keywords||[]).length?`<div class="imeta">${m.keywords.map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</div>`:""}
         <span class="gcnt">${cnt(m.game)}</span></div></article>`;
@@ -2521,8 +2661,8 @@ function goGame(v, g){
 }
 document.addEventListener("click",e=>{ const b=e.target.closest("[data-gogame]"); if(!b) return; const i=b.dataset.gogame.indexOf("|"); goGame(b.dataset.gogame.slice(0,i), b.dataset.gogame.slice(i+1)); });
 function openGameNote(m){
-  const sc=$("#scrim"), g=m.game, c=gameCounts(g), ed=canEdit(), blocks=gameBlocks(m);
-  const plain=blocks.filter(b=>b.t==="text").map(b=>b.text).join("\n")+"\n"+blocks.map(b=>b.caption||"").join("\n");
+  const sc=$("#scrim"), g=m.game, c=gameCounts(g), ed=canEdit(), body=gameHTML(m);
+  const plain=gwPlain(body);
   const ment=mentionsIn((m.oneLine||"")+"\n"+plain, g), byName=new Map(gameSysRefs(g).map(x=>[x.name,x]));
   const go=[["monsters","몬스터",c.monster],["pc","PC",c.pc],["sysref","시스템",c.system],["ideas","아이디어",c.idea]].filter(x=>x[2]);
   const when=m.updatedAt?new Date(m.updatedAt).toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric"}):"";
@@ -2534,7 +2674,7 @@ function openGameNote(m){
         <h1 id="gTitle">${esc(g)}</h1>
         ${m.oneLine?`<p class="gplead">${mentionHTML(esc(m.oneLine), g)}</p>`:""}
         <div class="gpmeta">${when?`<span>${esc(when)}</span>`:""}${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</div>
-        <div class="doc">${blocks.length?gameDocHTML(m):`<p class="ph-note">아직 본문이 없어요.</p>`}</div>
+        <div class="doc gpdoc" id="gpDoc">${body.trim()?body:`<p class="ph-note">아직 본문이 없어요.</p>`}</div>
         ${ment.length||go.length?`<aside class="gpside">
           ${ment.length?`<div class="gnbar"><span>언급한 시스템</span>${ment.map(n=>`<button type="button" class="tag c-sys linked" data-gosys="${esc(byName.get(n).id)}" data-msys="${esc(byName.get(n).id)}">${esc(n)} ↗</button>`).join("")}</div>`:""}
           ${go.length?`<div class="gnbar"><span>이 게임의 레퍼런스</span>${go.map(([v,l,n])=>`<button type="button" class="tag c-game" data-gogame="${v}|${esc(g)}">${l} ${n} →</button>`).join("")}</div>`:""}
@@ -2544,6 +2684,7 @@ function openGameNote(m){
     <div class="foot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px;border-top:1px solid var(--line)">
       ${m.link?`<a class="btn" href="${esc(m.link)}" target="_blank" rel="noopener" style="margin-right:auto">링크 열기</a>`:""}
       ${ed?`<button type="button" class="btn" id="gRelink" title="글 속 시스템 이름을 찾아 한 번에 연결">시스템 다시 연결</button><button type="button" class="btn" id="gDel">삭제</button><button type="button" class="btn" id="gEdit">편집</button>`:""}<button type="button" class="btn primary" id="gClose">닫기</button></div></div>`;
+  const pd=$("#gpDoc"); gwFill(pd, 1600, true); gwMentions(pd, g);
   sc.hidden=false; wireVideos(sc);
   sc.querySelectorAll(".gphero video,.doc video").forEach(v=>{ if(v.dataset.src&&!v.src) v.src=v.dataset.src; v.muted=true; v.play().catch(()=>{}); });
   $("#fClose").onclick=$("#gClose").onclick=closeForm;
@@ -2552,11 +2693,10 @@ function openGameNote(m){
     $("#gEdit").onclick=()=>{ closeForm(); openGameForm(m); };
     $("#gDel").onclick=()=>{ closeForm(); confirmDelete(m.id); };
     $("#gRelink").onclick=async()=>{
-      const a=linkAll(m.oneLine||"", g); let n=a.n;
-      const nb=gameBlocks(m).map(b=>{ if(b.t==="text"){ const x=linkAll(b.text,g); n+=x.n; return {...b,text:x.text}; } return b; });
+      const a=linkAll(m.oneLine||"", g), b=gwRelink(gameHTML(m), g), n=a.n+b.n;
       if(!n){ toast(gameSysRefs(g).length?"새로 연결할 시스템 이름이 없어요":`${g}에 등록된 시스템이 아직 없어요`); return; }
-      const guide=nb.filter(b=>b.t==="text").map(b=>b.text).join("\n\n");
-      try{ await store.update(m.id,{oneLine:a.text, blocks:nb, guide, mentions:mentionsIn(a.text+"\n"+guide, g), updatedAt:Date.now()});
+      const guide=gwPlain(b.html);
+      try{ await store.update(m.id,{oneLine:a.text, html:b.html, blocks:[], guide, mentions:mentionsIn(a.text+"\n"+guide, g), updatedAt:Date.now()});
         toast(`시스템 ${n}곳을 연결했어요`); const nm=allRefs.find(x=>x.id===m.id); if(nm) openGameNote(nm); }
       catch(ex){ toast(errMsg(ex)); }
     };
@@ -2597,7 +2737,9 @@ function wireMention(el){
   let box=null, items=[], idx=0, start=-1;
   const close=()=>{ if(box){ box.remove(); box=null; } };
   const names=()=>[...new Set(gameSysRefs(fv("f_game").trim()).map(m=>m.name))].sort(koCmp);
-  const pick=n=>{ const end=el.selectionStart; el.value=el.value.slice(0,start)+"@"+n+" "+el.value.slice(end); const c=start+n.length+2; el.setSelectionRange(c,c); close(); el.focus(); el.dispatchEvent(new Event("input")); };
+  let pending=false;
+  const pick=n=>{ const end=el.selectionStart; el.focus(); el.setSelectionRange(start,end); if(!document.execCommand("insertText", false, "@"+n+" ")){ el.value=el.value.slice(0,start)+"@"+n+" "+el.value.slice(end); const c=start+n.length+2; el.setSelectionRange(c,c); } close(); };
+  el.addEventListener("compositionend",()=>setTimeout(()=>{ el.dispatchEvent(new Event("input")); if(pending && box && items.length) pick(items[idx]); pending=false; },0));
   const draw=()=>{
     if(!box){ box=document.createElement("div"); box.className="mbox"; box.setAttribute("role","listbox"); el.parentElement.style.position="relative"; el.parentElement.appendChild(box);
       box.addEventListener("mousedown",e=>{ const b=e.target.closest("[data-mi]"); if(b){ e.preventDefault(); pick(items[+b.dataset.mi]); } }); }
@@ -2618,70 +2760,229 @@ function wireMention(el){
     if(!box) return;
     if(e.key==="ArrowDown"&&items.length){ e.preventDefault(); idx=(idx+1)%items.length; draw(); }
     else if(e.key==="ArrowUp"&&items.length){ e.preventDefault(); idx=(idx-1+items.length)%items.length; draw(); }
-    else if((e.key==="Enter"||e.key==="Tab")&&items.length){ e.preventDefault(); pick(items[idx]); }
+    else if((e.key==="Enter"||e.key==="Tab")&&items.length){ if(e.isComposing||e.keyCode===229){ pending=true; e.preventDefault(); return; } e.preventDefault(); pick(items[idx]); }
     else if(e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); close(); }
   });
-  el.addEventListener("blur",()=>setTimeout(close,150));
+  el.addEventListener("blur",()=>setTimeout(()=>{ if(document.activeElement!==el) close(); },150));
 }
+/* 글쓰기 화면 (네이버 블로그·옵시디언처럼 한 장에 이어 쓰기) */
+const DRAFT_KEY = id => "monster-ref-draft:"+(id||"new");
 function openGameForm(m, presetGame){
   if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
   hidePop(true);
   const v=m||{};
   formImage = v.image||null; formMedia = v.media||null; uploading=false;
-  edBlocks = (m?gameBlocks(m):[]).map(b=>({...b})); if(!edBlocks.length) edBlocks=[{t:"text",text:""}];
-  edPh = "## 좋았던 점\n@ 를 치면 이 게임의 시스템을 골라 넣을 수 있어요";
-  edAfter = L => L.querySelectorAll("textarea[data-k]").forEach(wireMention);
   const sc=$("#scrim");
-  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle" style="width:min(900px,100%)">
-    <header><h2 id="fTitle">게임 정리 ${m?"편집":"쓰기"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
-    <form id="form" novalidate>
-      <div class="field"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v.game||presetGame||"")}<small id="f_gDup" class="dupwarn" hidden></small></div>
-      <div class="field"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc((v.keywords||[]).join(" / "))}" placeholder="소울라이크 / 패링 / 보스 러시"></div>
-      <div class="field full"><label for="f_oneLine">한 줄 소감 <small style="font-weight:400">· 글 제목 아래 크게 보여요</small></label><input id="f_oneLine" type="text" class="gpone" value="${esc(v.oneLine)}" placeholder="예) 패링 하나로 끝까지 끌고 가는 손맛" autocomplete="off"></div>
-      ${mediaFieldHTML("대표 이미지 (맨 위 큰 사진)")}
-      <div class="field full"><label>본문</label>
-        <p class="edhint" style="margin:0 0 4px">블로그처럼 글과 이미지를 번갈아 쓰세요 · <b>## 제목</b> 줄은 소제목 · 이미지는 블록 사이 <b>+ 이미지·움짤</b>, 또는 글 칸에 붙여 넣기·끌어 놓기 · <b>@</b>로 시스템 언급 · 먼저 다 썼다면 <button type="button" class="btn sm" id="fLinkAll">시스템 한 번에 연결</button></p>
-        <div class="ed" id="edList"></div>
-        <input id="edFile" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm" hidden></div>
-      <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v.link)}" placeholder="https://"></div>
+  const tb=[["p","본문"],["h2","제목"],["h3","소제목"],"|",["bold","<b>B</b>"],["italic","<i>I</i>"],["underline","<u>U</u>"],["strike","<s>S</s>"],"|",
+    ["ul","• 목록"],["ol","1. 목록"],["quote","❝ 인용"],["hr","― 구분선"],["link","링크"],"|",["img","사진 넣기"],["mention","@ 시스템"]];
+  sc.innerHTML=`<div class="modal gwrite" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+    <header><h2 id="fTitle">게임 정리 ${m?"편집":"쓰기"}</h2>
+      <div class="gwhb"><span class="gwsave" id="gwState"></span><button type="button" class="btn" id="fCancel">닫기</button><button type="button" class="btn primary" id="fSave">${m?"저장":"올리기"}</button></div></header>
+    <form id="form" novalidate class="gwform">
+      <div class="gwdraft" id="gwDraft" hidden></div>
+      <div class="gwmeta">
+        <div class="field"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v.game||presetGame||"")}<small id="f_gDup" class="dupwarn" hidden></small></div>
+        <div class="field"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc((v.keywords||[]).join(" / "))}" placeholder="소울라이크 / 패링 / 보스 러시"></div>
+        <div class="field full"><input id="f_oneLine" type="text" class="gwone" value="${esc(v.oneLine)}" placeholder="한 줄 소감 — 예) 패링 하나로 끝까지 끌고 가는 손맛" autocomplete="off" aria-label="한 줄 소감"></div>
+        <details class="gwmore full"><summary>대표 이미지 · 링크</summary><div class="gwmorein">${mediaFieldHTML("대표 이미지 (글 맨 위 큰 사진)")}
+          <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v.link)}" placeholder="https://"></div></div></details>
+      </div>
+      <div class="gwtool" role="toolbar" aria-label="글 꾸미기">${tb.map(x=>x==="|"?`<span class="gwsep"></span>`:`<button type="button" data-gw="${x[0]}" title="${x[1].replace(/<[^>]+>/g,"")}">${x[1]}</button>`).join("")}
+        <button type="button" class="gwlink" id="fLinkAll" title="글 속 시스템 이름을 찾아 한 번에 연결">시스템 한 번에 연결</button></div>
+      <div class="gwwrap" id="gwWrap">
+        <div class="gwed gpdoc" id="gwEd" contenteditable="true" spellcheck="false" data-ph="여기에 이어서 쓰세요. 사진은 붙여 넣기(Ctrl+V)·끌어 놓기·‘사진 넣기’로 커서 자리에 들어가요. ## 를 치고 띄우면 제목, - 는 목록, > 는 인용."></div>
+        <div class="gwfig" id="gwFig" hidden><button type="button" data-fz="s">작게</button><button type="button" data-fz="m">중간</button><button type="button" data-fz="l">크게</button><span class="gwsep"></span><button type="button" data-fm="-1">↑ 위로</button><button type="button" data-fm="1">↓ 아래로</button><span class="gwsep"></span><button type="button" data-fd>삭제</button></div>
+      </div>
+      <input id="gwFile" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm" hidden>
       <div class="err" id="fErr" hidden></div>
-      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"올리기"}</button></div>
     </form></div>`;
   sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireMediaField();
-  drawEd(); wireEdList(); wireMention($("#f_oneLine"));
+  wireMention($("#f_oneLine"));
+  const ed=$("#gwEd"), wrap=$("#gwWrap"), figBar=$("#gwFig");
+  const setBody=html=>{ ed.innerHTML=gwSanitize(html)||"<p><br></p>"; gwFill(ed,640,true); ed.querySelectorAll("video").forEach(x=>{ x.muted=true; x.play().catch(()=>{}); }); };
+  setBody(m?gameHTML(m):"");
+  try{ document.execCommand("defaultParagraphSeparator", false, "p"); }catch{}
+  /* 저장 형태: 사진 칸은 비우고 data 속성만 */
+  const serialize=()=>{ const c=ed.cloneNode(true); c.querySelectorAll("figure[data-up]").forEach(f=>f.remove()); c.querySelectorAll(".gim").forEach(g=>g.innerHTML=""); c.querySelectorAll(".sel").forEach(e=>e.classList.remove("sel")); return gwSanitize(c.innerHTML); };
+  let dirty=false, busy=0, lastRange=null;
+  const state=t=>{ $("#gwState").textContent=t; };
+  const markDirty=()=>{ dirty=true; state("작성 중"); };
+  closeGuard=()=> !dirty || confirm("저장하지 않은 글이 있어요. 닫을까요? (임시 저장본은 남아 있어요)");
+  /* 임시 저장 */
+  const dk=DRAFT_KEY(m&&m.id);
+  const saveDraft=()=>{ if(!dirty) return; try{ localStorage.setItem(dk, JSON.stringify({t:Date.now(), html:serialize(), oneLine:$("#f_oneLine").value, game:fv("f_game"), keywords:$("#f_keywords").value})); state("임시 저장됨 "+new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})); }catch{} };
+  const dTimer=setInterval(()=>{ if(!document.body.contains(ed)){ clearInterval(dTimer); return; } saveDraft(); }, 4000);
+  try{ const d=JSON.parse(localStorage.getItem(dk)||"null");
+    if(d && d.t > (m&&m.updatedAt||0) && (d.html||"").replace(/<[^>]+>/g,"").trim()){
+      const bx=$("#gwDraft"); bx.hidden=false;
+      bx.innerHTML=`<span>${new Date(d.t).toLocaleString("ko-KR")}에 임시 저장된 글이 있어요</span><button type="button" class="btn sm" id="gwDl">불러오기</button><button type="button" class="btn sm" id="gwDx">버리기</button>`;
+      $("#gwDl").onclick=()=>{ setBody(d.html); $("#f_oneLine").value=d.oneLine||""; $("#f_keywords").value=d.keywords||""; if(d.game && !fv("f_game")) setCombo("f_game", d.game); bx.hidden=true; markDirty(); };
+      $("#gwDx").onclick=()=>{ try{ localStorage.removeItem(dk); }catch{} bx.hidden=true; };
+    } }catch{}
+  ["f_oneLine","f_keywords","f_link"].forEach(id=>$("#"+id).addEventListener("input",markDirty));
+  /* 커서 위치 기억 (사진·@ 넣을 자리) */
+  const saveSel=()=>{ const se=getSelection(); if(se.rangeCount && ed.contains(se.anchorNode)) lastRange=se.getRangeAt(0).cloneRange(); };
+  document.addEventListener("selectionchange", saveSel);
+  ed.addEventListener("mouseup",()=>setTimeout(saveSel)); ed.addEventListener("keyup",saveSel); ed.addEventListener("blur",saveSel);
+  const topBlock=node=>{ while(node && node.parentNode!==ed) node=node.parentNode; return node; };
+  const restore=()=>{ ed.focus(); if(lastRange){ const se=getSelection(); se.removeAllRanges(); se.addRange(lastRange); } };
+  /* 사진: 커서가 있는 문단 바로 아래에 (빈 문단이면 그 자리에) */
+  const placeFig=(fig, after)=>{
+    let blk = after || (lastRange && ed.contains(lastRange.startContainer) ? topBlock(lastRange.startContainer) : null);
+    if(blk===ed) blk=null;
+    if(blk && !after && blk.tagName==="P" && !blk.textContent.trim() && !blk.querySelector("img,figure")) blk.replaceWith(fig);
+    else if(blk) blk.after(fig); else ed.appendChild(fig);
+    if(!fig.nextElementSibling){ const p=document.createElement("p"); p.innerHTML="<br>"; fig.after(p); }
+    return fig;
+  };
+  const addFiles=async files=>{
+    saveSel(); let after=null;
+    for(const f of [...files].filter(x=>/^(image|video)\//.test(x.type))){
+      const fig=document.createElement("figure"); fig.className="gimg sz-l"; fig.dataset.up="1";
+      fig.innerHTML=`<div class="gim" contenteditable="false"><span class="gup">올리는 중</span></div><figcaption></figcaption>`;
+      placeFig(fig, after); after=fig; busy++; markDirty(); $("#fSave").disabled=true;
+      try{
+        const it=await uploadAny(f, pc=>{ const sp=fig.querySelector(".gup"); if(sp) sp.textContent=`올리는 중 ${pc}%`; });
+        if(it.media) fig.setAttribute("data-media", JSON.stringify(it.media)); else fig.setAttribute("data-image", it.image);
+        delete fig.dataset.up; gwFill(fig.parentNode||ed, 640, true);
+        fig.querySelectorAll("video").forEach(x=>{ x.muted=true; x.play().catch(()=>{}); });
+      }catch(ex){ fig.remove(); toast(cloudErr(ex)); }
+      busy--; if(!busy) $("#fSave").disabled=false;
+    }
+  };
+  ed.addEventListener("paste",e=>{
+    e.stopPropagation();
+    const files=[...(e.clipboardData?.files||[])].filter(x=>/^(image|video)\//.test(x.type));
+    if(files.length){ e.preventDefault(); saveSel(); addFiles(files); return; }
+    const h=e.clipboardData?.getData("text/html");
+    if(h){ e.preventDefault(); const clean=gwSanitize(h); document.execCommand("insertHTML", false, clean); gwFill(ed,640,true); markDirty(); }
+  });
+  ed.addEventListener("dragover",e=>{ if([...(e.dataTransfer?.types||[])].includes("Files")){ e.preventDefault(); wrap.classList.add("over"); } });
+  ed.addEventListener("dragleave",()=>wrap.classList.remove("over"));
+  ed.addEventListener("drop",e=>{
+    const files=[...(e.dataTransfer?.files||[])]; if(!files.length) return;
+    e.preventDefault(); e.stopPropagation(); wrap.classList.remove("over");
+    const rg=document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX,e.clientY) : null; if(rg && ed.contains(rg.startContainer)) lastRange=rg;
+    addFiles(files);
+  });
+  $("#gwFile").onchange=e=>{ const f=[...e.target.files]; e.target.value=""; addFiles(f); };
+  /* 마크다운처럼: 줄 맨 앞에 ## / ### / - / 1. / > 치고 띄우면 */
+  ed.addEventListener("input",e=>{
+    markDirty(); figBar.hidden=true;
+    if(e.inputType!=="insertText" || e.data!==" ") return;
+    const se=getSelection(); if(!se.rangeCount) return; const blk=topBlock(se.anchorNode); if(!blk||blk===ed||blk.tagName!=="P") return;
+    const t=blk.textContent.replace(/ /g," ");
+    const rule={"## ":["formatBlock","h2"],"# ":["formatBlock","h2"],"### ":["formatBlock","h3"],"- ":["insertUnorderedList"],"* ":["insertUnorderedList"],"1. ":["insertOrderedList"],"> ":["formatBlock","blockquote"]}[t];
+    if(!rule) return;
+    blk.innerHTML="<br>"; const rg=document.createRange(); rg.setStart(blk,0); rg.collapse(true); se.removeAllRanges(); se.addRange(rg);
+    document.execCommand(rule[0], false, rule[1]||null);
+  });
+  /* 도구 막대 */
+  $(".gwtool").addEventListener("mousedown",e=>{ if(e.target.closest("[data-gw]")) e.preventDefault(); });
+  $(".gwtool").addEventListener("click",e=>{
+    const b=e.target.closest("[data-gw]"); if(!b) return; const c=b.dataset.gw;
+    if(c==="img"){ saveSel(); $("#gwFile").click(); return; }
+    restore();
+    const X=(cmd,arg)=>document.execCommand(cmd,false,arg||null);
+    if(c==="p") X("formatBlock","p"); else if(c==="h2") X("formatBlock","h2"); else if(c==="h3") X("formatBlock","h3");
+    else if(c==="bold"||c==="italic"||c==="underline") X(c); else if(c==="strike") X("strikeThrough");
+    else if(c==="ul") X("insertUnorderedList"); else if(c==="ol") X("insertOrderedList");
+    else if(c==="quote") X("formatBlock","blockquote"); else if(c==="hr") X("insertHorizontalRule");
+    else if(c==="link"){ const u=prompt("연결할 주소 (https://…)"); if(u && /^https?:\/\//i.test(u.trim())) X("createLink", u.trim()); }
+    else if(c==="mention"){ X("insertText","@"); ed.dispatchEvent(new Event("keyup")); }
+    markDirty();
+  });
+  /* 사진 고르기: 크기·위치·삭제 */
+  let selFig=null;
+  const showBar=fig=>{ ed.querySelectorAll("figure.sel").forEach(f=>f.classList.remove("sel")); selFig=fig; if(!fig){ figBar.hidden=true; return; }
+    fig.classList.add("sel"); figBar.hidden=false; figBar.style.top=Math.max(4, fig.offsetTop+8)+"px"; figBar.style.left=(fig.offsetLeft+8)+"px";
+    figBar.querySelectorAll("[data-fz]").forEach(x=>x.classList.toggle("on", fig.classList.contains("sz-"+x.dataset.fz))); };
+  ed.addEventListener("click",e=>{ const f=e.target.closest("figure.gimg"); showBar(f && e.target.closest(".gim") ? f : null); });
+  figBar.addEventListener("mousedown",e=>e.preventDefault());
+  figBar.addEventListener("click",e=>{
+    if(!selFig) return; const b=e.target.closest("button"); if(!b) return;
+    if(b.dataset.fz){ selFig.classList.remove("sz-s","sz-m","sz-l"); selFig.classList.add("sz-"+b.dataset.fz); }
+    else if(b.dataset.fm){ const d=+b.dataset.fm, sib=d<0?selFig.previousElementSibling:selFig.nextElementSibling; if(sib){ d<0?sib.before(selFig):sib.after(selFig); } }
+    else if(b.hasAttribute("data-fd")){ selFig.remove(); selFig=null; figBar.hidden=true; markDirty(); return; }
+    markDirty(); showBar(selFig); selFig.scrollIntoView({block:"nearest"});
+  });
+  wrap.addEventListener("scroll",()=>{ if(selFig) showBar(selFig); });
+  /* @ 시스템 (글 칸) */
+  wireMentionCE(ed, markDirty);
+  /* 게임 중복 */
   const dupChk=()=>{ const g=fv("f_game").trim(), d=g&&allRefs.find(x=>kindOf(x)==="game"&&x.game===g&&(!m||x.id!==m.id)), w=$("#f_gDup");
     w.hidden=!d; if(d) w.textContent=`${g} 정리가 이미 있어요. 게임마다 하나만 둘 수 있어요.`; return !!d; };
   $("#f_game").addEventListener("input",dupChk); const gs=$("#f_gameSel"); if(gs) gs.addEventListener("change",()=>setTimeout(dupChk)); dupChk();
   $("#fLinkAll").onclick=()=>{
     const g=fv("f_game").trim(); if(!g){ toast("게임을 먼저 골라 주세요"); return; }
     if(!gameSysRefs(g).length){ toast(`${g}에 등록된 시스템이 아직 없어요`); return; }
-    syncEd(); let n=0;
-    const a=linkAll($("#f_oneLine").value, g); $("#f_oneLine").value=a.text; n+=a.n;
-    edBlocks.forEach(b=>{ if(b.t==="text"){ const x=linkAll(b.text||"", g); b.text=x.text; n+=x.n; } });
-    drawEd(); toast(n ? `시스템 ${n}곳을 연결했어요` : "새로 연결할 시스템 이름이 없어요");
+    const a=linkAll($("#f_oneLine").value, g); $("#f_oneLine").value=a.text; let n=a.n;
+    const walk=document.createTreeWalker(ed, NodeFilter.SHOW_TEXT,{acceptNode:x=>x.parentElement.closest(".gim")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}); const ts=[]; while(walk.nextNode()) ts.push(walk.currentNode);
+    ts.forEach(t=>{ const x=linkAll(t.data,g); if(x.n){ t.data=x.text; n+=x.n; } });
+    if(n) markDirty(); toast(n ? `시스템 ${n}곳을 연결했어요` : "새로 연결할 시스템 이름이 없어요");
   };
-  const close=()=>{ edAfter=null; edPh=null; closeForm(); };
-  $("#fClose").onclick=$("#fCancel").onclick=close;
-  sc.onclick=e=>{ if(e.target===sc) close(); };
-  $("#form").onsubmit=async e=>{
-    e.preventDefault(); syncEd();
+  const done=()=>{ document.removeEventListener("selectionchange", saveSel); clearInterval(dTimer); };
+  $("#fClose") && ($("#fClose").onclick=()=>closeForm());
+  $("#fCancel").onclick=()=>{ if(!closeGuard || closeGuard()){ done(); closeForm(true); } };
+  sc.onclick=null;   /* 바깥을 눌러도 닫히지 않게 (긴 글 보호) */
+  const submit=async()=>{
     const err=$("#fErr"), g=fv("f_game").trim();
-    if(uploading || edBlocks.some(b=>b.busy)){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
-    if(!g){ err.hidden=false; err.textContent="게임 이름을 골라 주세요."; return; }
+    if(uploading || busy){ err.hidden=false; err.textContent="사진 업로드가 끝나면 저장할 수 있어요."; err.scrollIntoView({block:"nearest"}); return; }
+    if(!g){ err.hidden=false; err.textContent="게임 이름을 골라 주세요."; $("#gwWrap").scrollTop=0; ($("#f_gameSel")||$("#f_game")).focus(); return; }
     if(dupChk()){ err.hidden=false; err.textContent=`${g} 정리가 이미 있어요. 그 정리를 편집해 주세요.`; return; }
-    const blocks=edBlocks.filter(b=> b.t==="text" ? (b.text||"").trim() : (b.media||b.image))
-      .map(b=> b.t==="text" ? {t:"text",text:b.text} : {t:"media",media:b.media||null,image:b.image||"",caption:(b.caption||"").trim()});
-    const oneLine=fv("f_oneLine").trim(), guide=blocks.filter(b=>b.t==="text").map(b=>b.text).join("\n\n");
-    const data={ kind:"game", game:g, name:g, oneLine, guide, blocks, keywords:splitTags(fv("f_keywords")), link:fv("f_link").trim(),
+    const html=serialize(), oneLine=fv("f_oneLine").trim(), guide=gwPlain(html);
+    const data={ kind:"game", game:g, name:g, oneLine, html, blocks:[], guide, keywords:splitTags(fv("f_keywords")), link:fv("f_link").trim(),
       mentions:mentionsIn(oneLine+"\n"+guide, g), image:formImage||"", media:formMedia||null, updatedAt:Date.now() };
-    const b=$("#fSave"); b.disabled=true;
+    const b=$("#fSave"); b.disabled=true; state("저장 중…");
     try{
       if(m) await store.set(m.id,{...data, createdAt:m.createdAt||Date.now()});
       else await store.add({...data, createdAt:Date.now()});
-      close(); toast(m?"저장했어요":"올렸어요");
-    }catch(ex){ b.disabled=false; err.hidden=false; err.textContent=errMsg(ex); }
+      try{ localStorage.removeItem(dk); }catch{}
+      dirty=false; done(); closeForm(true); toast(m?"저장했어요":"올렸어요");
+    }catch(ex){ b.disabled=false; state(""); err.hidden=false; err.textContent=errMsg(ex); }
   };
-  (v.game||presetGame ? $("#f_oneLine") : $("#f_gameSel")||$("#f_game")).focus();
+  $("#fSave").onclick=submit;
+  $("#form").onsubmit=e=>{ e.preventDefault(); submit(); };
+  ed.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); submit(); } });
+  if(v.game||presetGame) ed.focus(); else ($("#f_gameSel")||$("#f_game")).focus();
+}
+/* 글 칸(contenteditable)에서 @ → 그 게임의 시스템 */
+function wireMentionCE(ed, onChange){
+  let box=null, items=[], idx=0, at=null;
+  const close=()=>{ if(box){ box.remove(); box=null; } };
+  const names=()=>[...new Set(gameSysRefs(fv("f_game").trim()).map(m=>m.name))].sort(koCmp);
+  let pending=false;
+  const pick=n=>{ if(!at) return; const rg=document.createRange(); rg.setStart(at.node, at.start); rg.setEnd(at.node, Math.min(at.end, at.node.length));
+    const se=getSelection(); se.removeAllRanges(); se.addRange(rg); document.execCommand("insertText", false, "@"+n+"\u00A0"); close(); onChange&&onChange(); };
+  ed.addEventListener("compositionend",()=>setTimeout(()=>{ check(); if(pending && box && items.length) pick(items[idx]); pending=false; },0));
+  const check=()=>{
+    const se=getSelection(); if(!se.rangeCount || !se.isCollapsed){ close(); return; }
+    let node=se.anchorNode, off=se.anchorOffset;
+    if(node && node.nodeType===1){ const prev=node.childNodes[off-1]; if(prev && prev.nodeType===3){ node=prev; off=prev.length; } }
+    if(!node || node.nodeType!==3 || !ed.contains(node) || node.parentElement.closest(".gim,figcaption")){ close(); return; }
+    const before=node.data.slice(0,off), mt=before.match(/(?:^|[\s (\[“"'])@([^\n@ ]{0,20})$/);
+    if(!mt){ close(); return; }
+    const q=mt[1].toLowerCase(); items=names().filter(n=>n.toLowerCase().includes(q)).slice(0,8); idx=0;
+    if(!items.length && /\s/.test(q)){ close(); return; }
+    at={node, start:off-mt[1].length-1, end:off};
+    if(!box){ box=document.createElement("div"); box.className="mbox"; box.style.position="fixed"; box.setAttribute("role","listbox"); document.body.appendChild(box);
+      box.addEventListener("mousedown",e=>{ const b=e.target.closest("[data-mi]"); if(b){ e.preventDefault(); pick(items[+b.dataset.mi]); } }); }
+    const rc=se.getRangeAt(0).getBoundingClientRect();
+    box.style.left=Math.min(rc.left, innerWidth-330)+"px"; box.style.top=(rc.bottom+6)+"px";
+    box.innerHTML = items.length ? items.map((n,i)=>`<button type="button" role="option" data-mi="${i}" class="${i===idx?"on":""}">${esc(n)}</button>`).join("")
+      : `<div class="mnone">${fv("f_game").trim()?`${esc(fv("f_game").trim())}에 맞는 시스템이 없어요`:"게임을 먼저 골라 주세요"}</div>`;
+  };
+  ed.addEventListener("keyup",e=>{ if(["ArrowDown","ArrowUp","Enter","Tab","Escape"].includes(e.key) && box) return; check(); });
+  ed.addEventListener("input",()=>check());
+  ed.addEventListener("keydown",e=>{
+    if(!box) return;
+    const redraw=()=>box.querySelectorAll("[data-mi]").forEach((b,i)=>b.classList.toggle("on",i===idx));
+    if(e.key==="ArrowDown"&&items.length){ e.preventDefault(); idx=(idx+1)%items.length; redraw(); }
+    else if(e.key==="ArrowUp"&&items.length){ e.preventDefault(); idx=(idx-1+items.length)%items.length; redraw(); }
+    else if((e.key==="Enter"||e.key==="Tab")&&items.length){ if(e.isComposing||e.keyCode===229){ pending=true; return; } e.preventDefault(); e.stopPropagation(); pick(items[idx]); }
+    else if(e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); close(); }
+  }, true);
+  ed.addEventListener("blur",()=>setTimeout(()=>{ if(document.activeElement!==ed) close(); },150));
 }
 /* =====================================================================
    아이디어 보드: 전반적인 연출·느낌을 살릴 큰 이미지 (분류: 개별 패턴 / 이미지)
@@ -2889,7 +3190,8 @@ function formSnapshot(m){
     link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null,
     variants: $("#varEdit") ? cleanVars() : (m?.variants||[]) };
 }
-function closeForm(){ acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
+let closeGuard=null;
+function closeForm(force){ if(force!==true && closeGuard && !closeGuard()) return; closeGuard=null; acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
 document.addEventListener("paste", e=>{
   if ($("#scrim").hidden || !$("#fThumb")) return;
   const f=[...(e.clipboardData?.files||[])].find(f=>/^(image|video)\//.test(f.type));
