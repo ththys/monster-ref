@@ -239,6 +239,17 @@ def main():
         check("게임 정리: 시스템 다시 연결", pg.locator(".gpbody .doc .mention").count() == 1)
         pg.click("#gClose"); pg.wait_for_timeout(100)
 
+        # 7-3) 홈: 주소만 치면 홈, 숫자·최근 추가, 전체 검색 → 누르면 열림
+        pg.goto(url); pg.wait_for_timeout(400)
+        home_ok = pg.locator(".home").count() == 1 and pg.locator(".hstat").count() == 5 and pg.locator(".hgrid .hitem").count() >= 5
+        pg.fill("#hq", "패링"); pg.wait_for_timeout(150)
+        secs = pg.locator("#hres .hsec h3").all_inner_texts()
+        pg.locator("#hres .hitem", has_text="강공 패링").first.click(); pg.wait_for_timeout(200)
+        check("홈: 한눈에 보기·전체 검색", home_ok and any("시스템" in x for x in secs) and any("게임 정리" in x for x in secs)
+              and "강공 패링" in pg.inner_text("#scrim"), str(secs))
+        pg.keyboard.press("Escape"); pg.wait_for_timeout(100)
+        if pg.is_visible("#scrim"): pg.click("#gClose")
+
         # 8) 새로고침 후 유지
         pg.reload(); pg.wait_for_timeout(500); pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         check("새로고침 후 데이터 유지", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)

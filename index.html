@@ -472,6 +472,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .pubchip{border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--hover);color:var(--muted)}
 .pubchip.on{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
 .v-port .rail,.v-port .searchbar,.v-port #active,.v-port #addBtn{display:none!important}
+.v-home .rail,.v-home .searchbar,.v-home #active,.v-home #addBtn{display:none!important}
 .field textarea{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 10px;width:100%;min-height:110px;resize:vertical;line-height:1.6}
 .field .chk{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500;padding:8px 0}
 /* 상단 탭 *//* 상단 탭 */
@@ -529,6 +530,37 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .ac button mark{background:transparent;color:var(--accent);font-weight:700}
 .ac button .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .ac .hint{font-size:11px;color:var(--muted);padding:4px 10px 2px}
+/* 홈 */
+.tabs a.navhome{font-size:14px;color:var(--ink)}
+.home,#hbody,#hres{display:flex;flex-direction:column;gap:20px}
+#hbody[hidden],#hres:empty{display:none}
+.hhead h2{margin:0;font-size:22px;letter-spacing:-.01em}
+.hhead p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.hsearch{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted)}
+.hsearch input{flex:1;border:0;background:none;font-size:15.5px;color:var(--ink);outline:none;min-width:0}
+.hsearch:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+.hstats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.hstat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:2px;transition:border-color .12s}
+.hstat:hover{border-color:var(--accent)}
+.hstat b{font-size:24px;font-variant-numeric:tabular-nums} .hstat span{font-size:12.5px;color:var(--muted)}
+.hsec h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px}
+.hsec h3 span{color:var(--muted);font-weight:500;font-size:13px}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.hitem{display:grid;grid-template-columns:72px 1fr;gap:10px;align-items:center;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;cursor:pointer;color:var(--ink);font:inherit;transition:border-color .12s}
+.hitem:hover,.hitem:focus-visible{border-color:var(--accent);outline:none}
+.hth{width:72px;height:54px;border-radius:7px;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.hth img,.hth video{width:100%;height:100%;object-fit:cover;display:block}
+.hini{font-size:20px;font-weight:700;color:var(--muted);opacity:.6}
+.htx{display:flex;flex-direction:column;gap:3px;min-width:0}
+.htx .tag{align-self:flex-start;font-size:10.5px;padding:1px 7px}
+.htx b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.htx small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hinsp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.hins{aspect-ratio:4/3;border:0;padding:0;border-radius:10px;overflow:hidden;cursor:zoom-in;background:var(--bg)}
+.hins img,.hins video{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
+.hins:hover img,.hins:hover video{transform:scale(1.04)}
+.hnone{color:var(--muted);font-size:14px;margin:0}
+@media (max-width:860px){ .hstats{grid-template-columns:repeat(3,1fr)} .hinsp{grid-template-columns:repeat(2,1fr)} }
 /* 게임 정리: 블로그 글 보기 */
 .modal.gpost{width:min(900px,100%);padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
 .gpost>header{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line)}
@@ -700,6 +732,7 @@ span.mention{color:var(--t-sys);font-weight:600}
   <div class="main">
     <aside class="side">
       <nav class="tabs" aria-label="보기">
+        <a href="#home" data-view="home" class="navhome"><span>홈</span></a>
         <button type="button" class="navh navtog" data-grp="mon" aria-expanded="false" aria-controls="navg-mon"><span>몬스터 레퍼런스</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navg-mon" class="navgrp" hidden>
         <a href="#monsters" data-view="monsters"><span>몬스터</span><span class="n" id="nMon"></span></a>
@@ -1148,7 +1181,9 @@ function render(){
   const pa=$("#portAdmin"), isDoc = sub==="portfolio"||sub==="works"; document.body.classList.toggle("v-port", isDoc);
   if (isDoc){ tb.hidden=true; pa.hidden=false; renderPortAdmin(sub==="works"?"port":"about"); return; }
   pa.hidden=true;
+  document.body.classList.toggle("v-home", sub==="home");
   if (!loaded) return;
+  if (sub==="home"){ if(io) io.disconnect(); renderHome(); return; }
   if (sub==="board"){ if(io) io.disconnect(); renderIdeas(list); return; }
   if (sub==="games"){ if(io) io.disconnect(); renderGames(list); return; }
   if ((sub==="tree"||sub==="treeall") && monsters.length){
@@ -1216,11 +1251,12 @@ const VIEWMAP={
   "ideas":         {kind:"idea", sub:"board"},
   "ideas-pattern": {kind:"idea", sub:"board", type:"pattern"},
   "ideas-image":   {kind:"idea", sub:"board", type:"image"},
+  "home":       {kind:null,      sub:"home"},
   "portfolio":  {kind:null,      sub:"portfolio"},
   "works":      {kind:null,      sub:"works"},
 };
 const VIEWS=Object.keys(VIEWMAP);
-let view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "monsters";
+let view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home";
 let sub = VIEWMAP[view].sub;
 function setView(v){
   const prevKind=kind;
@@ -2348,6 +2384,66 @@ function openForm(m, copyFrom, opts){
   if(SYS) wireVars();
   $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m, v); };
 }
+/* =====================================================================
+   홈: 한눈에 보기 + 전체 검색 + 최근 추가 + 영감
+   ===================================================================== */
+const HK={monster:{l:"몬스터",h:"#monsters",c:"c-game"}, pc:{l:"PC",h:"#pc",c:"c-pc"}, system:{l:"시스템",h:"#sysref",c:"c-sys"}, game:{l:"게임 정리",h:"#games",c:"c-ver"}, idea:{l:"아이디어",h:"#ideas",c:"c-theme"}};
+let homeQ="", homeSeed=Math.random();
+const homeRefs = () => allRefs.filter(m=>HK[kindOf(m)]);
+function homeThumb(m){
+  const fi=(m.media||m.image)?m:(kindOf(m)==="game"?gameBlocks(m).find(b=>b.media||b.image):null);
+  return fi?mediaHTML({media:fi.media,image:fi.image},640):`<span class="hini">${esc(((m.name||m.game||"?")+"").slice(0,1))}</span>`;
+}
+function homeItem(m){
+  const k=kindOf(m), t=k==="game"?m.game:(m.name||(k==="idea"?ITYPES[ideaTypeOf(m)]:""));
+  const subl = k==="game" ? (m.oneLine||"").replace(/@(?=\S)/g,"") : [m.game, k==="system"&&(m.parents||[]).length?"↳ "+m.parents.join(" + "):""].filter(Boolean).join(" · ");
+  return `<button type="button" class="hitem" data-hopen="${esc(m.id)}"><div class="hth">${homeThumb(m)}</div>
+    <div class="htx"><span class="tag ${HK[k].c}">${HK[k].l}</span><b>${esc(t||"제목 없음")}</b>${subl?`<small>${esc(subl)}</small>`:""}</div></button>`;
+}
+function homeSearch(q){
+  const ws=q.toLowerCase().split(/\s+/).filter(Boolean); if(!ws.length) return [];
+  return homeRefs().filter(m=>{ const h=haystack(m)+" "+(m.blocks||[]).map(b=>b.caption||"").join(" ").toLowerCase(); return ws.every(w=>h.includes(w)); })
+    .sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
+}
+function homeResultsHTML(){
+  if(!homeQ.trim()) return "";
+  const rs=homeSearch(homeQ);
+  if(!rs.length) return `<p class="hnone">‘${esc(homeQ)}’에 맞는 레퍼런스가 없어요</p>`;
+  const by=Object.keys(HK).map(k=>[k,rs.filter(m=>kindOf(m)===k)]).filter(x=>x[1].length);
+  return by.map(([k,l])=>`<section class="hsec"><h3>${HK[k].l} <span>${l.length}</span></h3><div class="hgrid">${l.slice(0,12).map(homeItem).join("")}</div></section>`).join("");
+}
+function renderHome(){
+  const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
+  const all=homeRefs(), cnt=k=>all.filter(m=>kindOf(m)===k).length;
+  const games=new Set(all.map(m=>(m.game||"").trim()).filter(Boolean));
+  $("#count").textContent="";
+  const recent=[...all].sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0)).slice(0,12);
+  const ideas=all.filter(m=>kindOf(m)==="idea" && (m.media||m.image));
+  let x=homeSeed; const rnd=()=>{ x=(x*9301+49297)%233280; return x/233280; };
+  const pick=[...ideas].map(m=>[rnd(),m]).sort((a,b)=>a[0]-b[0]).slice(0,8).map(a=>a[1]);
+  gb.innerHTML=`<div class="home">
+    <div class="hhead"><h2>레퍼런스 아카이브</h2><p>레퍼런스 ${all.length}개 · 게임 ${games.size}개</p></div>
+    <label class="hsearch" for="hq"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input id="hq" type="search" value="${esc(homeQ)}" placeholder="몬스터·PC·시스템·게임 정리·아이디어를 한 번에 검색 — 띄어쓰기로 여러 단어" autocomplete="off"></label>
+    <div id="hres">${homeResultsHTML()}</div>
+    <div id="hbody" ${homeQ.trim()?"hidden":""}>
+      <div class="hstats">${Object.entries(HK).map(([k,v])=>`<a href="${v.h}" class="hstat"><b>${cnt(k)}</b><span>${v.l}</span></a>`).join("")}</div>
+      ${recent.length?`<section class="hsec"><h3>최근 추가·수정</h3><div class="hgrid">${recent.map(homeItem).join("")}</div></section>`
+        :`<div class="iempty"><strong>아직 레퍼런스가 없어요</strong><span>왼쪽 메뉴에서 몬스터·시스템·아이디어 등을 골라 추가해 보세요.</span></div>`}
+      ${pick.length?`<section class="hsec"><h3>영감 <button type="button" class="btn sm" id="hShuffle">다른 것 보기</button></h3><div class="hinsp">${pick.map(m=>`<button type="button" class="hins" data-hopen="${esc(m.id)}" aria-label="${esc(m.name||"아이디어")} 크게 보기">${mediaHTML(m,640)}</button>`).join("")}</div></section>`:""}
+    </div></div>`;
+  wireVideos(gb);
+  const hq=$("#hq");
+  hq.oninput=()=>{ homeQ=hq.value; $("#hres").innerHTML=homeResultsHTML(); $("#hbody").hidden=!!homeQ.trim(); wireVideos($("#hres")); };
+  const sh=$("#hShuffle"); if(sh) sh.onclick=()=>{ homeSeed=Math.random(); renderHome(); };
+}
+function homeOpen(m){
+  const k=kindOf(m);
+  if(k==="game") return openGameNote(m);
+  if(k==="idea"){ ideaList=allRefs.filter(x=>kindOf(x)==="idea"&&(x.media||x.image)); return ideaLB(m.id); }
+  openGuide(m);
+}
+$("#groupbox").addEventListener("click",e=>{ const b=e.target.closest("[data-hopen]"); if(!b) return; const m=allRefs.find(x=>x.id===b.dataset.hopen); if(m) homeOpen(m); });
 /* =====================================================================
    게임 정리: 게임마다 한 줄 소감 + 전반적인 정리. 글에서 @로 그 게임의 시스템을 골라 연결
    ===================================================================== */
