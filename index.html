@@ -529,6 +529,23 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .ac button mark{background:transparent;color:var(--accent);font-weight:700}
 .ac button .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .ac .hint{font-size:11px;color:var(--muted);padding:4px 10px 2px}
+/* 게임 정리: 블로그 글 보기 */
+.modal.gpost{width:min(900px,100%);padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
+.gpost>header{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line)}
+.gpkind{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.gpscroll{overflow:auto;flex:1}
+.gphero{background:var(--bg);max-height:420px;overflow:hidden;display:flex;justify-content:center}
+.gphero img,.gphero video{width:100%;max-height:420px;object-fit:cover;display:block}
+.gpbody{max-width:720px;margin:0 auto;padding:28px 24px 36px;display:flex;flex-direction:column;gap:14px}
+.gpbody h1{margin:0;font-size:30px;letter-spacing:-.02em;line-height:1.25}
+.gplead{margin:0;font-size:18px;line-height:1.6;color:var(--ink);font-weight:500;padding-left:14px;border-left:3px solid var(--accent)}
+.gpmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--muted);padding-bottom:14px;border-bottom:1px solid var(--line)}
+.gpbody .doc{max-width:none;font-size:16px;line-height:1.95}
+.gpbody .doc h3{font-size:21px;margin-top:22px}
+.gpside{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.gpside .gnbar{padding:0}
+.gpone{font-size:16px!important;font-weight:500}
+@media (max-width:560px){ .gpbody{padding:20px 16px 28px} .gpbody h1{font-size:24px} .gplead{font-size:16px} }
 /* 게임 정리 */
 .gnotes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .gncard{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s}
@@ -2366,6 +2383,15 @@ function linkAll(text, g){
   const out=text.replace(new RegExp("(@)?("+names.map(reEsc).join("|")+")","g"),(all,at,name)=>{ if(at) return all; n++; return "@"+name; });
   return {text:out, n};
 }
+/* 블로그처럼: 글·이미지 블록 (예전에 guide만 있던 정리는 글 블록 하나로) */
+const gameBlocks = m => Array.isArray(m.blocks)&&m.blocks.length ? m.blocks : ((m.guide||"").trim() ? [{t:"text",text:m.guide}] : []);
+function gameDocHTML(m){
+  return gameBlocks(m).map(b=>{
+    if(b.t==="text") return mentionHTML(aboutHTML(b.text), m.game);
+    if(b.media||b.image) return `<figure>${mediaHTML({media:b.media,image:b.image},1600)}${b.caption?`<figcaption>${mentionHTML(esc(b.caption), m.game, true)}</figcaption>`:""}</figure>`;
+    return "";
+  }).join("");
+}
 function renderGames(list){
   const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
   const ed=canEdit(), noted=new Set(monsters.map(m=>m.game));
@@ -2373,7 +2399,7 @@ function renderGames(list){
   $("#count").textContent = `${list.length} / ${monsters.length}건`;
   const cnt=g=>{ const c=gameCounts(g); return [["몬스터",c.monster],["PC",c.pc],["시스템",c.system],["아이디어",c.idea]].filter(x=>x[1]).map(([l,n])=>`${l} ${n}`).join(" · "); };
   const card=m=>`<article class="gncard" data-gnote="${esc(m.id)}" tabindex="0" role="button" aria-label="${esc(m.game)} 정리 보기">
-      <div class="gcover">${(m.media||m.image)?mediaHTML(m,640):`<span>${esc((m.game||"?").slice(0,1))}</span>`}</div>
+      <div class="gcover">${(()=>{ const fi=(m.media||m.image)?m:gameBlocks(m).find(b=>b.media||b.image); return fi?mediaHTML({media:fi.media,image:fi.image},640):`<span>${esc((m.game||"?").slice(0,1))}</span>`; })()}</div>
       <div class="gnbody"><b>${esc(m.game)}</b>${m.oneLine?`<p class="gquote">${mentionHTML(esc(m.oneLine), m.game, true)}</p>`:""}
         ${(m.keywords||[]).length?`<div class="imeta">${m.keywords.map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</div>`:""}
         <span class="gcnt">${cnt(m.game)}</span></div></article>`;
@@ -2399,31 +2425,43 @@ function goGame(v, g){
 }
 document.addEventListener("click",e=>{ const b=e.target.closest("[data-gogame]"); if(!b) return; const i=b.dataset.gogame.indexOf("|"); goGame(b.dataset.gogame.slice(0,i), b.dataset.gogame.slice(i+1)); });
 function openGameNote(m){
-  const sc=$("#scrim"), g=m.game, c=gameCounts(g), ed=canEdit(), has=(m.guide||"").trim();
-  const ment=mentionsIn((m.oneLine||"")+"\n"+(m.guide||""), g), byName=new Map(gameSysRefs(g).map(x=>[x.name,x]));
+  const sc=$("#scrim"), g=m.game, c=gameCounts(g), ed=canEdit(), blocks=gameBlocks(m);
+  const plain=blocks.filter(b=>b.t==="text").map(b=>b.text).join("\n")+"\n"+blocks.map(b=>b.caption||"").join("\n");
+  const ment=mentionsIn((m.oneLine||"")+"\n"+plain, g), byName=new Map(gameSysRefs(g).map(x=>[x.name,x]));
   const go=[["monsters","몬스터",c.monster],["pc","PC",c.pc],["sysref","시스템",c.system],["ideas","아이디어",c.idea]].filter(x=>x[2]);
-  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="gTitle" style="width:min(820px,100%)">
-    <header><h2 id="gTitle">게임 정리 · ${esc(g)}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
-    ${(m.media||m.image)?`<div class="gmedia">${mediaHTML(m,640,true)}</div>`:""}
-    ${m.oneLine?`<p class="gquote big">${mentionHTML(esc(m.oneLine), g)}</p>`:""}
-    <div class="gnbar">${go.length?`<span>이 게임의 레퍼런스</span>${go.map(([v,l,n])=>`<button type="button" class="tag c-game" data-gogame="${v}|${esc(g)}">${l} ${n} →</button>`).join("")}`:""}
-      ${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</div>
-    ${ment.length?`<div class="gnbar"><span>언급한 시스템</span>${ment.map(n=>`<button type="button" class="tag c-sys linked" data-gosys="${esc(byName.get(n).id)}" data-msys="${esc(byName.get(n).id)}">${esc(n)} ↗</button>`).join("")}</div>`:""}
-    <div class="guidedoc"><div class="doc">${has?mentionHTML(aboutHTML(m.guide), g):`<p class="ph-note">아직 정리가 없어요.</p>`}</div></div>
+  const when=m.updatedAt?new Date(m.updatedAt).toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric"}):"";
+  sc.innerHTML=`<div class="modal gpost" role="dialog" aria-modal="true" aria-labelledby="gTitle">
+    <header><span class="gpkind">게임 정리</span><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <div class="gpscroll">
+      ${(m.media||m.image)?`<div class="gphero">${mediaHTML(m,1600,true)}</div>`:""}
+      <article class="gpbody">
+        <h1 id="gTitle">${esc(g)}</h1>
+        ${m.oneLine?`<p class="gplead">${mentionHTML(esc(m.oneLine), g)}</p>`:""}
+        <div class="gpmeta">${when?`<span>${esc(when)}</span>`:""}${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</div>
+        <div class="doc">${blocks.length?gameDocHTML(m):`<p class="ph-note">아직 본문이 없어요.</p>`}</div>
+        ${ment.length||go.length?`<aside class="gpside">
+          ${ment.length?`<div class="gnbar"><span>언급한 시스템</span>${ment.map(n=>`<button type="button" class="tag c-sys linked" data-gosys="${esc(byName.get(n).id)}" data-msys="${esc(byName.get(n).id)}">${esc(n)} ↗</button>`).join("")}</div>`:""}
+          ${go.length?`<div class="gnbar"><span>이 게임의 레퍼런스</span>${go.map(([v,l,n])=>`<button type="button" class="tag c-game" data-gogame="${v}|${esc(g)}">${l} ${n} →</button>`).join("")}</div>`:""}
+        </aside>`:""}
+      </article>
+    </div>
     <div class="foot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px;border-top:1px solid var(--line)">
       ${m.link?`<a class="btn" href="${esc(m.link)}" target="_blank" rel="noopener" style="margin-right:auto">링크 열기</a>`:""}
       ${ed?`<button type="button" class="btn" id="gRelink" title="글 속 시스템 이름을 찾아 한 번에 연결">시스템 다시 연결</button><button type="button" class="btn" id="gDel">삭제</button><button type="button" class="btn" id="gEdit">편집</button>`:""}<button type="button" class="btn primary" id="gClose">닫기</button></div></div>`;
   sc.hidden=false; wireVideos(sc);
+  sc.querySelectorAll(".gphero video,.doc video").forEach(v=>{ if(v.dataset.src&&!v.src) v.src=v.dataset.src; v.muted=true; v.play().catch(()=>{}); });
   $("#fClose").onclick=$("#gClose").onclick=closeForm;
   sc.onclick=ev=>{ if(ev.target===sc) closeForm(); };
   if(ed){
     $("#gEdit").onclick=()=>{ closeForm(); openGameForm(m); };
     $("#gDel").onclick=()=>{ closeForm(); confirmDelete(m.id); };
     $("#gRelink").onclick=async()=>{
-      const a=linkAll(m.oneLine||"", g), b=linkAll(m.guide||"", g);
-      if(!a.n && !b.n){ toast(gameSysRefs(g).length?"새로 연결할 시스템 이름이 없어요":`${g}에 등록된 시스템이 아직 없어요`); return; }
-      try{ await store.update(m.id,{oneLine:a.text, guide:b.text, mentions:mentionsIn(a.text+"\n"+b.text, g), updatedAt:Date.now()});
-        toast(`시스템 ${a.n+b.n}곳을 연결했어요`); const nm=allRefs.find(x=>x.id===m.id); if(nm) openGameNote(nm); }
+      const a=linkAll(m.oneLine||"", g); let n=a.n;
+      const nb=gameBlocks(m).map(b=>{ if(b.t==="text"){ const x=linkAll(b.text,g); n+=x.n; return {...b,text:x.text}; } return b; });
+      if(!n){ toast(gameSysRefs(g).length?"새로 연결할 시스템 이름이 없어요":`${g}에 등록된 시스템이 아직 없어요`); return; }
+      const guide=nb.filter(b=>b.t==="text").map(b=>b.text).join("\n\n");
+      try{ await store.update(m.id,{oneLine:a.text, blocks:nb, guide, mentions:mentionsIn(a.text+"\n"+guide, g), updatedAt:Date.now()});
+        toast(`시스템 ${n}곳을 연결했어요`); const nm=allRefs.find(x=>x.id===m.id); if(nm) openGameNote(nm); }
       catch(ex){ toast(errMsg(ex)); }
     };
   }
@@ -2494,48 +2532,57 @@ function openGameForm(m, presetGame){
   hidePop(true);
   const v=m||{};
   formImage = v.image||null; formMedia = v.media||null; uploading=false;
+  edBlocks = (m?gameBlocks(m):[]).map(b=>({...b})); if(!edBlocks.length) edBlocks=[{t:"text",text:""}];
+  edPh = "## 좋았던 점\n@ 를 치면 이 게임의 시스템을 골라 넣을 수 있어요";
+  edAfter = L => L.querySelectorAll("textarea[data-k]").forEach(wireMention);
   const sc=$("#scrim");
-  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle" style="width:min(900px,100%)">
     <header><h2 id="fTitle">게임 정리 ${m?"편집":"쓰기"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <form id="form" novalidate>
-      <div class="field full"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v.game||presetGame||"")}<small id="f_gDup" class="dupwarn" hidden></small></div>
-      <div class="field full"><label for="f_oneLine">한 줄 소감</label><input id="f_oneLine" type="text" value="${esc(v.oneLine)}" placeholder="예) 패링 하나로 끝까지 끌고 가는 손맛" autocomplete="off"></div>
-      ${mediaFieldHTML("대표 이미지")}
-      <div class="field full"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc((v.keywords||[]).join(" / "))}" placeholder="소울라이크 / 패링 / 보스 러시"><small>/ 로 구분</small></div>
+      <div class="field"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v.game||presetGame||"")}<small id="f_gDup" class="dupwarn" hidden></small></div>
+      <div class="field"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc((v.keywords||[]).join(" / "))}" placeholder="소울라이크 / 패링 / 보스 러시"></div>
+      <div class="field full"><label for="f_oneLine">한 줄 소감 <small style="font-weight:400">· 글 제목 아래 크게 보여요</small></label><input id="f_oneLine" type="text" class="gpone" value="${esc(v.oneLine)}" placeholder="예) 패링 하나로 끝까지 끌고 가는 손맛" autocomplete="off"></div>
+      ${mediaFieldHTML("대표 이미지 (맨 위 큰 사진)")}
+      <div class="field full"><label>본문</label>
+        <p class="edhint" style="margin:0 0 4px">블로그처럼 글과 이미지를 번갈아 쓰세요 · <b>## 제목</b> 줄은 소제목 · 이미지는 블록 사이 <b>+ 이미지·움짤</b>, 또는 글 칸에 붙여 넣기·끌어 놓기 · <b>@</b>로 시스템 언급 · 먼저 다 썼다면 <button type="button" class="btn sm" id="fLinkAll">시스템 한 번에 연결</button></p>
+        <div class="ed" id="edList"></div>
+        <input id="edFile" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm" hidden></div>
       <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v.link)}" placeholder="https://"></div>
-      <div class="field full"><label for="f_guide">전반적인 정리</label><textarea id="f_guide" style="min-height:200px" placeholder="## 좋았던 점&#10;@패링 의 타이밍이 넉넉해서…&#10;&#10;## 아쉬운 점&#10;…">${esc(v.guide||"")}</textarea>
-        <small><b>@</b>를 치면 이 게임의 시스템을 골라 넣을 수 있어요 · 먼저 다 적었다면 <button type="button" class="btn sm" id="fLinkAll">시스템 한 번에 연결</button> · ‘## 제목’ 줄은 소제목</small></div>
       <div class="err" id="fErr" hidden></div>
-      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
+      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"올리기"}</button></div>
     </form></div>`;
   sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireMediaField();
-  wireMention($("#f_oneLine")); wireMention($("#f_guide"));
+  drawEd(); wireEdList(); wireMention($("#f_oneLine"));
   const dupChk=()=>{ const g=fv("f_game").trim(), d=g&&allRefs.find(x=>kindOf(x)==="game"&&x.game===g&&(!m||x.id!==m.id)), w=$("#f_gDup");
     w.hidden=!d; if(d) w.textContent=`${g} 정리가 이미 있어요. 게임마다 하나만 둘 수 있어요.`; return !!d; };
   $("#f_game").addEventListener("input",dupChk); const gs=$("#f_gameSel"); if(gs) gs.addEventListener("change",()=>setTimeout(dupChk)); dupChk();
   $("#fLinkAll").onclick=()=>{
     const g=fv("f_game").trim(); if(!g){ toast("게임을 먼저 골라 주세요"); return; }
     if(!gameSysRefs(g).length){ toast(`${g}에 등록된 시스템이 아직 없어요`); return; }
-    const a=linkAll($("#f_oneLine").value, g), b=linkAll($("#f_guide").value, g);
-    $("#f_oneLine").value=a.text; $("#f_guide").value=b.text;
-    toast(a.n+b.n ? `시스템 ${a.n+b.n}곳을 연결했어요` : "새로 연결할 시스템 이름이 없어요");
+    syncEd(); let n=0;
+    const a=linkAll($("#f_oneLine").value, g); $("#f_oneLine").value=a.text; n+=a.n;
+    edBlocks.forEach(b=>{ if(b.t==="text"){ const x=linkAll(b.text||"", g); b.text=x.text; n+=x.n; } });
+    drawEd(); toast(n ? `시스템 ${n}곳을 연결했어요` : "새로 연결할 시스템 이름이 없어요");
   };
-  $("#fClose").onclick=$("#fCancel").onclick=closeForm;
-  sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  const close=()=>{ edAfter=null; edPh=null; closeForm(); };
+  $("#fClose").onclick=$("#fCancel").onclick=close;
+  sc.onclick=e=>{ if(e.target===sc) close(); };
   $("#form").onsubmit=async e=>{
-    e.preventDefault();
+    e.preventDefault(); syncEd();
     const err=$("#fErr"), g=fv("f_game").trim();
-    if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
+    if(uploading || edBlocks.some(b=>b.busy)){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
     if(!g){ err.hidden=false; err.textContent="게임 이름을 골라 주세요."; return; }
     if(dupChk()){ err.hidden=false; err.textContent=`${g} 정리가 이미 있어요. 그 정리를 편집해 주세요.`; return; }
-    const oneLine=fv("f_oneLine").trim(), guide=fv("f_guide");
-    const data={ kind:"game", game:g, name:g, oneLine, guide, keywords:splitTags(fv("f_keywords")), link:fv("f_link").trim(),
+    const blocks=edBlocks.filter(b=> b.t==="text" ? (b.text||"").trim() : (b.media||b.image))
+      .map(b=> b.t==="text" ? {t:"text",text:b.text} : {t:"media",media:b.media||null,image:b.image||"",caption:(b.caption||"").trim()});
+    const oneLine=fv("f_oneLine").trim(), guide=blocks.filter(b=>b.t==="text").map(b=>b.text).join("\n\n");
+    const data={ kind:"game", game:g, name:g, oneLine, guide, blocks, keywords:splitTags(fv("f_keywords")), link:fv("f_link").trim(),
       mentions:mentionsIn(oneLine+"\n"+guide, g), image:formImage||"", media:formMedia||null, updatedAt:Date.now() };
     const b=$("#fSave"); b.disabled=true;
     try{
       if(m) await store.set(m.id,{...data, createdAt:m.createdAt||Date.now()});
       else await store.add({...data, createdAt:Date.now()});
-      closeForm(); toast(m?"저장했어요":"추가했어요");
+      close(); toast(m?"저장했어요":"올렸어요");
     }catch(ex){ b.disabled=false; err.hidden=false; err.textContent=errMsg(ex); }
   };
   (v.game||presetGame ? $("#f_oneLine") : $("#f_gameSel")||$("#f_game")).focus();
@@ -3272,10 +3319,24 @@ function openAboutForm(key){
       <div class="err" id="fErr" hidden></div>
       <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">저장</button></div>
     </form></div>`;
+  edPh=null; edAfter=null;
   sc.hidden=false; drawEd();
   const first=$("#edList textarea"); if(first) first.focus();
   $("#fClose").onclick=$("#fCancel").onclick=closeForm;
   sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  wireEdList();
+  $("#aform").onsubmit=async e=>{
+    e.preventDefault(); syncEd();
+    if(edBlocks.some(b=>b.busy)){ $("#fErr").hidden=false; $("#fErr").textContent="업로드가 끝나면 저장할 수 있어요."; return; }
+    const blocks=edBlocks.filter(b=> b.t==="text" ? (b.text||"").trim() : (b.media||b.image))
+      .map(b=> b.t==="text" ? {t:"text",text:b.text} : {t:"media",media:b.media||null,image:b.image||"",caption:(b.caption||"").trim()});
+    const plain=blocks.filter(b=>b.t==="text").map(b=>b.text).join("\n\n");
+    const btn=$("#fSave"); btn.disabled=true;
+    try{ await wstore.saveProfile({ ...profile, [D.blocks]:blocks, [D.plain]:plain, updatedAt:Date.now() }); closeForm(); toast("저장했어요"); }
+    catch(ex){ btn.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); }
+  };
+}
+function wireEdList(){
   let insAt=edBlocks.length;
   $("#edList").onclick=e=>{
     const t=e.target.closest("[data-ins],[data-em],[data-edel]"); if(!t) return;
@@ -3298,17 +3359,8 @@ function openAboutForm(key){
     e.preventDefault(); syncEd();
     const eb=e.target.closest(".eb"); edInsertFiles(f, eb? +eb.dataset.k+1 : edBlocks.length);
   });
-  $("#aform").onsubmit=async e=>{
-    e.preventDefault(); syncEd();
-    if(edBlocks.some(b=>b.busy)){ $("#fErr").hidden=false; $("#fErr").textContent="업로드가 끝나면 저장할 수 있어요."; return; }
-    const blocks=edBlocks.filter(b=> b.t==="text" ? (b.text||"").trim() : (b.media||b.image))
-      .map(b=> b.t==="text" ? {t:"text",text:b.text} : {t:"media",media:b.media||null,image:b.image||"",caption:(b.caption||"").trim()});
-    const plain=blocks.filter(b=>b.t==="text").map(b=>b.text).join("\n\n");
-    const btn=$("#fSave"); btn.disabled=true;
-    try{ await wstore.saveProfile({ ...profile, [D.blocks]:blocks, [D.plain]:plain, updatedAt:Date.now() }); closeForm(); toast("저장했어요"); }
-    catch(ex){ btn.disabled=false; $("#fErr").hidden=false; $("#fErr").textContent=errMsg(ex); }
-  };
 }
+let edPh=null, edAfter=null;
 function syncEd(){
   document.querySelectorAll("#edList [data-k]").forEach(el=>{
     const k=+el.dataset.k; if(!edBlocks[k]) return;
@@ -3322,13 +3374,14 @@ function drawEd(){
   const ins=k=>`<div class="ins"><button type="button" data-ins="${k}|text">+ 글</button><button type="button" data-ins="${k}|img">+ 이미지·움짤</button></div>`;
   L.innerHTML = ins(0) + edBlocks.map((b,k)=>`<div class="eb" data-k="${k}">
       ${b.t==="text"
-        ? `<textarea data-k="${k}" placeholder="${k===0?"## 지원 동기\n전투 기획에 관심을 갖게 된 계기…":"이어서 쓰기…"}" aria-label="글 ${k+1}">${esc(b.text||"")}</textarea>`
+        ? `<textarea data-k="${k}" placeholder="${k===0?(edPh||"## 지원 동기\n전투 기획에 관심을 갖게 된 계기…"):"이어서 쓰기…"}" aria-label="글 ${k+1}">${esc(b.text||"")}</textarea>`
         : `<div class="ebm"><div class="pic">${b.busy?`<span>${esc(b.busy)}</span>`:mediaHTML({media:b.media,image:b.image},960)}</div><input data-k="${k}" type="text" value="${esc(b.caption||"")}" placeholder="이미지 설명 (선택)" aria-label="이미지 설명"></div>`}
       <div class="ops"><button type="button" class="iconbtn" data-em="${k}|-1" ${k?"":"disabled"} aria-label="위로">↑</button><button type="button" class="iconbtn" data-em="${k}|1" ${k<edBlocks.length-1?"":"disabled"} aria-label="아래로">↓</button><button type="button" class="iconbtn" data-edel="${k}" aria-label="삭제">✕</button></div>
     </div>${ins(k+1)}`).join("");
   L.querySelectorAll("textarea").forEach(ta=>{ autoGrow(ta); ta.addEventListener("input",()=>autoGrow(ta)); });
   L.querySelectorAll("video").forEach(v=>{ if(v.dataset.src) v.src=v.dataset.src; v.muted=true; const p=v.play(); if(p) p.catch(()=>{}); });
   const sv=$("#fSave"); if(sv) sv.disabled=edBlocks.some(b=>b.busy);
+  if(edAfter) edAfter(L);
 }
 async function edInsertFiles(files, at){
   const slots=files.filter(f=>/^(image|video)\//.test(f.type)).map(f=>({f, b:{t:"media",busy:"올리는 중",caption:""}}));
