@@ -210,6 +210,32 @@ def main():
         check("아이디어: 크게 보기·넘기기", pg.is_visible(".ilb") and first == "1 / 2" and second == "2 / 2", f"{first}->{second}")
         pg.keyboard.press("Escape"); pg.wait_for_timeout(100)
 
+        # 7-2) 게임 정리: 정리 없는 게임 카드 → 쓰기, @로 시스템 고르기, 한 번에 연결, 정보 카드, 다시 연결
+        pg.goto(url + "#games"); pg.wait_for_timeout(300)
+        pg.locator('[data-gnew="테스트 게임"]').click(); pg.wait_for_timeout(150)
+        game_ok = pg.input_value("#f_game") == "테스트 게임"
+        pg.fill("#f_oneLine", "패링 손맛이 좋은 게임")
+        pg.click("#f_guide"); pg.keyboard.type("@강공"); pg.wait_for_timeout(100)
+        mbox = pg.locator(".mbox button").all_inner_texts()
+        pg.keyboard.press("Enter"); pg.keyboard.type("이 시원하고 패링 타이밍이 넉넉함")
+        pg.click("#fLinkAll"); pg.wait_for_timeout(100)
+        g_txt = pg.input_value("#f_guide"); o_txt = pg.input_value("#f_oneLine")
+        check("게임 정리: @로 시스템 고르기·한 번에 연결", game_ok and mbox == ["강공 패링"]
+              and "@강공 패링 " in g_txt and "@패링 타이밍" in g_txt and o_txt.startswith("@패링"), f"{mbox} | {g_txt} | {o_txt}")
+        pg.click("#fSave"); pg.wait_for_timeout(200)
+        pg.locator(".gncard[data-gnote]").first.click(); pg.wait_for_timeout(200)
+        check("게임 정리: 언급한 시스템 링크", pg.locator(".guidedoc .mention").count() == 2 and pg.locator(".gnbar [data-gosys]").count() == 2)
+        pg.locator(".guidedoc .mention").first.hover(); pg.wait_for_timeout(200)
+        check("게임 정리: 올리면 시스템 정보", pg.locator(".mcard").count() == 1 and "강공 패링" in pg.inner_text(".mcard"))
+        pg.click("#gClose"); pg.wait_for_timeout(100)
+        pg.evaluate("""()=>{ const k='monster-ref-v1', d=JSON.parse(localStorage.getItem(k));
+            d.forEach(m=>{ if(m.kind==='game') m.guide='나중에 쓴 글: 패링 좋음'; }); localStorage.setItem(k, JSON.stringify(d)); }""")
+        pg.reload(); pg.wait_for_timeout(500)
+        pg.locator(".gncard[data-gnote]").first.click(); pg.wait_for_timeout(150)
+        pg.click("#gRelink"); pg.wait_for_timeout(300)
+        check("게임 정리: 시스템 다시 연결", pg.locator(".guidedoc .mention").count() == 1)
+        pg.click("#gClose"); pg.wait_for_timeout(100)
+
         # 8) 새로고침 후 유지
         pg.reload(); pg.wait_for_timeout(500); pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         check("새로고침 후 데이터 유지", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)

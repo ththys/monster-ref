@@ -527,6 +527,36 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .ac button mark{background:transparent;color:var(--accent);font-weight:700}
 .ac button .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .ac .hint{font-size:11px;color:var(--muted);padding:4px 10px 2px}
+/* 게임 정리 */
+.gnotes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.gncard{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s}
+.gncard:hover,.gncard:focus-visible{transform:translateY(-2px);box-shadow:var(--shadow);outline:none}
+.gncard.gnone{border-style:dashed;background:transparent}
+.gncard.gnone:not([data-gnew]){cursor:default}
+.gcover{aspect-ratio:16/9;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.gcover img,.gcover video{width:100%;height:100%;object-fit:cover;display:block}
+.gcover span{font-size:40px;font-weight:700;color:var(--muted);opacity:.5}
+.gnbody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.gnbody b{font-size:15px}
+.gquote{margin:0;font-size:13px;line-height:1.5;color:var(--ink)}
+.gquote.big{margin:14px 22px 0;font-size:16px;font-weight:500;padding-left:12px;border-left:3px solid var(--accent)}
+.gcnt{font-size:11.5px;color:var(--muted)}
+.gnbar{padding:10px 22px 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.gnbar>span:first-child{color:var(--muted);margin-right:2px}
+span.mention{color:var(--t-sys);font-weight:600}
+.doc .mention{vertical-align:baseline;font-size:.92em}
+.mcard{position:fixed;z-index:95;width:300px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:hidden;font-size:12.5px;line-height:1.5}
+.mcmed{background:var(--bg);height:150px;display:flex;justify-content:center;overflow:hidden}
+.mcmed img,.mcmed video{width:100%;height:150px;object-fit:cover;display:block}
+.mcbody{padding:9px 12px 10px;display:flex;flex-direction:column;gap:5px}
+.mcbody b{font-size:14px} .mcbody small{color:var(--muted)}
+.mcbody p{margin:0;color:var(--ink)} .mcbody .mcnone{color:var(--muted)}
+.mcpar{color:var(--t-sys);font-weight:600} .mcext{color:var(--muted)}
+.mchint{font-size:11px}
+.mbox{position:absolute;z-index:40;min-width:200px;max-width:320px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:4px;display:flex;flex-direction:column}
+.mbox button{border:0;background:none;text-align:left;padding:7px 10px;border-radius:5px;font-size:13px;color:var(--ink);cursor:pointer}
+.mbox button.on,.mbox button:hover{background:var(--hover)}
+.mnone{padding:8px 10px;font-size:12.5px;color:var(--muted)}
 /* 아이디어 보드 */
 .ibar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .iseg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
@@ -667,6 +697,8 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
         <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-tree" data-view="sysref-tree" class="sub"><span>확장 구조</span></a>
         <a href="#sysref-all" data-view="sysref-all" class="sub"><span>톺아보기</span></a>
+        <div class="navh">게임</div>
+        <a href="#games" data-view="games"><span>게임 정리</span><span class="n" id="nGame"></span></a>
         <div class="navh">아이디어</div>
         <a href="#ideas" data-view="ideas"><span>전체</span><span class="n" id="nIdea"></span></a>
         <a href="#ideas-pattern" data-view="ideas-pattern" class="sub"><span>개별 패턴</span><span class="n" id="nIdeaP"></span></a>
@@ -837,11 +869,12 @@ const KINDS = {
   monster:{ label:"몬스터", counter:"대응 PC 도구", counterPh:"엽빛나", namePh:"태초의 악몽", guide:"공략", enPh:"Primordial Nightmare" },
   pc:     { label:"PC",    counter:"대응 몬스터",  counterPh:"태초의 악몽", namePh:"엽빛나", guide:"공략", enPh:"Ye Shunguang" },
   system: { label:"시스템", counter:"대응 항목",   counterPh:"", namePh:"태그 교체", guide:"설명", enPh:"Tag Switch" },
+  game:   { label:"게임 정리", counter:"",         counterPh:"", namePh:"", guide:"정리", enPh:"" },
   idea:   { label:"아이디어", counter:"",         counterPh:"", namePh:"폐허 위 거대한 실루엣", guide:"메모", enPh:"" },
 };
-const kindOf = m => m.kind==="pc" ? "pc" : m.kind==="system" ? "system" : m.kind==="idea" ? "idea" : "monster";
+const kindOf = m => m.kind==="pc" ? "pc" : m.kind==="system" ? "system" : m.kind==="idea" ? "idea" : m.kind==="game" ? "game" : "monster";
 const SYS_KEYS=["game","cats","keywords"], IDEA_KEYS=["keywords","game"];
-const railCats = () => kind==="idea" ? IDEA_KEYS.map(k=>CAT[k]) : CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key));
+const railCats = () => kind==="game" ? [CAT.keywords] : kind==="idea" ? IDEA_KEYS.map(k=>CAT[k]) : CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key));
 /* 아이디어 분류: 개별 패턴 / 이미지 */
 const ITYPES={pattern:"개별 패턴", image:"이미지"};
 const ideaTypeOf = m => m.type==="pattern" ? "pattern" : "image";
@@ -956,7 +989,7 @@ function wireVideos(root, ob){
 
 /* ---------- filtering ---------- */
 function haystack(m){
-  const parts=[m.game,m.version,m.name,m.nameEn,m.link,m.guide,...(m.cats||[]),...(m.keywords||[]),...(m.parents||[]),...(m.similar||[]),m.ext,...(m.variants||[]).flatMap(x=>[x.src,x.diff]),...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
+  const parts=[m.game,m.version,m.name,m.nameEn,m.link,m.guide,...(m.cats||[]),...(m.keywords||[]),...(m.parents||[]),...(m.similar||[]),m.ext,m.oneLine,...(m.variants||[]).flatMap(x=>[x.src,x.diff]),...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
   for (const e of (m.systems||[])){ const sr=sysRefFor(m.game,e.name); parts.push(e.name, sr&&sr.nameEn, ...((sr&&sr.keywords)||[])); }
   for (const e of (m.pcs||[])){ const d=getDef(kindOf(m),"pcs",e.name); parts.push(e.name,d.nameEn,d.label,d.note); }
   return parts.filter(Boolean).join(" ").toLowerCase();
@@ -1088,6 +1121,7 @@ function render(){
   pa.hidden=true;
   if (!loaded) return;
   if (sub==="board"){ if(io) io.disconnect(); renderIdeas(list); return; }
+  if (sub==="games"){ if(io) io.disconnect(); renderGames(list); return; }
   if ((sub==="tree"||sub==="treeall") && monsters.length){
     if(io) io.disconnect();
     renderTree(list, sub==="treeall");
@@ -1149,6 +1183,7 @@ const VIEWMAP={
   "sysref-games": {kind:"system", sub:"bygame"},
   "sysref-tree":  {kind:"system", sub:"tree"},
   "sysref-all":   {kind:"system", sub:"treeall"},
+  "games":         {kind:"game", sub:"games"},
   "ideas":         {kind:"idea", sub:"board"},
   "ideas-pattern": {kind:"idea", sub:"board", type:"pattern"},
   "ideas-image":   {kind:"idea", sub:"board", type:"image"},
@@ -1166,7 +1201,7 @@ function setView(v){
   syncKind();
   const q=$("#q"); if(q) q.placeholder=`게임, ${KINDS[kind].label}, 태그, 공략 내용까지 검색 — 띄어쓰기로 여러 단어 AND`;
 }
-const listHash = () => kind==="pc" ? "#pc" : kind==="system" ? "#sysref" : kind==="idea" ? "#ideas" : "#monsters";
+const listHash = () => kind==="pc" ? "#pc" : kind==="system" ? "#sysref" : kind==="idea" ? "#ideas" : kind==="game" ? "#games" : "#monsters";
 let groupEdit = null;   /* "monsterId|cat|index" */
 function renderTabs(){
   document.querySelectorAll(".tabs a").forEach(a=>a.setAttribute("aria-current", a.dataset.view===view?"page":"false"));
@@ -1178,7 +1213,7 @@ function renderTabs(){
   $("#nSR").textContent=SR.length; $("#nSRcat").textContent=new Set(SR.flatMap(m=>m.cats||[])).size; $("#nSRgame").textContent=new Set(SR.map(m=>m.game).filter(Boolean)).size;
   $("#nPC").textContent=P.length; $("#nPCSys").textContent=distinct(P,"systems"); $("#nPCCnt").textContent=distinct(P,"pcs");
   $("#nWork").textContent=works.length;
-  const ID=of("idea"); $("#nIdea").textContent=ID.length;
+  const ID=of("idea"); $("#nIdea").textContent=ID.length; $("#nGame").textContent=of("game").length;
   $("#nIdeaP").textContent=ID.filter(m=>ideaTypeOf(m)==="pattern").length; $("#nIdeaI").textContent=ID.filter(m=>ideaTypeOf(m)==="image").length;
 }
 addEventListener("hashchange", ()=>{
@@ -2125,7 +2160,7 @@ document.addEventListener("click", e=>{
 });
 $("#lightbox").addEventListener("click",e=>{ if(e.target.id==="lightbox"||e.target.id==="lbClose"){ $("#lightbox").hidden=true; $("#lightbox").innerHTML=""; } });
 $("#q").addEventListener("input", e=>{ query=e.target.value; render(); });
-$("#addBtn").addEventListener("click", ()=> kind==="idea" ? openIdeaForm(null) : openForm(null));
+$("#addBtn").addEventListener("click", ()=> kind==="idea" ? openIdeaForm(null) : kind==="game" ? openGameForm(null) : openForm(null));
 $("#deadBtn").addEventListener("click", ()=>{ filters.has(DEAD)?filters.delete(DEAD):filters.add(DEAD); render(); });
 
 /* ---------- popover (hover detail) ---------- */
@@ -2226,6 +2261,7 @@ let formImage = null, formMedia = null, uploading = false;
 function openForm(m, copyFrom, opts){
   if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
   if((m && kindOf(m)==="idea") || (!m && !copyFrom && kind==="idea")) return openIdeaForm(m);
+  if((m && kindOf(m)==="game") || (!m && !copyFrom && kind==="game")) return openGameForm(m);
   hidePop(true);
   /* 복제: 원본 내용을 채운 새 레퍼런스 (공략 메모·이미지도 그대로) */
   const v = copyFrom ? {...copyFrom, name: copyFrom.name+" (복사본)"} : m;
@@ -2282,6 +2318,215 @@ function openForm(m, copyFrom, opts){
   wireMediaField();
   if(SYS) wireVars();
   $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m, v); };
+}
+/* =====================================================================
+   게임 정리: 게임마다 한 줄 소감 + 전반적인 정리. 글에서 @로 그 게임의 시스템을 골라 연결
+   ===================================================================== */
+const reEsc = x => x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+const gameSysRefs = g => allRefs.filter(m=>kindOf(m)==="system" && (m.game||"")===(g||"") && m.name);
+const gameNoteFor = g => allRefs.find(m=>kindOf(m)==="game" && m.game===g);
+function gameCounts(g){
+  const c={monster:0,pc:0,system:0,idea:0};
+  allRefs.forEach(m=>{ const k=kindOf(m); if((m.game||"")===g && k in c) c[k]++; });
+  return c;
+}
+/* 글 안의 @시스템이름 → 링크 (그 게임에 등록된 시스템만, 긴 이름부터) */
+function mentionRe(g){
+  const names=[...new Set(gameSysRefs(g).map(m=>m.name))].sort((a,b)=>b.length-a.length);
+  return names.length ? {names, re:new RegExp("@("+names.map(n=>reEsc(esc(n))).join("|")+")","g")} : null;
+}
+function mentionHTML(html, g, asSpan){
+  const M=mentionRe(g); if(!M) return html;
+  const byName=new Map(gameSysRefs(g).map(m=>[esc(m.name),m]));
+  return html.replace(M.re,(all,n)=>{ const m=byName.get(n); if(!m) return all;
+    return asSpan ? `<span class="mention" data-msys="${esc(m.id)}">${n}</span>` : `<button type="button" class="tag c-sys linked mention" data-gosys="${esc(m.id)}" data-msys="${esc(m.id)}">${n} ↗</button>`; });
+}
+function mentionsIn(text, g){
+  const M=mentionRe(g); if(!M) return [];
+  const raw=new RegExp("@("+M.names.map(reEsc).join("|")+")","g"), out=new Set();
+  let x; while((x=raw.exec(text||""))) out.add(x[1]); return [...out].sort(koCmp);
+}
+/* 다 적은 뒤에 한 번에: 글 속 시스템 이름 앞에 @를 붙여 연결 (이미 @가 있으면 그대로) */
+function linkAll(text, g){
+  const names=[...new Set(gameSysRefs(g).map(m=>m.name))].sort((a,b)=>b.length-a.length);
+  if(!names.length || !text) return {text, n:0};
+  let n=0;
+  const out=text.replace(new RegExp("(@)?("+names.map(reEsc).join("|")+")","g"),(all,at,name)=>{ if(at) return all; n++; return "@"+name; });
+  return {text:out, n};
+}
+function renderGames(list){
+  const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
+  const ed=canEdit(), noted=new Set(monsters.map(m=>m.game));
+  const ghosts = (!filters.size && !query) ? [...new Set(allRefs.filter(m=>kindOf(m)!=="game").map(m=>(m.game||"").trim()).filter(Boolean))].filter(g=>!noted.has(g)).sort(koCmp) : [];
+  $("#count").textContent = `${list.length} / ${monsters.length}건`;
+  const cnt=g=>{ const c=gameCounts(g); return [["몬스터",c.monster],["PC",c.pc],["시스템",c.system],["아이디어",c.idea]].filter(x=>x[1]).map(([l,n])=>`${l} ${n}`).join(" · "); };
+  const card=m=>`<article class="gncard" data-gnote="${esc(m.id)}" tabindex="0" role="button" aria-label="${esc(m.game)} 정리 보기">
+      <div class="gcover">${(m.media||m.image)?mediaHTML(m,640):`<span>${esc((m.game||"?").slice(0,1))}</span>`}</div>
+      <div class="gnbody"><b>${esc(m.game)}</b>${m.oneLine?`<p class="gquote">${mentionHTML(esc(m.oneLine), m.game, true)}</p>`:""}
+        ${(m.keywords||[]).length?`<div class="imeta">${m.keywords.map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</div>`:""}
+        <span class="gcnt">${cnt(m.game)}</span></div></article>`;
+  const ghost=g=>`<article class="gncard gnone" ${ed?`data-gnew="${esc(g)}" tabindex="0" role="button"`:""} aria-label="${esc(g)} 정리 쓰기">
+      <div class="gcover"><span>${esc(g.slice(0,1))}</span></div>
+      <div class="gnbody"><b>${esc(g)}</b><p class="gquote" style="color:var(--muted)">아직 정리가 없어요${ed?" · 눌러서 쓰기":""}</p><span class="gcnt">${cnt(g)}</span></div></article>`;
+  const bar=`<div class="ibar"><span class="note">게임마다 한 줄 소감과 전반적인 정리 · 글에서 <b>@</b>를 치면 그 게임의 시스템을 골라 연결해요</span></div>`;
+  const body = (list.length||ghosts.length) ? `<div class="gnotes">${list.map(card).join("")}${ghosts.map(ghost).join("")}</div>`
+    : `<div class="iempty"><strong>${monsters.length?"조건에 맞는 정리가 없어요":"아직 게임 정리가 없어요"}</strong>${monsters.length&&(filters.size||query)?`<button class="btn sm" type="button" data-clear>필터 모두 해제</button>`:`<span>${ed?"‘+ 레퍼런스 추가’로 첫 게임 정리를 써 주세요.":""}</span>`}</div>`;
+  gb.innerHTML = bar + body;
+  wireVideos(gb);
+}
+$("#groupbox").addEventListener("click",e=>{
+  const c=e.target.closest("[data-gnote]"); if(c){ const m=allRefs.find(x=>x.id===c.dataset.gnote); if(m) openGameNote(m); return; }
+  const n=e.target.closest("[data-gnew]"); if(n) openGameForm(null, n.dataset.gnew);
+});
+$("#groupbox").addEventListener("keydown",e=>{ if(e.key!=="Enter"&&e.key!==" ") return; const c=e.target.closest("[data-gnote],[data-gnew]"); if(c){ e.preventDefault(); c.click(); } });
+/* 다른 레퍼런스로: 그 게임으로 걸러서 */
+function goGame(v, g){
+  closeForm(); hidePop(true); setView(v);
+  filters.clear(); filters.add("game|"+g);
+  if(location.hash!=="#"+v) location.hash="#"+v; else render();
+}
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-gogame]"); if(!b) return; const i=b.dataset.gogame.indexOf("|"); goGame(b.dataset.gogame.slice(0,i), b.dataset.gogame.slice(i+1)); });
+function openGameNote(m){
+  const sc=$("#scrim"), g=m.game, c=gameCounts(g), ed=canEdit(), has=(m.guide||"").trim();
+  const ment=mentionsIn((m.oneLine||"")+"\n"+(m.guide||""), g), byName=new Map(gameSysRefs(g).map(x=>[x.name,x]));
+  const go=[["monsters","몬스터",c.monster],["pc","PC",c.pc],["sysref","시스템",c.system],["ideas","아이디어",c.idea]].filter(x=>x[2]);
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="gTitle" style="width:min(820px,100%)">
+    <header><h2 id="gTitle">게임 정리 · ${esc(g)}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    ${(m.media||m.image)?`<div class="gmedia">${mediaHTML(m,640,true)}</div>`:""}
+    ${m.oneLine?`<p class="gquote big">${mentionHTML(esc(m.oneLine), g)}</p>`:""}
+    <div class="gnbar">${go.length?`<span>이 게임의 레퍼런스</span>${go.map(([v,l,n])=>`<button type="button" class="tag c-game" data-gogame="${v}|${esc(g)}">${l} ${n} →</button>`).join("")}`:""}
+      ${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</div>
+    ${ment.length?`<div class="gnbar"><span>언급한 시스템</span>${ment.map(n=>`<button type="button" class="tag c-sys linked" data-gosys="${esc(byName.get(n).id)}" data-msys="${esc(byName.get(n).id)}">${esc(n)} ↗</button>`).join("")}</div>`:""}
+    <div class="guidedoc"><div class="doc">${has?mentionHTML(aboutHTML(m.guide), g):`<p class="ph-note">아직 정리가 없어요.</p>`}</div></div>
+    <div class="foot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px;border-top:1px solid var(--line)">
+      ${m.link?`<a class="btn" href="${esc(m.link)}" target="_blank" rel="noopener" style="margin-right:auto">링크 열기</a>`:""}
+      ${ed?`<button type="button" class="btn" id="gRelink" title="글 속 시스템 이름을 찾아 한 번에 연결">시스템 다시 연결</button><button type="button" class="btn" id="gDel">삭제</button><button type="button" class="btn" id="gEdit">편집</button>`:""}<button type="button" class="btn primary" id="gClose">닫기</button></div></div>`;
+  sc.hidden=false; wireVideos(sc);
+  $("#fClose").onclick=$("#gClose").onclick=closeForm;
+  sc.onclick=ev=>{ if(ev.target===sc) closeForm(); };
+  if(ed){
+    $("#gEdit").onclick=()=>{ closeForm(); openGameForm(m); };
+    $("#gDel").onclick=()=>{ closeForm(); confirmDelete(m.id); };
+    $("#gRelink").onclick=async()=>{
+      const a=linkAll(m.oneLine||"", g), b=linkAll(m.guide||"", g);
+      if(!a.n && !b.n){ toast(gameSysRefs(g).length?"새로 연결할 시스템 이름이 없어요":`${g}에 등록된 시스템이 아직 없어요`); return; }
+      try{ await store.update(m.id,{oneLine:a.text, guide:b.text, mentions:mentionsIn(a.text+"\n"+b.text, g), updatedAt:Date.now()});
+        toast(`시스템 ${a.n+b.n}곳을 연결했어요`); const nm=allRefs.find(x=>x.id===m.id); if(nm) openGameNote(nm); }
+      catch(ex){ toast(errMsg(ex)); }
+    };
+  }
+}
+/* 언급한 시스템에 마우스를 올리면 시스템 정보 카드 */
+let mcEl=null, mcT=0;
+function sysCardHTML(m){
+  const txt=(m.guide||"").replace(/^#+\s*/gm,"").replace(/\s+/g," ").trim();
+  const vn=(m.variants||[]).length;
+  return `${(m.media||m.image)?`<div class="mcmed">${mediaHTML(m,640,true)}</div>`:""}
+    <div class="mcbody"><b>${esc(m.name)}</b>${m.nameEn?` <small>${esc(m.nameEn)}</small>`:""}
+      ${(m.parents||[]).length?`<div class="mcpar">↳ ${esc(m.parents.join(" + "))}에서 확장</div>`:""}
+      ${m.ext?`<div class="mcext">${esc(m.ext)}</div>`:""}
+      ${[...(m.cats||[]),...(m.keywords||[])].length?`<div class="imeta">${(m.cats||[]).map(k=>`<span class="tag c-pc">${esc(k)}</span>`).join("")}${(m.keywords||[]).map(k=>`<span class="tag c-theme">#${esc(k)}</span>`).join("")}</div>`:""}
+      ${txt?`<p>${esc(txt.length>160?txt.slice(0,160)+"…":txt)}</p>`:`<p class="mcnone">아직 설명이 없어요</p>`}
+      ${vn?`<span class="vcnt" style="position:static">연출 ${vn}</span>`:""}
+      <small class="mchint">누르면 시스템 레퍼런스로</small></div>`;
+}
+function mcHide(){ clearTimeout(mcT); mcT=setTimeout(()=>{ if(mcEl){ mcEl.remove(); mcEl=null; } },120); }
+document.addEventListener("mouseover",e=>{
+  if(mcEl && mcEl.contains(e.target)){ clearTimeout(mcT); return; }
+  const t=e.target.closest("[data-msys]"); if(!t){ if(mcEl) mcHide(); return; }
+  const m=allRefs.find(x=>x.id===t.dataset.msys); if(!m) return;
+  clearTimeout(mcT);
+  if(mcEl && mcEl.dataset.id===m.id) return;
+  if(mcEl) mcEl.remove();
+  mcEl=document.createElement("div"); mcEl.className="mcard"; mcEl.dataset.id=m.id; mcEl.innerHTML=sysCardHTML(m);
+  document.body.appendChild(mcEl);
+  mcEl.querySelectorAll("video").forEach(v=>{ v.muted=true; v.play().catch(()=>{}); });
+  const r=t.getBoundingClientRect(), w=mcEl.offsetWidth, h=mcEl.offsetHeight;
+  let top=r.bottom+6; if(top+h>innerHeight-8) top=Math.max(8,r.top-h-6);
+  mcEl.style.left=Math.max(8,Math.min(r.left, innerWidth-w-8))+"px"; mcEl.style.top=top+"px";
+});
+addEventListener("scroll",()=>{ if(mcEl){ mcEl.remove(); mcEl=null; } },true);
+/* @ 를 치면 그 게임의 시스템 목록 */
+function wireMention(el){
+  let box=null, items=[], idx=0, start=-1;
+  const close=()=>{ if(box){ box.remove(); box=null; } };
+  const names=()=>[...new Set(gameSysRefs(fv("f_game").trim()).map(m=>m.name))].sort(koCmp);
+  const pick=n=>{ const end=el.selectionStart; el.value=el.value.slice(0,start)+"@"+n+" "+el.value.slice(end); const c=start+n.length+2; el.setSelectionRange(c,c); close(); el.focus(); el.dispatchEvent(new Event("input")); };
+  const draw=()=>{
+    if(!box){ box=document.createElement("div"); box.className="mbox"; box.setAttribute("role","listbox"); el.parentElement.style.position="relative"; el.parentElement.appendChild(box);
+      box.addEventListener("mousedown",e=>{ const b=e.target.closest("[data-mi]"); if(b){ e.preventDefault(); pick(items[+b.dataset.mi]); } }); }
+    box.style.top=(el.offsetTop+el.offsetHeight+4)+"px"; box.style.left=el.offsetLeft+"px";
+    box.innerHTML = items.length ? items.map((n,i)=>`<button type="button" role="option" data-mi="${i}" class="${i===idx?"on":""}">${esc(n)}</button>`).join("")
+      : `<div class="mnone">${fv("f_game").trim()?`${esc(fv("f_game").trim())}에 맞는 시스템이 없어요`:"게임을 먼저 골라 주세요"}</div>`;
+  };
+  el.addEventListener("input",e=>{
+    if(e.isTrusted===false && !box) return;
+    const pos=el.selectionStart, before=el.value.slice(0,pos), mt=before.match(/(?:^|[\s(\[“"'])@([^\n@]{0,20})$/);
+    if(!mt){ close(); return; }
+    const q=mt[1].toLowerCase(); start=pos-mt[1].length-1;
+    items=names().filter(n=>n.toLowerCase().includes(q)).slice(0,8); idx=0;
+    if(!items.length && /\s/.test(q)){ close(); return; }
+    draw();
+  });
+  el.addEventListener("keydown",e=>{
+    if(!box) return;
+    if(e.key==="ArrowDown"&&items.length){ e.preventDefault(); idx=(idx+1)%items.length; draw(); }
+    else if(e.key==="ArrowUp"&&items.length){ e.preventDefault(); idx=(idx-1+items.length)%items.length; draw(); }
+    else if((e.key==="Enter"||e.key==="Tab")&&items.length){ e.preventDefault(); pick(items[idx]); }
+    else if(e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); close(); }
+  });
+  el.addEventListener("blur",()=>setTimeout(close,150));
+}
+function openGameForm(m, presetGame){
+  if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
+  hidePop(true);
+  const v=m||{};
+  formImage = v.image||null; formMedia = v.media||null; uploading=false;
+  const sc=$("#scrim");
+  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+    <header><h2 id="fTitle">게임 정리 ${m?"편집":"쓰기"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <form id="form" novalidate>
+      <div class="field full"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v.game||presetGame||"")}<small id="f_gDup" class="dupwarn" hidden></small></div>
+      <div class="field full"><label for="f_oneLine">한 줄 소감</label><input id="f_oneLine" type="text" value="${esc(v.oneLine)}" placeholder="예) 패링 하나로 끝까지 끌고 가는 손맛" autocomplete="off"></div>
+      ${mediaFieldHTML("대표 이미지")}
+      <div class="field full"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc((v.keywords||[]).join(" / "))}" placeholder="소울라이크 / 패링 / 보스 러시"><small>/ 로 구분</small></div>
+      <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v.link)}" placeholder="https://"></div>
+      <div class="field full"><label for="f_guide">전반적인 정리</label><textarea id="f_guide" style="min-height:200px" placeholder="## 좋았던 점&#10;@패링 의 타이밍이 넉넉해서…&#10;&#10;## 아쉬운 점&#10;…">${esc(v.guide||"")}</textarea>
+        <small><b>@</b>를 치면 이 게임의 시스템을 골라 넣을 수 있어요 · 먼저 다 적었다면 <button type="button" class="btn sm" id="fLinkAll">시스템 한 번에 연결</button> · ‘## 제목’ 줄은 소제목</small></div>
+      <div class="err" id="fErr" hidden></div>
+      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
+    </form></div>`;
+  sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireMediaField();
+  wireMention($("#f_oneLine")); wireMention($("#f_guide"));
+  const dupChk=()=>{ const g=fv("f_game").trim(), d=g&&allRefs.find(x=>kindOf(x)==="game"&&x.game===g&&(!m||x.id!==m.id)), w=$("#f_gDup");
+    w.hidden=!d; if(d) w.textContent=`${g} 정리가 이미 있어요. 게임마다 하나만 둘 수 있어요.`; return !!d; };
+  $("#f_game").addEventListener("input",dupChk); const gs=$("#f_gameSel"); if(gs) gs.addEventListener("change",()=>setTimeout(dupChk)); dupChk();
+  $("#fLinkAll").onclick=()=>{
+    const g=fv("f_game").trim(); if(!g){ toast("게임을 먼저 골라 주세요"); return; }
+    if(!gameSysRefs(g).length){ toast(`${g}에 등록된 시스템이 아직 없어요`); return; }
+    const a=linkAll($("#f_oneLine").value, g), b=linkAll($("#f_guide").value, g);
+    $("#f_oneLine").value=a.text; $("#f_guide").value=b.text;
+    toast(a.n+b.n ? `시스템 ${a.n+b.n}곳을 연결했어요` : "새로 연결할 시스템 이름이 없어요");
+  };
+  $("#fClose").onclick=$("#fCancel").onclick=closeForm;
+  sc.onclick=e=>{ if(e.target===sc) closeForm(); };
+  $("#form").onsubmit=async e=>{
+    e.preventDefault();
+    const err=$("#fErr"), g=fv("f_game").trim();
+    if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
+    if(!g){ err.hidden=false; err.textContent="게임 이름을 골라 주세요."; return; }
+    if(dupChk()){ err.hidden=false; err.textContent=`${g} 정리가 이미 있어요. 그 정리를 편집해 주세요.`; return; }
+    const oneLine=fv("f_oneLine").trim(), guide=fv("f_guide");
+    const data={ kind:"game", game:g, name:g, oneLine, guide, keywords:splitTags(fv("f_keywords")), link:fv("f_link").trim(),
+      mentions:mentionsIn(oneLine+"\n"+guide, g), image:formImage||"", media:formMedia||null, updatedAt:Date.now() };
+    const b=$("#fSave"); b.disabled=true;
+    try{
+      if(m) await store.set(m.id,{...data, createdAt:m.createdAt||Date.now()});
+      else await store.add({...data, createdAt:Date.now()});
+      closeForm(); toast(m?"저장했어요":"추가했어요");
+    }catch(ex){ b.disabled=false; err.hidden=false; err.textContent=errMsg(ex); }
+  };
+  (v.game||presetGame ? $("#f_oneLine") : $("#f_gameSel")||$("#f_game")).focus();
 }
 /* =====================================================================
    아이디어 보드: 전반적인 연출·느낌을 살릴 큰 이미지 (분류: 개별 패턴 / 이미지)
