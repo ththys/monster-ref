@@ -190,6 +190,10 @@ def main():
         pg.reload(); pg.wait_for_timeout(500)
         node("패링").first.click(); pg.wait_for_timeout(150)
         check("확장 구조: 눌러서 이미지 보기", pg.locator(".gmedia img").count() == 1)
+        pg.locator(".gmedia .gmbig").dispatch_event("click"); pg.wait_for_timeout(150)
+        big = pg.is_visible(".ilb") and pg.is_visible("#scrim")
+        pg.keyboard.press("Escape"); pg.wait_for_timeout(100)
+        check("설명 창: 이미지 크게 보기 → Esc는 큰 화면만 닫음", big and not pg.is_visible("#lightbox") and pg.is_visible("#scrim"))
         check("연출 변형: 설명 창·구조도 개수", pg.locator(".vcard").count() == 2 and "연출 2" in pg.inner_text("#tree"))
         pg.click("#gClose"); pg.wait_for_timeout(100)
 

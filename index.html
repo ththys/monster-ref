@@ -747,6 +747,10 @@ span.mention{color:var(--t-sys);font-weight:600}
 .vcnt{position:absolute;top:6px;right:8px;font-size:10.5px;font-weight:600;color:var(--t-sys);background:color-mix(in srgb,var(--t-sys) 12%,transparent);border-radius:999px;padding:1px 7px}
 @media (max-width:560px){ .vrow{grid-template-columns:80px 1fr auto} .vth{width:80px;height:56px} }
 .gmedia{margin:12px 22px 0;border-radius:10px;overflow:hidden;background:var(--bg);border:1px solid var(--line);display:flex;justify-content:center}
+.gmedia{position:relative}
+.gmbig{display:flex;justify-content:center;width:100%;border:0;padding:0;background:none;cursor:zoom-in}
+.gmorig{position:absolute;top:8px;right:8px;font-size:12px;font-weight:600;color:#fff;background:rgba(0,0,0,.6);border-radius:6px;padding:4px 9px;text-decoration:none}
+.gmorig:hover{background:rgba(0,0,0,.8)}
 .gmedia img,.gmedia video{display:block;max-width:100%;max-height:min(60vh,520px);object-fit:contain}
 .dupwarn{color:var(--t-weapon);font-size:12px;margin-top:4px;display:block}
 .dupwarn[hidden]{display:none}
@@ -2185,7 +2189,7 @@ function openGuide(m){
       return `<div style="padding:8px 22px 0;font-size:13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span style="color:var(--muted)">이 시스템을 쓰는 곳</span>${us.map(u=>`<button type="button" class="tag ${kindOf(u)==="pc"?"c-pc":"c-game"}" data-gouse="${kindOf(u)}|${esc(u.game||"")}|${esc(m.name)}">${kindOf(u)==="pc"?"PC ":""}${esc(u.name)}</button>`).join("")}</div>`; })():""}
     ${kindOf(m)==="system"&&((m.parents||[]).length||m.ext)?`<div style="padding:8px 22px 0;font-size:13px;line-height:1.6">${(m.parents||[]).length?`<div style="color:var(--t-sys);font-weight:600">↳ ${esc(m.parents.join(" + "))}에서 확장</div>`:""}${m.ext?`<div style="color:var(--muted)">${esc(m.ext)}</div>`:""}</div>`:""}
     ${kindOf(m)==="system"&&similarOf(m).length?`<div style="padding:6px 22px 0;font-size:13px;color:var(--t-theme)">≈ 비슷한 시스템: ${esc(similarOf(m).join(", "))}</div>`:""}
-    ${(m.media||m.image)?`<div class="gmedia">${mediaHTML(m, 640, true)}</div>`:""}
+    ${(m.media||m.image)?`<div class="gmedia"><button type="button" class="gmbig" data-solb="${esc(m.id)}|0" title="크게 보기">${mediaHTML(m, 640, true)}</button>${origLink(m)}</div>`:""}
     ${kindOf(m)==="system"&&(m.gallery||[]).length?`<div class="gstrip">${m.gallery.map((g,k)=>`<button type="button" data-solb="${esc(m.id)}|${k+((m.media||m.image)?1:0)}">${mediaHTML(g,640)}</button>`).join("")}</div>`:""}
     ${kindOf(m)==="system"?varsViewHTML(m):""}
     <div class="guidedoc"><div class="doc">${has?aboutHTML(m.guide):`<p class="ph-note">아직 ${KINDS[kindOf(m)].guide}이 없어요.</p>`}</div></div>
@@ -2331,7 +2335,7 @@ document.addEventListener("mouseout", e=>{
 pop.addEventListener("mouseenter", ()=>clearTimeout(hideT));
 pop.addEventListener("mouseleave", ()=>schedHide());
 document.addEventListener("mousedown", e=>{ if(!pop.hidden && pinned && !editing && !pop.contains(e.target) && !e.target.closest("[data-deep]")) hidePop(true); });
-document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ if(!$("#scrim").hidden) closeForm(); else if(!$("#lightbox").hidden){ $("#lightbox").hidden=true; $("#lightbox").innerHTML=""; } else hidePop(true);} });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ if(!$("#lightbox").hidden){ $("#lightbox").hidden=true; $("#lightbox").innerHTML=""; } else if(!$("#scrim").hidden) closeForm(); else hidePop(true);} });
 
 function schedHide(){ if(pinned||editing) return; clearTimeout(hideT); hideT=setTimeout(()=>hidePop(false),220); }
 function hidePop(force){ if(editing && !force) return; pop.hidden=true; popKey=null; pinned=false; editing=false; anchorEl=null; }
@@ -2518,15 +2522,21 @@ function renderSolo(list){
   wireVideos(gb);
 }
 let galList=[];
+/* 크게 보기: 정지 이미지는 원본 파일 그대로(변환 없음), 영상·움짤은 재생 */
+function bigMediaHTML(g){
+  if(g.media && g.media.rt!=="video" && !g.media.anim){ const o=origUrl(g); if(o) return `<img src="${esc(o)}" alt="">`; }
+  return mediaHTML(g,1280,true);
+}
+function origLink(m){ const o=origUrl(m); return o&&!o.startsWith("data:")?`<a class="gmorig" href="${esc(o)}" target="_blank" rel="noopener" title="원본 파일을 새 탭에서">원본 ↗</a>`:""; }
 function galLB(id, i){
   const m=allRefs.find(x=>x.id===id); if(!m) return;
   galList=soloPics(m); const n=galList.length; if(!n) return; i=((i%n)+n)%n;
   const lb=$("#lightbox");
   lb.innerHTML=`<div class="lb ilb">
       ${n>1?`<button type="button" class="inav prev" data-gnav="-1" aria-label="이전">‹</button><button type="button" class="inav next" data-gnav="1" aria-label="다음">›</button>`:""}
-      ${mediaHTML(galList[i],1280,true)}
+      ${bigMediaHTML(galList[i])}
       <div class="ifoot"><div class="ihead"><span class="tag c-game">${esc(m.game||"")}</span><b>${esc(m.name)}</b>${n>1?`<span class="icnt">${i+1} / ${n}</span>`:""}</div>
-        <div class="lbbar"><button type="button" id="lbClose">닫기</button></div></div></div>`;
+        <div class="lbbar">${(()=>{ const o=origUrl(galList[i]); return o&&!o.startsWith("data:")?`<a href="${esc(o)}" target="_blank" rel="noopener">원본 열기</a>`:""; })()}<button type="button" id="lbClose">닫기</button></div></div></div>`;
   lb.hidden=false; lb.dataset.gal=id+"|"+i; delete lb.dataset.idea;
   lb.querySelectorAll("video").forEach(v=>{ v.muted=true; v.play().catch(()=>{}); });
   lb.querySelectorAll("[data-gnav]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); galLB(id, i + +b.dataset.gnav); });
@@ -2537,7 +2547,7 @@ document.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft"){ e.preventDefault(); galLB(id, +i-1); } else if(e.key==="ArrowRight"){ e.preventDefault(); galLB(id, +i+1); }
 });
 document.addEventListener("click",e=>{
-  const sb=e.target.closest("[data-solb]"); if(sb){ const [id,k]=sb.dataset.solb.split("|"); galLB(id,+k); return; }
+  const sb=e.target.closest("[data-solb]"); if(sb){ if(sb.classList.contains("gmbig") && e.target.tagName==="VIDEO") return; const [id,k]=sb.dataset.solb.split("|"); galLB(id,+k); return; }
   const g=e.target.closest("[data-soguide],[data-soedit],[data-sooff],[data-sogrp]"); if(!g) return;
   if(g.dataset.sogrp){ soloGroup=g.dataset.sogrp; try{ localStorage.setItem("monster-ref-sologroup",soloGroup); }catch{} render(); return; }
   const m=allRefs.find(x=>x.id===(g.dataset.soguide||g.dataset.soedit||g.dataset.sooff)); if(!m) return;
