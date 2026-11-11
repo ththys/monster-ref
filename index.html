@@ -583,7 +583,7 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .gwwrap{position:relative;flex:1;overflow:auto;background:var(--panel)}
 .gwwrap.over{outline:2px dashed var(--accent);outline-offset:-6px}
 .gwed{max-width:760px;margin:0 auto;padding:28px 24px 40vh;min-height:100%;outline:none;cursor:text}
-.gwed>p:only-child:has(br:only-child)::before{color:var(--muted);pointer-events:none;content:"여기에 이어서 쓰세요. 사진은 붙여 넣기(Ctrl+V)·끌어 놓기·‘사진 넣기’로 커서 자리에 들어가요. ## 를 치고 띄우면 제목, - 는 목록, > 는 인용.";position:absolute}
+.gwed>p:only-child:has(br:only-child)::before{color:var(--muted);pointer-events:none;content:"여기에 이어서 쓰세요. 사진·움짤(jpg·png·gif·webp·mp4)은 붙여 넣기(Ctrl+V)·끌어 놓기·‘사진·움짤 넣기’로 커서 자리에 들어가요. ## 를 치고 띄우면 제목, - 는 목록, > 는 인용.";position:absolute}
 .gwed figure.gimg .gim{cursor:pointer}
 .gwed figure.sel .gim{outline:3px solid var(--accent);outline-offset:2px;border-radius:10px}
 .gwed figcaption:empty::before{content:"사진 설명 (선택)";color:var(--muted)}
@@ -2774,7 +2774,7 @@ function openGameForm(m, presetGame){
   formImage = v.image||null; formMedia = v.media||null; uploading=false;
   const sc=$("#scrim");
   const tb=[["p","본문"],["h2","제목"],["h3","소제목"],"|",["bold","<b>B</b>"],["italic","<i>I</i>"],["underline","<u>U</u>"],["strike","<s>S</s>"],"|",
-    ["ul","• 목록"],["ol","1. 목록"],["quote","❝ 인용"],["hr","― 구분선"],["link","링크"],"|",["img","사진 넣기"],["mention","@ 시스템"]];
+    ["ul","• 목록"],["ol","1. 목록"],["quote","❝ 인용"],["hr","― 구분선"],["link","링크"],"|",["img","사진·움짤 넣기"],["mention","@ 시스템"]];
   sc.innerHTML=`<div class="modal gwrite" role="dialog" aria-modal="true" aria-labelledby="fTitle">
     <header><h2 id="fTitle">게임 정리 ${m?"편집":"쓰기"}</h2>
       <div class="gwhb"><span class="gwsave" id="gwState"></span><button type="button" class="btn" id="fCancel">닫기</button><button type="button" class="btn primary" id="fSave">${m?"저장":"올리기"}</button></div></header>
@@ -2790,7 +2790,7 @@ function openGameForm(m, presetGame){
       <div class="gwtool" role="toolbar" aria-label="글 꾸미기">${tb.map(x=>x==="|"?`<span class="gwsep"></span>`:`<button type="button" data-gw="${x[0]}" title="${x[1].replace(/<[^>]+>/g,"")}">${x[1]}</button>`).join("")}
         <button type="button" class="gwlink" id="fLinkAll" title="글 속 시스템 이름을 찾아 한 번에 연결">시스템 한 번에 연결</button></div>
       <div class="gwwrap" id="gwWrap">
-        <div class="gwed gpdoc" id="gwEd" contenteditable="true" spellcheck="false" data-ph="여기에 이어서 쓰세요. 사진은 붙여 넣기(Ctrl+V)·끌어 놓기·‘사진 넣기’로 커서 자리에 들어가요. ## 를 치고 띄우면 제목, - 는 목록, > 는 인용."></div>
+        <div class="gwed gpdoc" id="gwEd" contenteditable="true" spellcheck="false" data-ph="여기에 이어서 쓰세요. 사진·움짤(jpg·png·gif·webp·mp4)은 붙여 넣기(Ctrl+V)·끌어 놓기·‘사진·움짤 넣기’로 커서 자리에 들어가요. ## 를 치고 띄우면 제목, - 는 목록, > 는 인용."></div>
         <div class="gwfig" id="gwFig" hidden><button type="button" data-fz="s">작게</button><button type="button" data-fz="m">중간</button><button type="button" data-fz="l">크게</button><span class="gwsep"></span><button type="button" data-fm="-1">↑ 위로</button><button type="button" data-fm="1">↓ 아래로</button><span class="gwsep"></span><button type="button" data-fd>삭제</button></div>
       </div>
       <input id="gwFile" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm" hidden>
@@ -2835,8 +2835,8 @@ function openGameForm(m, presetGame){
     if(!fig.nextElementSibling){ const p=document.createElement("p"); p.innerHTML="<br>"; fig.after(p); }
     return fig;
   };
-  const addFiles=async files=>{
-    saveSel(); let after=null;
+  const addFiles=async (files, keep)=>{
+    if(!keep) saveSel(); let after=null;
     for(const f of [...files].filter(x=>/^(image|video)\//.test(x.type))){
       const fig=document.createElement("figure"); fig.className="gimg sz-l"; fig.dataset.up="1";
       fig.innerHTML=`<div class="gim" contenteditable="false"><span class="gup">올리는 중</span></div><figcaption></figcaption>`;
@@ -2857,13 +2857,33 @@ function openGameForm(m, presetGame){
     const h=e.clipboardData?.getData("text/html");
     if(h){ e.preventDefault(); const clean=gwSanitize(h); document.execCommand("insertHTML", false, clean); gwFill(ed,640,true); markDirty(); }
   });
-  ed.addEventListener("dragover",e=>{ if([...(e.dataTransfer?.types||[])].includes("Files")){ e.preventDefault(); wrap.classList.add("over"); } });
+  ed.addEventListener("dragover",e=>{ const ty=[...(e.dataTransfer?.types||[])]; if(ty.includes("Files")||ty.includes("text/uri-list")){ e.preventDefault(); wrap.classList.add("over"); } });
   ed.addEventListener("dragleave",()=>wrap.classList.remove("over"));
+  /* 다른 웹 페이지에서 끌어 온 그림: 받아서 올리고, 막혀 있으면 주소로 넣기 */
+  const addRemote=async url=>{
+    try{
+      const res=await fetch(url,{mode:"cors"}); const bl=await res.blob();
+      if(!res.ok || !/^(image|video)\//.test(bl.type)) throw 0;
+      const ext=(bl.type.split("/")[1]||"jpg").replace("jpeg","jpg");
+      await addFiles([new File([bl], "web."+ext, {type:bl.type})], true);
+    }catch{
+      const fig=document.createElement("figure"); fig.className="gimg sz-l"; fig.setAttribute("data-image", url);
+      fig.innerHTML=`<div class="gim" contenteditable="false"></div><figcaption></figcaption>`;
+      placeFig(fig, null); gwFill(ed,640,true); markDirty();
+      toast("그 사이트가 파일 받기를 막아서 주소로 넣었어요 · 나중에 사라질 수 있어요");
+    }
+  };
   ed.addEventListener("drop",e=>{
-    const files=[...(e.dataTransfer?.files||[])]; if(!files.length) return;
+    const dt=e.dataTransfer; const files=[...(dt?.files||[])];
+    let url="";
+    if(!files.length){
+      const h=dt?.getData("text/html")||""; const mm=h.match(/<img[^>]+src=["']([^"']+)["']/i);
+      url = mm ? mm[1].replace(/&amp;/g,"&") : (dt?.getData("text/uri-list")||"").split("\n").find(x=>/^https:\/\/\S+\.(png|jpe?g|gif|webp)(\?|$)/i.test(x.trim()))||"";
+      url=url.trim(); if(!/^https:\/\//.test(url)) return;
+    }
     e.preventDefault(); e.stopPropagation(); wrap.classList.remove("over");
     const rg=document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX,e.clientY) : null; if(rg && ed.contains(rg.startContainer)) lastRange=rg;
-    addFiles(files);
+    if(files.length) addFiles(files, true); else addRemote(url);
   });
   $("#gwFile").onchange=e=>{ const f=[...e.target.files]; e.target.value=""; addFiles(f); };
   /* 마크다운처럼: 줄 맨 앞에 ## / ### / - / 1. / > 치고 띄우면 */

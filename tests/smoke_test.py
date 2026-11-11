@@ -233,6 +233,19 @@ def main():
         pg.locator("#gwEd h2").click()
         pg.set_input_files("#gwFile", png); pg.wait_for_timeout(500)
         fig_after_h2 = pg.evaluate("()=>{ const f=document.querySelector('#gwEd figure.gimg'); return !!f && f.previousElementSibling && f.previousElementSibling.tagName==='H2'; }")
+        # gif·webp 파일 끌어 놓기 + 다른 사이트 그림 끌어 오기
+        pg.evaluate("()=>document.querySelector('#gwEd figure.gimg').setAttribute('data-keep','1')")
+        pg.evaluate("""async (b64)=>{ const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+            const ed=document.getElementById("gwEd"), r=ed.querySelector("h2").getBoundingClientRect();
+            const dt=new DataTransfer(); dt.items.add(new File([bin],"a.gif",{type:"image/gif"})); dt.items.add(new File([bin],"b.webp",{type:"image/webp"}));
+            ed.dispatchEvent(new DragEvent("drop",{dataTransfer:dt,bubbles:true,cancelable:true,clientX:r.left+5,clientY:r.top+5}));
+            const d2=new DataTransfer(); d2.setData("text/uri-list","https://example.invalid/pic.webp");
+            ed.dispatchEvent(new DragEvent("drop",{dataTransfer:d2,bubbles:true,cancelable:true,clientX:r.left+5,clientY:r.top+5})); }""",
+            __import__("base64").b64encode(open(png,"rb").read()).decode())
+        pg.wait_for_timeout(1200)
+        figs = pg.evaluate("()=>[...document.querySelectorAll('#gwEd figure.gimg')].map(f=>f.dataset.image&&f.dataset.image.startsWith('https')?'web':'file')")
+        check("게임 정리: gif·webp 끌어 놓기·웹 그림", figs.count("file") == 3 and figs.count("web") == 1, str(figs))
+        pg.evaluate("()=>document.querySelectorAll('#gwEd figure.gimg:not([data-keep])').forEach(x=>x.remove())")
         pg.locator("#gwEd figure.gimg .gim").click(); pg.wait_for_timeout(100)
         bar = pg.is_visible("#gwFig"); pg.click('#gwFig [data-fz="s"]')
         check("게임 정리: 사진은 커서 자리에·크기 바꾸기", fig_after_h2 and bar and pg.locator("#gwEd figure.sz-s").count() == 1)
