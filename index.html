@@ -530,6 +530,34 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .ac button mark{background:transparent;color:var(--accent);font-weight:700}
 .ac button .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .ac .hint{font-size:11px;color:var(--muted);padding:4px 10px 2px}
+/* 단독 시스템 비교 */
+.solock{display:flex!important;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-weight:400!important}
+.solock:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.solock input{width:18px;height:18px;accent-color:var(--accent)}
+.solock small{color:var(--muted)}
+.sobar button{border:0;background:none;padding:6px 14px;font-size:13px;color:var(--muted);border-right:1px solid var(--line);cursor:pointer}
+.sobar button:last-child{border-right:0}
+.sobar button.on{background:var(--ink);color:var(--panel);font-weight:600}
+.sosec{margin-bottom:22px}
+.sosec h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px}
+.sosec h3 span{color:var(--muted);font-weight:500;font-size:13px}
+.sorow{display:grid;grid-template-columns:240px 1fr;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.sohead{display:flex;flex-direction:column;gap:5px;min-width:0}
+.sohead>b{font-size:15.5px;line-height:1.3}
+.sohead small{color:var(--muted);font-size:12px}
+.sohead .tag.c-game{align-self:flex-start}
+.sohead p{margin:2px 0 0;font-size:12.5px;line-height:1.55;color:var(--muted)}
+.soact{display:flex;gap:4px;margin-top:auto;padding-top:6px;flex-wrap:wrap}
+.sostrip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity;min-width:0}
+.somed{flex:0 0 auto;height:190px;border:0;padding:0;border-radius:9px;overflow:hidden;background:var(--bg);cursor:zoom-in;scroll-snap-align:start}
+.somed img,.somed video{height:100%;width:auto;max-width:420px;object-fit:cover;display:block}
+.sonone{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:13px;padding:0 10px;min-height:80px}
+.linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;font:inherit;padding:0;text-decoration:underline}
+.gstrip{display:flex;gap:8px;overflow-x:auto;margin:10px 22px 0;padding-bottom:4px}
+.gstrip button{flex:0 0 auto;height:120px;border:0;padding:0;border-radius:8px;overflow:hidden;cursor:zoom-in;background:var(--bg)}
+.gstrip img,.gstrip video{height:100%;width:auto;display:block}
+.galedit .gi .gl{right:auto;left:2px}
+@media (max-width:760px){ .sorow{grid-template-columns:1fr} .somed{height:150px} }
 /* 홈 */
 .tabs a.navhome{font-size:14px;color:var(--ink)}
 .home,#hbody,#hres{display:flex;flex-direction:column;gap:20px}
@@ -800,6 +828,7 @@ span.mention{color:var(--t-sys);font-weight:600}
         <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-tree" data-view="sysref-tree" class="sub"><span>확장 구조</span></a>
         <a href="#sysref-all" data-view="sysref-all" class="sub"><span>톺아보기</span></a>
+        <a href="#sysref-solo" data-view="sysref-solo" class="sub"><span>단독 시스템 비교</span><span class="n" id="nSolo"></span></a>
         </div>
         <button type="button" class="navh navtog" data-grp="game" aria-expanded="false" aria-controls="navg-game"><span>게임</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navg-game" class="navgrp" hidden>
@@ -1232,6 +1261,7 @@ function render(){
   if (sub==="home"){ if(io) io.disconnect(); renderHome(); return; }
   if (sub==="board"){ if(io) io.disconnect(); renderIdeas(list); return; }
   if (sub==="games"){ if(io) io.disconnect(); renderGames(list); return; }
+  if (sub==="solo"){ if(io) io.disconnect(); renderSolo(list); return; }
   if ((sub==="tree"||sub==="treeall") && monsters.length){
     if(io) io.disconnect();
     renderTree(list, sub==="treeall");
@@ -1293,6 +1323,7 @@ const VIEWMAP={
   "sysref-games": {kind:"system", sub:"bygame"},
   "sysref-tree":  {kind:"system", sub:"tree"},
   "sysref-all":   {kind:"system", sub:"treeall"},
+  "sysref-solo":  {kind:"system", sub:"solo"},
   "games":         {kind:"game", sub:"games"},
   "ideas":         {kind:"idea", sub:"board"},
   "ideas-pattern": {kind:"idea", sub:"board", type:"pattern"},
@@ -1324,6 +1355,7 @@ function renderTabs(){
   $("#nSR").textContent=SR.length; $("#nSRcat").textContent=new Set(SR.flatMap(m=>m.cats||[])).size; $("#nSRgame").textContent=new Set(SR.map(m=>m.game).filter(Boolean)).size;
   $("#nPC").textContent=P.length; $("#nPCSys").textContent=distinct(P,"systems"); $("#nPCCnt").textContent=distinct(P,"pcs");
   $("#nWork").textContent=works.length;
+  $("#nSolo").textContent=of("system").filter(m=>m.solo).length;
   const ID=of("idea"); $("#nIdea").textContent=ID.length; $("#nGame").textContent=of("game").length;
   $("#nIdeaP").textContent=ID.filter(m=>ideaTypeOf(m)==="pattern").length; $("#nIdeaI").textContent=ID.filter(m=>ideaTypeOf(m)==="image").length;
 }
@@ -1548,6 +1580,7 @@ function treeCtxNode(e, key, N, merge){
   ];
   if(fam) items.push(treeFocus===fam ? {label:"전체 계열 보기", run:()=>{ treeFocus=""; render(); }} : {label:"이 계열만 보기", hint:fam, run:()=>{ treeFocus=fam; render(); }});
   if((ref.parents||[]).length) items.push({label:"기본 시스템으로 빼기", hint:`${ref.parents.join(" + ")}에서`, run:()=>reparent(key, [], `${name}을(를) 기본 시스템으로 뺐어요`)});
+  items.push({label: ref.solo?"단독 시스템 비교에서 빼기":"단독 시스템 비교에 넣기", run:()=>setSolo(ref, !ref.solo)});
   items.push("-", {label:"삭제", danger:true, run:()=>confirmDelete(ref.id)});
   openCtx(e.clientX, e.clientY, items, name);
 }
@@ -2145,6 +2178,7 @@ function openGuide(m){
     ${kindOf(m)==="system"&&((m.parents||[]).length||m.ext)?`<div style="padding:8px 22px 0;font-size:13px;line-height:1.6">${(m.parents||[]).length?`<div style="color:var(--t-sys);font-weight:600">↳ ${esc(m.parents.join(" + "))}에서 확장</div>`:""}${m.ext?`<div style="color:var(--muted)">${esc(m.ext)}</div>`:""}</div>`:""}
     ${kindOf(m)==="system"&&similarOf(m).length?`<div style="padding:6px 22px 0;font-size:13px;color:var(--t-theme)">≈ 비슷한 시스템: ${esc(similarOf(m).join(", "))}</div>`:""}
     ${(m.media||m.image)?`<div class="gmedia">${mediaHTML(m, 640, true)}</div>`:""}
+    ${kindOf(m)==="system"&&(m.gallery||[]).length?`<div class="gstrip">${m.gallery.map((g,k)=>`<button type="button" data-solb="${esc(m.id)}|${k+((m.media||m.image)?1:0)}">${mediaHTML(g,640)}</button>`).join("")}</div>`:""}
     ${kindOf(m)==="system"?varsViewHTML(m):""}
     <div class="guidedoc"><div class="doc">${has?aboutHTML(m.guide):`<p class="ph-note">아직 ${KINDS[kindOf(m)].guide}이 없어요.</p>`}</div></div>
     <div class="foot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px;border-top:1px solid var(--line)">
@@ -2391,7 +2425,8 @@ function openForm(m, copyFrom, opts){
       <div class="field${SYS?" full":""}"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v?.game||"")}</div>
       ${SYS?"":`<div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>`}
       ${SYS ? `<div class="field"><label for="f_name">시스템 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${esc(K.namePh)}" autocomplete="off" required><small id="f_nameDup" class="dupwarn" hidden></small></div>
-      <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${esc(K.enPh)}" lang="en" autocomplete="off"></div>`
+      <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${esc(K.enPh)}" lang="en" autocomplete="off"></div>
+      <div class="field full"><label class="solock"><input type="checkbox" id="f_solo" ${v?.solo?"checked":""}><span><b>단독 시스템</b> — ‘단독 시스템 비교’ 화면에 넣기 <small>(깊이 없이 나열해서 다른 게임과 나란히 비교)</small></span></label></div>`
       : `<div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${K.enPh}" lang="en" autocomplete="off"></div>`}
       ${SYS?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>`}
@@ -2414,6 +2449,7 @@ function openForm(m, copyFrom, opts){
       <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>${KINDS[fKind].counter}</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="${KINDS[fKind].counterPh}"></div>`}
       <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
       <div class="field full"><label for="f_guide">${K.guide}</label><textarea id="f_guide" style="min-height:220px" placeholder="${SYS?"## 규칙&#10;…&#10;&#10;## 특징&#10;- …":"## 패턴 요약&#10;…&#10;&#10;## 공략 포인트&#10;- …"}">${esc(v?.guide||"")}</textarea><small>길게 써도 돼요 · ‘## 제목’ 줄은 소제목, 빈 줄로 문단 구분</small></div>
+      ${SYS?galleryFieldHTML("이미지 여러 장","한 번에 여러 개 골라 올려요 · ‘단독 시스템 비교’와 설명 창에서 한 줄로 쭉 보여요"):""}
       ${SYS?varFieldHTML():""}
       <div class="err" id="fErr" hidden></div>
       <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
@@ -2427,9 +2463,77 @@ function openForm(m, copyFrom, opts){
   $("#fClose").onclick=$("#fCancel").onclick=closeForm;
   sc.onclick=e=>{ if(e.target===sc) closeForm(); };
   wireMediaField();
-  if(SYS) wireVars();
+  if(SYS){ formGallery=((v&&v.gallery)||[]).map(g=>({...g})); galBusy=0; wireGallery(); wireVars(); }
   $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m, v); };
 }
+/* =====================================================================
+   단독 시스템 비교: 깊이 없이 나열, 다른 게임과 나란히. 시스템의 solo(체크)로 넣고 뺌
+   ===================================================================== */
+let soloGroup=(()=>{ try{ return localStorage.getItem("monster-ref-sologroup")||"cat"; }catch{ return "cat"; } })();
+async function setSolo(m, on){
+  try{ await store.update(m.id,{solo:!!on, updatedAt:Date.now()});
+    toastUndo(on?`${m.name}을(를) 단독 시스템 비교에 넣었어요`:`${m.name}을(를) 단독 시스템 비교에서 뺐어요`, ()=>store.update(m.id,{solo:!on, updatedAt:Date.now()})); }
+  catch(ex){ toast(errMsg(ex)); }
+}
+const soloPics = m => [...((m.media||m.image)?[{media:m.media,image:m.image}]:[]), ...(m.gallery||[])];
+function renderSolo(list){
+  const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
+  const ed=canEdit(), all=monsters.filter(m=>m.solo), shown=list.filter(m=>m.solo);
+  $("#count").textContent=`${shown.length} / ${all.length}건`;
+  const seg=[["cat","분류별"],["game","게임별"],["none","한 줄로"]].map(([k,l])=>`<button type="button" data-sogrp="${k}" class="${soloGroup===k?"on":""}">${l}</button>`).join("");
+  const bar=`<div class="ibar"><nav class="iseg sobar" aria-label="묶기">${seg}</nav><span class="note">시스템 편집 창의 ‘단독 시스템’ 체크로 넣고 빼요${ed?" · 확장 구조에서 우클릭해도 돼요":""} · 이미지를 누르면 크게 보고 ← → 로 넘겨요</span></div>`;
+  if(!shown.length){
+    gb.innerHTML=bar+`<div class="iempty"><strong>${all.length?"조건에 맞는 단독 시스템이 없어요":"아직 단독 시스템이 없어요"}</strong><span>${all.length?"":"시스템을 편집해서 ‘단독 시스템’에 체크하면 여기에 나란히 모여요. 이미지는 한 번에 여러 장 올릴 수 있어요."}</span>${filters.size||query?`<button class="btn sm" type="button" data-clear>필터 모두 해제</button>`:""}</div>`;
+    return;
+  }
+  const keyOf = m => soloGroup==="game" ? [m.game||"게임 없음"] : soloGroup==="cat" ? ((m.cats||[]).length?m.cats:["분류 없음"]) : [""];
+  const groups=new Map();
+  shown.forEach(m=>keyOf(m).forEach(k=>{ if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(m); }));
+  const order=[...groups.keys()].sort((a,b)=>(a==="분류 없음"||a==="게임 없음")-(b==="분류 없음"||b==="게임 없음") || koCmp(a,b));
+  const row=m=>{
+    const pics=soloPics(m), txt=(m.guide||"").replace(/^#+\s*/gm,"").replace(/\s+/g," ").trim();
+    return `<article class="sorow">
+      <div class="sohead">
+        <span class="tag c-game">${esc(m.game||"게임 없음")}</span>
+        <b>${esc(m.name)}</b>${m.nameEn?`<small lang="en">${esc(m.nameEn)}</small>`:""}
+        ${(m.parents||[]).length?`<span class="mcpar">↳ ${esc(m.parents.join(" + "))}</span>`:""}
+        ${[...(m.cats||[]),...(m.keywords||[])].length?`<div class="imeta">${(m.cats||[]).map(k=>`<span class="tag c-pc">${esc(k)}</span>`).join("")}${(m.keywords||[]).map(k=>`<span class="tag c-theme">#${esc(k)}</span>`).join("")}</div>`:""}
+        ${txt?`<p>${esc(txt.length>140?txt.slice(0,140)+"…":txt)}</p>`:""}
+        <div class="soact"><button type="button" class="btn sm" data-soguide="${esc(m.id)}">설명</button>${ed?`<button type="button" class="btn sm" data-soedit="${esc(m.id)}">편집</button><button type="button" class="btn sm" data-sooff="${esc(m.id)}" title="단독 시스템 비교에서 빼기">빼기</button>`:""}</div>
+      </div>
+      <div class="sostrip">${pics.length?pics.map((g,k)=>`<button type="button" class="somed" data-solb="${esc(m.id)}|${k}" aria-label="${esc(m.name)} 이미지 ${k+1}">${mediaHTML(g,640)}</button>`).join("")
+        :`<div class="sonone">이미지 없음${ed?` · <button type="button" class="linkbtn" data-soedit="${esc(m.id)}">편집에서 여러 장 올리기</button>`:""}</div>`}</div>
+    </article>`;
+  };
+  gb.innerHTML = bar + order.map(k=>`<section class="sosec">${k?`<h3>${esc(k)} <span>${groups.get(k).length}</span></h3>`:""}${groups.get(k).sort((a,b)=>koCmp(a.game||"",b.game||"")||koCmp(a.name,b.name)).map(row).join("")}</section>`).join("");
+  wireVideos(gb);
+}
+let galList=[];
+function galLB(id, i){
+  const m=allRefs.find(x=>x.id===id); if(!m) return;
+  galList=soloPics(m); const n=galList.length; if(!n) return; i=((i%n)+n)%n;
+  const lb=$("#lightbox");
+  lb.innerHTML=`<div class="lb ilb">
+      ${n>1?`<button type="button" class="inav prev" data-gnav="-1" aria-label="이전">‹</button><button type="button" class="inav next" data-gnav="1" aria-label="다음">›</button>`:""}
+      ${mediaHTML(galList[i],1280,true)}
+      <div class="ifoot"><div class="ihead"><span class="tag c-game">${esc(m.game||"")}</span><b>${esc(m.name)}</b>${n>1?`<span class="icnt">${i+1} / ${n}</span>`:""}</div>
+        <div class="lbbar"><button type="button" id="lbClose">닫기</button></div></div></div>`;
+  lb.hidden=false; lb.dataset.gal=id+"|"+i; delete lb.dataset.idea;
+  lb.querySelectorAll("video").forEach(v=>{ v.muted=true; v.play().catch(()=>{}); });
+  lb.querySelectorAll("[data-gnav]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); galLB(id, i + +b.dataset.gnav); });
+}
+document.addEventListener("keydown",e=>{
+  const lb=$("#lightbox"); if(lb.hidden || !lb.dataset.gal || !lb.querySelector(".ilb")) return;
+  const [id,i]=lb.dataset.gal.split("|");
+  if(e.key==="ArrowLeft"){ e.preventDefault(); galLB(id, +i-1); } else if(e.key==="ArrowRight"){ e.preventDefault(); galLB(id, +i+1); }
+});
+document.addEventListener("click",e=>{
+  const sb=e.target.closest("[data-solb]"); if(sb){ const [id,k]=sb.dataset.solb.split("|"); galLB(id,+k); return; }
+  const g=e.target.closest("[data-soguide],[data-soedit],[data-sooff],[data-sogrp]"); if(!g) return;
+  if(g.dataset.sogrp){ soloGroup=g.dataset.sogrp; try{ localStorage.setItem("monster-ref-sologroup",soloGroup); }catch{} render(); return; }
+  const m=allRefs.find(x=>x.id===(g.dataset.soguide||g.dataset.soedit||g.dataset.sooff)); if(!m) return;
+  if(g.dataset.soguide) openGuide(m); else if(g.dataset.soedit) openForm(m); else setSolo(m,false);
+});
 /* =====================================================================
    홈: 한눈에 보기 + 전체 검색 + 최근 추가 + 영감
    ===================================================================== */
@@ -3043,7 +3147,7 @@ function ideaLB(id){
         <div class="lbbar">${m.link?`<a href="${esc(m.link)}" target="_blank" rel="noopener">링크 열기</a>`:""}${o&&!o.startsWith("data:")?`<a href="${esc(o)}" target="_blank" rel="noopener">원본 열기</a>`:""}
           ${ed?`<button type="button" id="ibEdit">편집</button><button type="button" id="ibDel">삭제</button>`:""}<button type="button" id="lbClose">닫기</button></div>
       </div></div>`;
-  lb.hidden=false; lb.dataset.idea=m.id;
+  lb.hidden=false; lb.dataset.idea=m.id; delete lb.dataset.gal;
   lb.querySelectorAll("video").forEach(v=>{ v.muted=true; v.play().catch(()=>{}); });
   lb.querySelectorAll("[data-inav]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); ideaStep(+b.dataset.inav); });
   if(ed){ $("#ibEdit").onclick=()=>{ ideaLBClose(); openIdeaForm(m); }; $("#ibDel").onclick=()=>{ ideaLBClose(); confirmDelete(m.id); }; }
@@ -3208,7 +3312,9 @@ function formSnapshot(m){
     systems:keep(splitTags(fv("f_systems")), m?.systems), pcs:keep(splitTags(fv("f_pcs")), m?.pcs),
     cats:tagsOr("f_cats",m?.cats), keywords:splitTags(fv("f_keywords")), parents:tagsOr("f_parents",m?.parents), similar:splitTags(fv("f_similar")), ext:textOr("f_ext",m?.ext),
     link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null,
-    variants: $("#varEdit") ? cleanVars() : (m?.variants||[]) };
+    variants: $("#varEdit") ? cleanVars() : (m?.variants||[]),
+    gallery: $("#galEdit") ? formGallery.filter(g=>!g.busy).map(g=>({media:g.media||null,image:g.image||""})) : (m?.gallery||[]),
+    solo: $("#f_solo") ? $("#f_solo").checked : !!m?.solo };
 }
 let closeGuard=null;
 function closeForm(force){ if(force!==true && closeGuard && !closeGuard()) return; closeGuard=null; acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
@@ -3364,8 +3470,10 @@ async function saveForm(m, src){
     cats:tagsOr("f_cats",src?.cats), keywords:splitTags(fv("f_keywords")), parents:tagsOr("f_parents",src?.parents), similar:splitTags(fv("f_similar")), ext:textOr("f_ext",src?.ext),
     link:$("#f_link").value.trim(), guide:$("#f_guide").value, image:formImage||"", media:formMedia||null, updatedAt:Date.now(),
     variants: $("#varEdit") ? cleanVars() : (src?.variants||[]),
+    ...((src?.gallery||[]).length || $("#galEdit") ? {gallery: $("#galEdit") ? formGallery.filter(g=>!g.busy).map(g=>({media:g.media||null,image:g.image||""})) : (src?.gallery||[])} : {}),
+    ...($("#f_solo") ? {solo:$("#f_solo").checked} : (src?.solo ? {solo:true} : {})),
   };
-  if(uploading || varBusy>0){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
+  if(uploading || varBusy>0 || ($("#galEdit") && galBusy>0)){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
   const isSys = data.kind==="system";
   if(isSys){
     const d=sysDup(game, name, m?m.id:null);
@@ -3860,14 +3968,14 @@ async function uploadAny(file, onp){
   }
   return {media:await prepUpload(target, file, t=>{ const m=/(\d+)%/.exec(t); onp(m?Number(m[1]):0); })};
 }
-function galleryFieldHTML(){
-  return `<div class="field full"><label>추가 이미지 <small style="font-weight:400">· 슬라이드에서 넘겨 보고, 상세 화면에 차례로 보여요</small></label>
+function galleryFieldHTML(title, hint){
+  return `<div class="field full"><label>${title||"추가 이미지"} <small style="font-weight:400">· ${hint||"슬라이드에서 넘겨 보고, 상세 화면에 차례로 보여요"}</small></label>
     <div class="galedit" id="galEdit"></div>
     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><label class="btn sm" for="g_files" style="font-weight:500">이미지 여러 장 추가</label><input id="g_files" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm" hidden><small>또는 이 칸 위로 끌어 놓기</small></div></div>`;
 }
 function drawGallery(){
   const el=$("#galEdit"); if(!el) return;
-  el.innerHTML=formGallery.map((g,k)=>`<div class="gi">${g.busy?`<span>${esc(g.busy)}</span>`:slideMediaHTML(g,false)}${g.busy?"":`<button type="button" data-grm="${k}" aria-label="빼기">✕</button>`}</div>`).join("") || `<small style="color:var(--muted)">없음</small>`;
+  el.innerHTML=formGallery.map((g,k)=>`<div class="gi">${g.busy?`<span>${esc(g.busy)}</span>`:slideMediaHTML(g,false)}${g.busy?"":`<button type="button" data-grm="${k}" aria-label="빼기">✕</button>${k?`<button type="button" class="gl" data-gmv="${k}" aria-label="앞으로">‹</button>`:""}`}</div>`).join("") || `<small style="color:var(--muted)">없음</small>`;
   el.querySelectorAll("video").forEach(v=>{ if(v.dataset.src) v.src=v.dataset.src; v.muted=true; v.play().catch(()=>{}); });
   const sv=$("#fSave"); if(sv) sv.disabled = uploading || galBusy>0;
 }
@@ -3885,7 +3993,9 @@ function wireGallery(){
   const z=$("#galEdit").parentElement;
   z.ondragover=e=>{ e.preventDefault(); };
   z.ondrop=e=>{ e.preventDefault(); e.stopPropagation(); addGalleryFiles(e.dataTransfer.files); };
-  $("#galEdit").onclick=e=>{ const b=e.target.closest("[data-grm]"); if(b){ formGallery.splice(+b.dataset.grm,1); drawGallery(); } };
+  $("#galEdit").onclick=e=>{ const b=e.target.closest("[data-grm]"), mv=e.target.closest("[data-gmv]");
+    if(b){ formGallery.splice(+b.dataset.grm,1); drawGallery(); }
+    else if(mv){ const k=+mv.dataset.gmv; [formGallery[k-1],formGallery[k]]=[formGallery[k],formGallery[k-1]]; drawGallery(); } };
 }
 function confirmWorkDelete(id){
   const w=works.find(x=>x.id===id); if(!w) return;
