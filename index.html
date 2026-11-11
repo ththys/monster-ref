@@ -313,6 +313,11 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .drop .thumb{flex:none}
 .drop .txt{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 .modal .foot{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
+/* 저장 버튼은 늘 보이게: 머리·바닥 고정 */
+.modal>header{position:sticky;top:0;background:var(--panel);z-index:5}
+.modal form>.foot{position:sticky;bottom:-16px;background:var(--panel);margin:0 -18px -16px;padding:10px 18px 14px;border-top:1px solid var(--line);z-index:5}
+.modal.wide{width:min(900px,100%)}
+.modal.wide .drop .txt span{font-size:12px}
 .err{color:var(--t-weapon);font-size:12px;grid-column:1/-1}
 
 .lightbox{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.85);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));cursor:zoom-out}
@@ -1234,9 +1239,12 @@ function moveTo(dragId, targetId, after){
   if(after) at++;
   ids.splice(at,0,dragId); reorder(ids);
 }
+/* 단독 시스템은 '단독 시스템 비교'에서만, 나머지 시스템 화면에는 안 보임 */
+const inScope = m => kind!=="system" || (sub==="solo" ? !!m.solo : !m.solo);
+const scoped = () => monsters.filter(inScope);
 function visible(){
   const toks = query.toLowerCase().split(/\s+/).filter(Boolean);
-  return sortList(monsters).filter(m=>{
+  return sortList(scoped()).filter(m=>{
     for (const f of filters){
       if(f===DEAD){ const i=ytId(m.link); if(!(i && linkState.get(i)==="dead")) return false; continue; }
       const [k,v]=f.split("|"); if(!vals(m,k).includes(v)) return false; }
@@ -1250,7 +1258,7 @@ function render(){
   document.body.classList.toggle("v-sysl", kind==="system" && sub==="list");
   renderRail(); renderActive(); renderTabs();
   const list = visible();
-  $("#count").textContent = loaded ? `${list.length} / ${monsters.length}건` : "";
+  $("#count").textContent = loaded ? `${list.length} / ${scoped().length}건` : "";
   const st=$("#state"), tbl=$("#tbl"), tb=$("#tablebox"), gb=$("#groupbox");
   tb.hidden=false; gb.hidden=true;
   const pa=$("#portAdmin"), isDoc = sub==="portfolio"||sub==="works"; document.body.classList.toggle("v-port", isDoc);
@@ -1351,7 +1359,7 @@ function renderTabs(){
   const distinct=(arr,k)=>new Set(arr.flatMap(m=>(m[k]||[]).map(e=>e.name))).size;
   const M=of("monster"), P=of("pc");
   $("#nMon").textContent=M.length; $("#nSys").textContent=distinct(M,"systems"); $("#nPc").textContent=distinct(M,"pcs");
-  const SR=of("system");
+  const SR=of("system").filter(m=>!m.solo);
   $("#nSR").textContent=SR.length; $("#nSRcat").textContent=new Set(SR.flatMap(m=>m.cats||[])).size; $("#nSRgame").textContent=new Set(SR.map(m=>m.game).filter(Boolean)).size;
   $("#nPC").textContent=P.length; $("#nPCSys").textContent=distinct(P,"systems"); $("#nPCCnt").textContent=distinct(P,"pcs");
   $("#nWork").textContent=works.length;
@@ -2260,7 +2268,7 @@ function renderRail(){
   const counts = {};
   const RC=railCats();
   for (const c of RC) counts[c.key]=new Map();
-  for (const m of monsters) for (const c of RC) for (const v of new Set(vals(m,c.key))) counts[c.key].set(v,(counts[c.key].get(v)||0)+1);
+  for (const m of scoped()) for (const c of RC) for (const v of new Set(vals(m,c.key))) counts[c.key].set(v,(counts[c.key].get(v)||0)+1);
   $("#rail").innerHTML = RC.map(c=>{
     const arr=[...counts[c.key]].sort(c.key==="version" ? (a,b)=>cmpVersion(b[0],a[0]) : (a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
     return `<div class="group"><h3><i style="background:var(--${{game:"t-game",version:"t-ver",theme:"t-theme",levels:"t-level",hooks:"t-hook",looks:"t-look",weapons:"t-weapon",systems:"t-sys",pcs:"t-pc",cats:"t-pc",keywords:"t-theme"}[c.key]})"></i>${c.label}</h3>
@@ -2419,20 +2427,21 @@ function openForm(m, copyFrom, opts){
   /* 시스템: 기본 시스템 창과 확장 시스템 창을 따로 (확장 = 부모가 있는 시스템) */
   const EXT = SYS && (!!(opts&&opts.ext) || (v?.parents||[]).length>0);
   const sc=$("#scrim");
-  sc.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+  sc.innerHTML = `<div class="modal${SYS?" wide":""}" role="dialog" aria-modal="true" aria-labelledby="fTitle">
     <header><h2 id="fTitle">${EXT?(m?"확장 시스템 편집":"확장 시스템 추가"):`${KINDS[fKind].label} ${m?"레퍼런스 편집":copyFrom?"레퍼런스 복제":"레퍼런스 추가"}`}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <form id="form" novalidate>
       <div class="field${SYS?" full":""}"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v?.game||"")}</div>
       ${SYS?"":`<div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>`}
       ${SYS ? `<div class="field"><label for="f_name">시스템 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${esc(K.namePh)}" autocomplete="off" required><small id="f_nameDup" class="dupwarn" hidden></small></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${esc(K.enPh)}" lang="en" autocomplete="off"></div>
-      <div class="field full"><label class="solock"><input type="checkbox" id="f_solo" ${v?.solo?"checked":""}><span><b>단독 시스템</b> — ‘단독 시스템 비교’ 화면에 넣기 <small>(깊이 없이 나열해서 다른 게임과 나란히 비교)</small></span></label></div>`
+      <div class="field full"><label class="solock"><input type="checkbox" id="f_solo" ${v?.solo?"checked":""}><span><b>단독 시스템</b> <small>— ‘단독 시스템 비교’에서만 보여요</small></span></label></div>`
       : `<div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${K.enPh}" lang="en" autocomplete="off"></div>`}
       ${SYS?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>`}
-      ${mediaFieldHTML("이미지")}
-      ${SYS?`${EXT?"":`<div class="field full"><label for="f_cats"><i style="background:var(--t-pc)"></i>분류</label><input id="f_cats" type="text" value="${esc(j(v?.cats))}" placeholder="전투 / 성장 / 재화"><small>시스템 종류 · / 로 구분</small></div>`}
-      <div class="field full"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc(j(v?.keywords))}" placeholder="태그 / 연계 / 게이지"><small>/ 로 구분</small></div>
+      ${mediaFieldHTML(SYS?"대표 이미지":"이미지", SYS)}
+      ${SYS?galleryFieldHTML("이미지 여러 장","한 번에 여러 개 · 비교 화면에 쭉",true):""}
+      ${SYS?`${EXT?"":`<div class="field"><label for="f_cats"><i style="background:var(--t-pc)"></i>분류</label><input id="f_cats" type="text" value="${esc(j(v?.cats))}" placeholder="전투 / 성장 / 재화"><small>시스템 종류 · / 로 구분</small></div>`}
+      <div class="field${EXT?" full":""}"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc(j(v?.keywords))}" placeholder="태그 / 연계 / 게이지"><small>/ 로 구분</small></div>
       ${EXT?`<div class="field full"><label for="f_parentsSel"><i style="background:var(--t-sys)"></i>확장 원본 (부모 시스템)</label>
         <div class="ppick" id="ppick"></div>
         <select id="f_parentsSel" class="gamesel"></select>
@@ -2440,16 +2449,15 @@ function openForm(m, copyFrom, opts){
         <input id="f_parents" type="hidden" value="${esc(j(v?.parents))}">
         <small>같은 게임에 등록된 시스템에서 골라요 · 여러 개 가능 · 부모를 모두 빼면 기본 시스템이 돼요</small></div>
       <div class="field full"><label for="f_ext">확장 포인트</label><input id="f_ext" type="text" value="${esc(v?.ext)}" placeholder="강공격을 패링하면 상대가 더 크게 밀려남"><small>부모 시스템과 비교해 무엇이 달라졌는지 한 줄로</small></div>`:""}
-      <div class="field full"><label for="f_similar"><i style="background:var(--t-theme)"></i>비슷한 시스템</label><input id="f_similar" type="text" value="${esc(j(v?.similar))}" placeholder="저스트 가드"><small>확장 관계는 아니지만 역할이 비슷한 시스템 · / 로 구분 · 양쪽에 자동으로 표시돼요</small></div>`:`
+      <div class="field"><label for="f_similar"><i style="background:var(--t-theme)"></i>비슷한 시스템</label><input id="f_similar" type="text" value="${esc(j(v?.similar))}" placeholder="저스트 가드"><small>확장 관계는 아니지만 역할이 비슷한 시스템 · / 로 구분 · 양쪽에 자동으로 표시돼요</small></div>`:`
       <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
       <div class="field full"><label for="f_levels"><i style="background:var(--t-level)"></i>레벨 테마</label><input id="f_levels" type="text" value="${esc(j(v?.levels))}" placeholder="폐허 도시 / 우주 정거장"><small>등장 스테이지의 분위기 · / 로 구분</small></div>
       <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
       <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(v?.weapons))}" placeholder="에너지 / 검"></div>
       <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>같은 게임의 시스템 레퍼런스와 이어져요 · 게임을 먼저 고르면 그 게임의 시스템이 추천돼요</small></div>
       <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>${KINDS[fKind].counter}</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="${KINDS[fKind].counterPh}"></div>`}
-      <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
-      <div class="field full"><label for="f_guide">${K.guide}</label><textarea id="f_guide" style="min-height:220px" placeholder="${SYS?"## 규칙&#10;…&#10;&#10;## 특징&#10;- …":"## 패턴 요약&#10;…&#10;&#10;## 공략 포인트&#10;- …"}">${esc(v?.guide||"")}</textarea><small>길게 써도 돼요 · ‘## 제목’ 줄은 소제목, 빈 줄로 문단 구분</small></div>
-      ${SYS?galleryFieldHTML("이미지 여러 장","한 번에 여러 개 골라 올려요 · ‘단독 시스템 비교’와 설명 창에서 한 줄로 쭉 보여요"):""}
+      <div class="field${SYS?"":" full"}"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
+      <div class="field full"><label for="f_guide">${K.guide}</label><textarea id="f_guide" style="min-height:${SYS?140:220}px" placeholder="${SYS?"## 규칙&#10;…&#10;&#10;## 특징&#10;- …":"## 패턴 요약&#10;…&#10;&#10;## 공략 포인트&#10;- …"}">${esc(v?.guide||"")}</textarea><small>길게 써도 돼요 · ‘## 제목’ 줄은 소제목, 빈 줄로 문단 구분</small></div>
       ${SYS?varFieldHTML():""}
       <div class="err" id="fErr" hidden></div>
       <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
@@ -2464,6 +2472,7 @@ function openForm(m, copyFrom, opts){
   sc.onclick=e=>{ if(e.target===sc) closeForm(); };
   wireMediaField();
   if(SYS){ formGallery=((v&&v.gallery)||[]).map(g=>({...g})); galBusy=0; wireGallery(); wireVars(); }
+  $("#form").addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); $("#form").requestSubmit(); } });
   $("#form").onsubmit=e=>{ e.preventDefault(); saveForm(m, v); };
 }
 /* =====================================================================
@@ -2478,7 +2487,7 @@ async function setSolo(m, on){
 const soloPics = m => [...((m.media||m.image)?[{media:m.media,image:m.image}]:[]), ...(m.gallery||[])];
 function renderSolo(list){
   const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
-  const ed=canEdit(), all=monsters.filter(m=>m.solo), shown=list.filter(m=>m.solo);
+  const ed=canEdit(), all=scoped(), shown=list;
   $("#count").textContent=`${shown.length} / ${all.length}건`;
   const seg=[["cat","분류별"],["game","게임별"],["none","한 줄로"]].map(([k,l])=>`<button type="button" data-sogrp="${k}" class="${soloGroup===k?"on":""}">${l}</button>`).join("");
   const bar=`<div class="ibar"><nav class="iseg sobar" aria-label="묶기">${seg}</nav><span class="note">시스템 편집 창의 ‘단독 시스템’ 체크로 넣고 빼요${ed?" · 확장 구조에서 우클릭해도 돼요":""} · 이미지를 누르면 크게 보고 ← → 로 넘겨요</span></div>`;
@@ -3280,8 +3289,8 @@ function varsViewHTML(m){
     <div class="vgrid">${vs.map(x=>`<figure class="vcard">${(x.media||x.image)?`<div class="vmed">${mediaHTML(x,480)}</div>`:""}
       <figcaption>${x.src?`<b>${esc(x.src)}</b>`:""}${x.diff?`<span>${esc(x.diff)}</span>`:""}</figcaption></figure>`).join("")}</div></div>`;
 }
-function mediaFieldHTML(label){
-  return `<div class="field full"><label>${label}</label>
+function mediaFieldHTML(label, half){
+  return `<div class="field${half?"":" full"}"><label>${label}</label>
         <div class="drop" id="drop"><div class="thumb" id="fThumb"><span>없음</span></div>
           <div class="txt"><span>파일을 끌어 놓거나, 이 창에서 Ctrl+V로 붙여 넣으세요. ${upTarget()?"GIF·WEBP·MP4 모두 그대로 올라가요 (이미지 10MB, 영상 100MB까지 · 10MB 넘는 GIF는 영상으로 바꿔서 올려요).":`움직이는 GIF·WEBP는 ${MAX_ANIM_KB}KB까지 원본 그대로 저장돼요.`}</span>
           <span style="display:flex;gap:6px;flex-wrap:wrap"><label class="btn sm" for="f_file" style="font-weight:500">파일 선택</label><input id="f_file" type="file" accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm,video/quicktime" hidden><button type="button" class="btn sm" id="fImgClear" hidden>이미지 빼기</button></span></div></div>
@@ -3968,8 +3977,8 @@ async function uploadAny(file, onp){
   }
   return {media:await prepUpload(target, file, t=>{ const m=/(\d+)%/.exec(t); onp(m?Number(m[1]):0); })};
 }
-function galleryFieldHTML(title, hint){
-  return `<div class="field full"><label>${title||"추가 이미지"} <small style="font-weight:400">· ${hint||"슬라이드에서 넘겨 보고, 상세 화면에 차례로 보여요"}</small></label>
+function galleryFieldHTML(title, hint, half){
+  return `<div class="field${half?"":" full"}"><label>${title||"추가 이미지"} <small style="font-weight:400">· ${hint||"슬라이드에서 넘겨 보고, 상세 화면에 차례로 보여요"}</small></label>
     <div class="galedit" id="galEdit"></div>
     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><label class="btn sm" for="g_files" style="font-weight:500">이미지 여러 장 추가</label><input id="g_files" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm" hidden><small>또는 이 칸 위로 끌어 놓기</small></div></div>`;
 }

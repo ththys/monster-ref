@@ -133,6 +133,11 @@ def main():
         pg.locator("#toast button", has_text="되돌리기").click(); pg.wait_for_timeout(300)
         check("단독 시스템 비교: 빼기·되돌리기", off == 0 and pg.locator(".sorow").count() == 1)
         pg.goto(url + "#sysref"); pg.wait_for_timeout(300)
+        hidden = pg.locator(f'#rows [data-edit="{pid}"]').count() == 0
+        pg.goto(url + "#sysref-tree"); pg.wait_for_timeout(300)
+        check("단독 시스템은 비교 화면에서만", hidden and pg.locator('#tree [data-tnode$="\u0001패링"]:not(.ghost)').count() == 0)
+        pg.goto(url + "#sysref-solo"); pg.wait_for_timeout(300); pg.click("[data-sooff]"); pg.wait_for_timeout(200)
+        pg.goto(url + "#sysref"); pg.wait_for_timeout(300)
 
         # 3-2) 몬스터의 전투 확장 시스템 추천은 같은 게임의 시스템만
         pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
