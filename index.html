@@ -584,6 +584,16 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .gstrip img,.gstrip video{height:100%;width:auto;display:block}
 .galedit .gi .gl{right:auto;left:2px}
 
+/* 홈: 저장 공간 */
+.husage{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.hucard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.hutop{display:flex;align-items:center;gap:8px}
+.hubig{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.hucard small{color:var(--muted);font-size:12px}
+.hubar{height:6px;border-radius:99px;background:var(--hover);overflow:hidden}
+.hubar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.hucard a{font-size:12.5px;color:var(--accent);text-decoration:none}
+.hunote{margin:8px 0 0;font-size:12px;color:var(--muted)}
 /* 홈 */
 .tabs a.navhome{font-size:14px;color:var(--ink)}
 .home,#hbody,#hres{display:flex;flex-direction:column;gap:20px}
@@ -2627,6 +2637,33 @@ function homeResultsHTML(){
   const by=Object.keys(HK).map(k=>[k,rs.filter(m=>kindOf(m)===k)]).filter(x=>x[1].length);
   return by.map(([k,l])=>`<section class="hsec"><h3>${HK[k].l} <span>${l.length}</span></h3><div class="hgrid">${l.slice(0,12).map(homeItem).join("")}</div></section>`).join("");
 }
+/* 이미지 저장 공간: 올린 파일 크기를 데이터에서 모아 계산 (Cloudinary 남은 크레딧은 비밀 키가 있어야 해서 사이트에서는 못 봄) */
+function mediaUsage(){
+  const seen=new Map(); let local=0, localBytes=0;
+  const add=x=>{ if(!x) return;
+    if(x.media&&x.media.id){ const k=(x.media.cloud||"")+"/"+x.media.id; if(!seen.has(k)) seen.set(k,{cloud:x.media.cloud||"?", bytes:+x.media.bytes||0, rt:x.media.rt}); }
+    else if(typeof x.image==="string" && x.image.startsWith("data:")){ local++; localBytes+=Math.round(x.image.length*0.75); } };
+  allRefs.forEach(m=>{
+    add(m); (m.gallery||[]).forEach(add); (m.variants||[]).forEach(add); (m.blocks||[]).forEach(add);
+    if(m.html){ const d=document.createElement("div"); d.innerHTML=gwSanitize(m.html); d.querySelectorAll("figure.gimg").forEach(f=>add(gwMediaOf(f))); }
+  });
+  try{ [...aboutBlocks(profile), ...docBlocks(profile,"port")].forEach(add); }catch{}
+  const by=new Map(); seen.forEach(v=>{ const c=by.get(v.cloud)||{n:0,bytes:0,video:0}; c.n++; c.bytes+=v.bytes; if(v.rt==="video") c.video++; by.set(v.cloud,c); });
+  return {by, local, localBytes};
+}
+const fmtBytes=b=>b>=1073741824?(b/1073741824).toFixed(2)+" GB":b>=1048576?(b/1048576).toFixed(1)+" MB":Math.max(0,Math.round(b/1024))+" KB";
+function usageHTML(){
+  const u=mediaUsage(), clouds=[...u.by.entries()], cfg=(window.REF_CONFIG&&window.REF_CONFIG.cloudinary)||[], cur=(cfg[cfg.length-1]||{}).cloudName;
+  if(!clouds.length && !u.local) return "";
+  return `<section class="hsec"><h3>이미지 저장 공간</h3><div class="husage">
+    ${clouds.map(([c,v])=>{ const gb=v.bytes/1073741824, pct=Math.min(100, gb/25*100);
+      return `<div class="hucard"><div class="hutop"><b>${esc(c)}</b>${c===cur?`<span class="tag c-ver">새 업로드 계정</span>`:""}</div>
+        <div class="hubig">${fmtBytes(v.bytes)}</div><small>파일 ${v.n}개${v.video?` (영상 ${v.video}개)`:""} · 저장만으로 약 ${gb<0.01?"0.01 미만":gb.toFixed(2)} 크레딧 / 월 25</small>
+        <div class="hubar" title="저장 공간만 계산한 값이에요"><i style="width:${Math.max(pct,0.8)}%"></i></div>
+        <a href="https://console.cloudinary.com/" target="_blank" rel="noopener">Cloudinary에서 정확한 남은 양 보기 ↗</a></div>`; }).join("")}
+    ${u.local?`<div class="hucard"><div class="hutop"><b>이 브라우저 안</b></div><div class="hubig">${fmtBytes(u.localBytes)}</div><small>파일 ${u.local}개 · 브라우저 저장소에 직접 들어간 작은 이미지</small></div>`:""}
+    </div><p class="hunote">올린 파일 크기를 더한 값이에요. 이미지를 볼 때 쓰는 전송량과 영상 변환도 크레딧을 쓰기 때문에, 실제 남은 양은 Cloudinary의 Usage 화면이 정확해요. 계정이 차면 config.js에 계정을 하나 더 추가하면 새 파일은 그쪽으로 가요.</p></section>`;
+}
 function renderHome(){
   const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
   const all=homeRefs(), cnt=k=>all.filter(m=>kindOf(m)===k).length;
@@ -2645,6 +2682,7 @@ function renderHome(){
       <div class="hstats">${Object.entries(HK).map(([k,v])=>`<a href="${v.h}" class="hstat"><b>${cnt(k)}</b><span>${v.l}</span></a>`).join("")}</div>
       ${recent.length?`<section class="hsec"><h3>최근 추가·수정</h3><div class="hgrid">${recent.map(homeItem).join("")}</div></section>`
         :`<div class="iempty"><strong>아직 레퍼런스가 없어요</strong><span>왼쪽 메뉴에서 몬스터·시스템·아이디어 등을 골라 추가해 보세요.</span></div>`}
+      ${usageHTML()}
       ${pick.length?`<section class="hsec"><h3>영감 <button type="button" class="btn sm" id="hShuffle">다른 것 보기</button></h3><div class="hinsp">${pick.map(m=>`<button type="button" class="hins" data-hopen="${esc(m.id)}" aria-label="${esc(m.name||"아이디어")} 크게 보기">${mediaHTML(m,640)}</button>`).join("")}</div></section>`:""}
     </div></div>`;
   wireVideos(gb);

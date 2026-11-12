@@ -306,6 +306,7 @@ def main():
         # 7-3) 홈: 주소만 치면 홈, 숫자·최근 추가, 전체 검색 → 누르면 열림
         pg.goto(url); pg.wait_for_timeout(400)
         home_ok = pg.locator(".home").count() == 1 and pg.locator(".hstat").count() == 5 and pg.locator(".hgrid .hitem").count() >= 5
+        check("홈: 이미지 저장 공간", pg.locator(".husage .hucard").count() >= 1 and "파일" in pg.inner_text(".husage"))
         pg.fill("#hq", "패링"); pg.wait_for_timeout(150)
         secs = pg.locator("#hres .hsec h3").all_inner_texts()
         pg.locator("#hres .hitem", has_text="강공 패링").first.click(); pg.wait_for_timeout(200)
