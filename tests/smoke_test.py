@@ -123,20 +123,21 @@ def main():
         pg.click("#fSave"); pg.wait_for_timeout(200)
         sv = pg.evaluate("()=>JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.kind==='system'&&m.name==='패링')")
         pg.goto(url + "#sysref-solo"); pg.wait_for_timeout(300)
-        rows, meds = pg.locator(".sorow").count(), pg.locator(".sorow .somed").count()
-        pg.locator(".sorow .somed").first.click(); pg.wait_for_timeout(150)
-        c1 = pg.inner_text(".ilb .icnt"); pg.keyboard.press("ArrowRight"); pg.wait_for_timeout(150); c2 = pg.inner_text(".ilb .icnt")
+        rows, meds = pg.locator(".solit").count(), pg.locator(".sothumbs button").count()
+        c0 = pg.inner_text(".sopane .socnt"); pg.keyboard.press("ArrowRight"); pg.wait_for_timeout(150); c1 = pg.inner_text(".sopane .socnt")
+        pg.click(".sopane .sobig"); pg.wait_for_timeout(150)
+        lb1 = pg.inner_text(".ilb .icnt"); pg.keyboard.press("ArrowRight"); pg.wait_for_timeout(150); c2 = pg.inner_text(".ilb .icnt")
         pg.keyboard.press("Escape"); pg.wait_for_timeout(100)
-        check("단독 시스템 비교: 체크·여러 장·나란히·넘기기", sv.get("solo") is True and len(sv.get("gallery", [])) == 3 and rows == 1 and meds == 3
-              and c1 == "1 / 3" and c2 == "2 / 3", f"{sv.get('solo')} {len(sv.get('gallery',[]))} {rows} {meds} {c1} {c2}")
-        pg.click("[data-sooff]"); pg.wait_for_timeout(200); off = pg.locator(".sorow").count()
+        check("연출 비교: 체크·여러 장·넘겨 보기·크게 보기", sv.get("solo") is True and len(sv.get("gallery", [])) == 3 and rows == 1 and meds == 3
+              and c0 == "1 / 3" and c1 == "2 / 3" and lb1 == "2 / 3" and c2 == "3 / 3", f"{sv.get('solo')} {len(sv.get('gallery',[]))} {rows} {meds} {c0} {c1} {lb1} {c2}")
+        pg.click(".sopane [data-sooff]"); pg.wait_for_timeout(200); off = pg.locator(".solit").count()
         pg.locator("#toast button", has_text="되돌리기").click(); pg.wait_for_timeout(300)
-        check("단독 시스템 비교: 빼기·되돌리기", off == 0 and pg.locator(".sorow").count() == 1)
+        check("연출 비교: 빼기·되돌리기", off == 0 and pg.locator(".solit").count() == 1)
         pg.goto(url + "#sysref"); pg.wait_for_timeout(300)
         hidden = pg.locator(f'#rows [data-edit="{pid}"]').count() == 0
         pg.goto(url + "#sysref-tree"); pg.wait_for_timeout(300)
-        check("단독 시스템은 비교 화면에서만", hidden and pg.locator('#tree [data-tnode$="\u0001패링"]:not(.ghost)').count() == 0)
-        pg.goto(url + "#sysref-solo"); pg.wait_for_timeout(300); pg.click("[data-sooff]"); pg.wait_for_timeout(200)
+        check("연출 비교 시스템은 거기서만", hidden and pg.locator('#tree [data-tnode$="\u0001패링"]:not(.ghost)').count() == 0)
+        pg.goto(url + "#sysref-solo"); pg.wait_for_timeout(300); pg.click(".sopane [data-sooff]"); pg.wait_for_timeout(200)
         pg.goto(url + "#sysref"); pg.wait_for_timeout(300)
 
         # 3-2) 몬스터의 전투 확장 시스템 추천은 같은 게임의 시스템만

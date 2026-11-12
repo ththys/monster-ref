@@ -543,26 +543,47 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .sobar button{border:0;background:none;padding:6px 14px;font-size:13px;color:var(--muted);border-right:1px solid var(--line);cursor:pointer}
 .sobar button:last-child{border-right:0}
 .sobar button.on{background:var(--ink);color:var(--panel);font-weight:600}
-.sosec{margin-bottom:22px}
-.sosec h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px}
-.sosec h3 span{color:var(--muted);font-weight:500;font-size:13px}
-.sorow{display:grid;grid-template-columns:240px 1fr;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
-.sohead{display:flex;flex-direction:column;gap:5px;min-width:0}
-.sohead>b{font-size:15.5px;line-height:1.3}
-.sohead small{color:var(--muted);font-size:12px}
-.sohead .tag.c-game{align-self:flex-start}
-.sohead p{margin:2px 0 0;font-size:12.5px;line-height:1.55;color:var(--muted)}
-.soact{display:flex;gap:4px;margin-top:auto;padding-top:6px;flex-wrap:wrap}
-.sostrip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity;min-width:0}
-.somed{flex:0 0 auto;height:190px;border:0;padding:0;border-radius:9px;overflow:hidden;background:var(--bg);cursor:zoom-in;scroll-snap-align:start}
-.somed img,.somed video{height:100%;width:auto;max-width:420px;object-fit:cover;display:block}
+.sowrap{display:grid;grid-template-columns:250px 1fr;gap:14px;align-items:start}
+.solist{position:sticky;top:12px;max-height:calc(100vh - 160px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px}
+.solgrp h4{margin:8px 6px 4px;font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+.solit{display:flex;align-items:center;gap:2px;border-radius:8px}
+.solit.on{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.solit.main{box-shadow:inset 3px 0 0 var(--accent)}
+.solpick{flex:1;display:flex;align-items:center;gap:8px;border:0;background:none;padding:6px;text-align:left;cursor:pointer;color:var(--ink);font:inherit;min-width:0;border-radius:8px}
+.solpick:hover{background:var(--hover)}
+.solth{flex:0 0 56px;height:40px;border-radius:5px;overflow:hidden;background:var(--bg)}
+.solth img,.solth video{width:100%;height:100%;object-fit:cover;display:block}
+.soltx{display:flex;flex-direction:column;min-width:0}
+.soltx b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.soltx small{font-size:11px;color:var(--muted)}
+.soladd{flex:0 0 28px;height:28px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--muted);cursor:pointer;font-size:15px;line-height:1}
+.soladd:hover{color:var(--accent);border-color:var(--accent)}
+.sopanes{display:grid;gap:12px;min-width:0}
+.sopanes.n2{grid-template-columns:1fr 1fr} .sopanes.n3{grid-template-columns:1fr 1fr 1fr}
+.sopane{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.sopane>header{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sopane>header b{font-size:14.5px}
+.socnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sotools{margin-left:auto;display:flex;gap:4px;align-items:center}
+.sostage{position:relative;background:#0b0d10;height:min(62vh,560px);display:flex;align-items:center;justify-content:center}
+.sopanes.n2 .sostage,.sopanes.n3 .sostage{height:min(48vh,440px)}
+.sobig{border:0;padding:0;background:none;width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:zoom-in}
+.sobig img,.sobig video{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.sonav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:60px;border:0;border-radius:8px;background:rgba(255,255,255,.14);color:#fff;font-size:30px;cursor:pointer}
+.sonav:hover{background:rgba(255,255,255,.28)} .sonav.prev{left:8px} .sonav.next{right:8px}
+.sostage .sonone{color:#aab}
+.sothumbs{display:flex;gap:6px;overflow-x:auto;padding:8px}
+.sothumbs button{flex:0 0 auto;width:72px;height:50px;border:2px solid transparent;border-radius:6px;overflow:hidden;padding:0;background:var(--bg);cursor:pointer;opacity:.65}
+.sothumbs button.on{border-color:var(--accent);opacity:1}
+.sothumbs img,.sothumbs video{width:100%;height:100%;object-fit:cover;display:block}
 .sonone{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:13px;padding:0 10px;min-height:80px}
+@media (max-width:900px){ .sowrap{grid-template-columns:1fr} .solist{position:static;max-height:none;display:flex;gap:6px;overflow-x:auto} .solgrp{display:flex;gap:4px;align-items:center} .solgrp h4{display:none} .solit{flex:0 0 auto} .soltx{max-width:120px} .sopanes.n2,.sopanes.n3{grid-template-columns:1fr} }
 .linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;font:inherit;padding:0;text-decoration:underline}
 .gstrip{display:flex;gap:8px;overflow-x:auto;margin:10px 22px 0;padding-bottom:4px}
 .gstrip button{flex:0 0 auto;height:120px;border:0;padding:0;border-radius:8px;overflow:hidden;cursor:zoom-in;background:var(--bg)}
 .gstrip img,.gstrip video{height:100%;width:auto;display:block}
 .galedit .gi .gl{right:auto;left:2px}
-@media (max-width:760px){ .sorow{grid-template-columns:1fr} .somed{height:150px} }
+
 /* 홈 */
 .tabs a.navhome{font-size:14px;color:var(--ink)}
 .home,#hbody,#hres{display:flex;flex-direction:column;gap:20px}
@@ -837,7 +858,7 @@ span.mention{color:var(--t-sys);font-weight:600}
         <a href="#sysref-cats" data-view="sysref-cats" class="sub"><span>분류별</span><span class="n" id="nSRcat"></span></a>
         <a href="#sysref-tree" data-view="sysref-tree" class="sub"><span>확장 구조</span></a>
         <a href="#sysref-all" data-view="sysref-all" class="sub"><span>톺아보기</span></a>
-        <a href="#sysref-solo" data-view="sysref-solo" class="sub"><span>단독 시스템 비교</span><span class="n" id="nSolo"></span></a>
+        <a href="#sysref-solo" data-view="sysref-solo" class="sub"><span>연출 비교</span><span class="n" id="nSolo"></span></a>
         </div>
         <button type="button" class="navh navtog" data-grp="game" aria-expanded="false" aria-controls="navg-game"><span>게임</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navg-game" class="navgrp" hidden>
@@ -1592,7 +1613,7 @@ function treeCtxNode(e, key, N, merge){
   ];
   if(fam) items.push(treeFocus===fam ? {label:"전체 계열 보기", run:()=>{ treeFocus=""; render(); }} : {label:"이 계열만 보기", hint:fam, run:()=>{ treeFocus=fam; render(); }});
   if((ref.parents||[]).length) items.push({label:"기본 시스템으로 빼기", hint:`${ref.parents.join(" + ")}에서`, run:()=>reparent(key, [], `${name}을(를) 기본 시스템으로 뺐어요`)});
-  items.push({label: ref.solo?"단독 시스템 비교에서 빼기":"단독 시스템 비교에 넣기", run:()=>setSolo(ref, !ref.solo)});
+  items.push({label: ref.solo?"연출 비교에서 빼기":"연출 비교에 넣기", run:()=>setSolo(ref, !ref.solo)});
   items.push("-", {label:"삭제", danger:true, run:()=>confirmDelete(ref.id)});
   openCtx(e.clientX, e.clientY, items, name);
 }
@@ -2438,12 +2459,12 @@ function openForm(m, copyFrom, opts){
       ${SYS?"":`<div class="field"><label for="f_version"><i style="background:var(--t-ver)"></i>버전</label><input id="f_version" type="text" value="${esc(v?.version)}" placeholder="1.4"><small>등장한 게임 버전·패치</small></div>`}
       ${SYS ? `<div class="field"><label for="f_name">시스템 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${esc(K.namePh)}" autocomplete="off" required><small id="f_nameDup" class="dupwarn" hidden></small></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${esc(K.enPh)}" lang="en" autocomplete="off"></div>
-      <div class="field full"><label class="solock"><input type="checkbox" id="f_solo" ${v?.solo?"checked":""}><span><b>단독 시스템</b> <small>— ‘단독 시스템 비교’에서만 보여요</small></span></label></div>`
+      <div class="field full"><label class="solock"><input type="checkbox" id="f_solo" ${v?.solo?"checked":""}><span><b>연출 비교</b> <small>— 체크하면 ‘연출 비교’에서만 보여요 (이미지 여러 장을 넘겨 보며 다른 게임과 나란히)</small></span></label></div>`
       : `<div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${K.enPh}" lang="en" autocomplete="off"></div>`}
       ${SYS?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>`}
       ${mediaFieldHTML(SYS?"대표 이미지":"이미지", SYS)}
-      ${SYS?galleryFieldHTML("이미지 여러 장","한 번에 여러 개 · 비교 화면에 쭉",true):""}
+      ${SYS?galleryFieldHTML("이미지 여러 장","한 번에 여러 개 · 연출 비교에서 넘겨 봐요",true):""}
       ${SYS?`${EXT?"":`<div class="field"><label for="f_cats"><i style="background:var(--t-pc)"></i>분류</label><input id="f_cats" type="text" value="${esc(j(v?.cats))}" placeholder="전투 / 성장 / 재화"><small>시스템 종류 · / 로 구분</small></div>`}
       <div class="field${EXT?" full":""}"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc(j(v?.keywords))}" placeholder="태그 / 연계 / 게이지"><small>/ 로 구분</small></div>
       ${EXT?`<div class="field full"><label for="f_parentsSel"><i style="background:var(--t-sys)"></i>확장 원본 (부모 시스템)</label>
@@ -2485,42 +2506,59 @@ function openForm(m, copyFrom, opts){
 let soloGroup=(()=>{ try{ return localStorage.getItem("monster-ref-sologroup")||"cat"; }catch{ return "cat"; } })();
 async function setSolo(m, on){
   try{ await store.update(m.id,{solo:!!on, updatedAt:Date.now()});
-    toastUndo(on?`${m.name}을(를) 단독 시스템 비교에 넣었어요`:`${m.name}을(를) 단독 시스템 비교에서 뺐어요`, ()=>store.update(m.id,{solo:!on, updatedAt:Date.now()})); }
+    toastUndo(on?`${m.name}을(를) 연출 비교에 넣었어요`:`${m.name}을(를) 연출 비교에서 뺐어요`, ()=>store.update(m.id,{solo:!on, updatedAt:Date.now()})); }
   catch(ex){ toast(errMsg(ex)); }
 }
 const soloPics = m => [...((m.media||m.image)?[{media:m.media,image:m.image}]:[]), ...(m.gallery||[])];
-function renderSolo(list){
-  const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
-  const ed=canEdit(), all=scoped(), shown=list;
-  $("#count").textContent=`${shown.length} / ${all.length}건`;
-  const seg=[["cat","분류별"],["game","게임별"],["none","한 줄로"]].map(([k,l])=>`<button type="button" data-sogrp="${k}" class="${soloGroup===k?"on":""}">${l}</button>`).join("");
-  const bar=`<div class="ibar"><nav class="iseg sobar" aria-label="묶기">${seg}</nav><span class="note">시스템 편집 창의 ‘단독 시스템’ 체크로 넣고 빼요${ed?" · 확장 구조에서 우클릭해도 돼요":""} · 이미지를 누르면 크게 보고 ← → 로 넘겨요</span></div>`;
-  if(!shown.length){
-    gb.innerHTML=bar+`<div class="iempty"><strong>${all.length?"조건에 맞는 단독 시스템이 없어요":"아직 단독 시스템이 없어요"}</strong><span>${all.length?"":"시스템을 편집해서 ‘단독 시스템’에 체크하면 여기에 나란히 모여요. 이미지는 한 번에 여러 장 올릴 수 있어요."}</span>${filters.size||query?`<button class="btn sm" type="button" data-clear>필터 모두 해제</button>`:""}</div>`;
-    return;
-  }
+let soloSel=[], soloIdx={}, soloOrder=[];
+function soloGroups(list){
   const keyOf = m => soloGroup==="game" ? [m.game||"게임 없음"] : soloGroup==="cat" ? ((m.cats||[]).length?m.cats:["분류 없음"]) : [""];
   const groups=new Map();
-  shown.forEach(m=>keyOf(m).forEach(k=>{ if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(m); }));
+  list.forEach(m=>keyOf(m).forEach(k=>{ if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(m); }));
   const order=[...groups.keys()].sort((a,b)=>(a==="분류 없음"||a==="게임 없음")-(b==="분류 없음"||b==="게임 없음") || koCmp(a,b));
-  const row=m=>{
-    const pics=soloPics(m), txt=(m.guide||"").replace(/^#+\s*/gm,"").replace(/\s+/g," ").trim();
-    return `<article class="sorow">
-      <div class="sohead">
-        <span class="tag c-game">${esc(m.game||"게임 없음")}</span>
-        <b>${esc(m.name)}</b>${m.nameEn?`<small lang="en">${esc(m.nameEn)}</small>`:""}
-        ${(m.parents||[]).length?`<span class="mcpar">↳ ${esc(m.parents.join(" + "))}</span>`:""}
-        ${[...(m.cats||[]),...(m.keywords||[])].length?`<div class="imeta">${(m.cats||[]).map(k=>`<span class="tag c-pc">${esc(k)}</span>`).join("")}${(m.keywords||[]).map(k=>`<span class="tag c-theme">#${esc(k)}</span>`).join("")}</div>`:""}
-        ${txt?`<p>${esc(txt.length>140?txt.slice(0,140)+"…":txt)}</p>`:""}
-        <div class="soact"><button type="button" class="btn sm" data-soguide="${esc(m.id)}">설명</button>${ed?`<button type="button" class="btn sm" data-soedit="${esc(m.id)}">편집</button><button type="button" class="btn sm" data-sooff="${esc(m.id)}" title="단독 시스템 비교에서 빼기">빼기</button>`:""}</div>
-      </div>
-      <div class="sostrip">${pics.length?pics.map((g,k)=>`<button type="button" class="somed" data-solb="${esc(m.id)}|${k}" aria-label="${esc(m.name)} 이미지 ${k+1}">${mediaHTML(g,640)}</button>`).join("")
-        :`<div class="sonone">이미지 없음${ed?` · <button type="button" class="linkbtn" data-soedit="${esc(m.id)}">편집에서 여러 장 올리기</button>`:""}</div>`}</div>
-    </article>`;
-  };
-  gb.innerHTML = bar + order.map(k=>`<section class="sosec">${k?`<h3>${esc(k)} <span>${groups.get(k).length}</span></h3>`:""}${groups.get(k).sort((a,b)=>koCmp(a.game||"",b.game||"")||koCmp(a.name,b.name)).map(row).join("")}</section>`).join("");
-  wireVideos(gb);
+  return order.map(k=>[k, groups.get(k).sort((a,b)=>koCmp(a.game||"",b.game||"")||koCmp(a.name,b.name))]);
 }
+function renderSolo(list){
+  const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
+  const ed=canEdit(), all=scoped();
+  $("#count").textContent=`${list.length} / ${all.length}건`;
+  const seg=[["cat","분류별"],["game","게임별"],["none","이름순"]].map(([k,l])=>`<button type="button" data-sogrp="${k}" class="${soloGroup===k?"on":""}">${l}</button>`).join("");
+  const bar=`<div class="ibar"><nav class="iseg sobar" aria-label="묶기">${seg}</nav><span class="note">← → 이미지 넘기기 · ↑ ↓ 다른 시스템 · <b>＋</b>로 최대 3개 나란히 · 시스템 편집 창의 ‘연출 비교’ 체크로 넣고 빼요</span></div>`;
+  if(!list.length){
+    gb.innerHTML=bar+`<div class="iempty"><strong>${all.length?"조건에 맞는 시스템이 없어요":"아직 연출 비교에 넣은 시스템이 없어요"}</strong><span>${all.length?"":"시스템을 편집해서 ‘연출 비교’에 체크하고, 이미지를 여러 장 한 번에 올려 주세요."}</span>${filters.size||query?`<button class="btn sm" type="button" data-clear>필터 모두 해제</button>`:""}</div>`;
+    return;
+  }
+  const groups=soloGroups(list); soloOrder=groups.flatMap(g=>g[1].map(m=>m.id)).filter((x,i,a)=>a.indexOf(x)===i);
+  soloSel=soloSel.filter(id=>soloOrder.includes(id)); if(!soloSel.length) soloSel=[soloOrder[0]];
+  const side=groups.map(([k,ms])=>`<div class="solgrp">${k?`<h4>${esc(k)}</h4>`:""}${ms.map(m=>{
+      const pics=soloPics(m), on=soloSel.includes(m.id), main=soloSel[0]===m.id;
+      return `<div class="solit ${on?"on":""} ${main?"main":""}"><button type="button" class="solpick" data-sopick="${esc(m.id)}">
+        <span class="solth">${pics.length?mediaHTML(pics[0],640):""}</span><span class="soltx"><b>${esc(m.name)}</b><small>${esc(m.game||"")} · ${pics.length}장</small></span></button>
+        <button type="button" class="soladd" data-soadd="${esc(m.id)}" title="${on?"나란히 보기에서 빼기":"나란히 보기에 더하기"}" aria-label="${on?"빼기":"더하기"}">${on&&soloSel.length>1?"−":"＋"}</button></div>`; }).join("")}</div>`).join("");
+  const pane=id=>{
+    const m=allRefs.find(x=>x.id===id); if(!m) return "";
+    const pics=soloPics(m), n=pics.length, i=n?(((soloIdx[id]||0)%n)+n)%n:0; soloIdx[id]=i;
+    return `<section class="sopane">
+      <header><span class="tag c-game">${esc(m.game||"")}</span><b>${esc(m.name)}</b>${n?`<span class="socnt">${i+1} / ${n}</span>`:""}
+        <span class="sotools"><button type="button" class="btn sm" data-soguide="${esc(m.id)}">설명</button>${ed?`<button type="button" class="btn sm" data-soedit="${esc(m.id)}">편집</button><button type="button" class="btn sm" data-sooff="${esc(m.id)}" title="연출 비교에서 빼서 다른 시스템 화면으로 돌려보내기">빼기</button>`:""}${soloSel.length>1?`<button type="button" class="iconbtn" data-soadd="${esc(m.id)}" aria-label="닫기" title="나란히 보기에서 빼기">✕</button>`:""}</span></header>
+      <div class="sostage">${n?`<button type="button" class="sobig" data-solb="${esc(m.id)}|${i}" title="크게 보기">${mediaHTML(pics[i],640,true)}</button>
+        ${n>1?`<button type="button" class="sonav prev" data-sostep="${esc(m.id)}|-1" aria-label="이전">‹</button><button type="button" class="sonav next" data-sostep="${esc(m.id)}|1" aria-label="다음">›</button>`:""}`
+        :`<div class="sonone">이미지 없음${ed?` · <button type="button" class="linkbtn" data-soedit="${esc(m.id)}">편집에서 여러 장 올리기</button>`:""}</div>`}</div>
+      ${n>1?`<div class="sothumbs">${pics.map((g,k)=>`<button type="button" class="${k===i?"on":""}" data-sogo="${esc(m.id)}|${k}" aria-label="${k+1}번째">${mediaHTML(g,640)}</button>`).join("")}</div>`:""}
+    </section>`;
+  };
+  gb.innerHTML = bar + `<div class="sowrap"><aside class="solist" aria-label="시스템 목록">${side}</aside><div class="sopanes n${soloSel.length}">${soloSel.map(pane).join("")}</div></div>`;
+  gb.querySelectorAll(".sostage video").forEach(v=>{ v.muted=true; v.play().catch(()=>{}); });
+  wireVideos(gb);
+  const cur=gb.querySelector(".solit.main"); if(cur) cur.scrollIntoView({block:"nearest"});
+}
+function soloStep(id, d){ const m=allRefs.find(x=>x.id===id); const n=m?soloPics(m).length:0; if(!n) return; soloIdx[id]=((((soloIdx[id]||0)+d)%n)+n)%n; render(); }
+document.addEventListener("keydown",e=>{
+  if(sub!=="solo" || !$("#scrim").hidden || !$("#lightbox").hidden || ctxEl) return;
+  if(e.target.closest("input,textarea,select,[contenteditable]")) return;
+  if(e.key==="ArrowLeft"||e.key==="ArrowRight"){ e.preventDefault(); const d=e.key==="ArrowLeft"?-1:1; soloSel.forEach(id=>{ const m=allRefs.find(x=>x.id===id); const n=m?soloPics(m).length:0; if(n) soloIdx[id]=((((soloIdx[id]||0)+d)%n)+n)%n; }); render(); }
+  else if((e.key==="ArrowUp"||e.key==="ArrowDown") && soloOrder.length){ e.preventDefault(); const i=soloOrder.indexOf(soloSel[0]); const nx=soloOrder[(i+(e.key==="ArrowUp"?-1:1)+soloOrder.length)%soloOrder.length]; soloSel=[nx, ...soloSel.slice(1).filter(x=>x!==nx)]; render(); }
+});
 let galList=[];
 /* 크게 보기: 정지 이미지는 원본 파일 그대로(변환 없음), 영상·움짤은 재생 */
 function bigMediaHTML(g){
@@ -2548,6 +2586,14 @@ document.addEventListener("keydown",e=>{
 });
 document.addEventListener("click",e=>{
   const sb=e.target.closest("[data-solb]"); if(sb){ if(sb.classList.contains("gmbig") && e.target.tagName==="VIDEO") return; const [id,k]=sb.dataset.solb.split("|"); galLB(id,+k); return; }
+  const sp=e.target.closest("[data-sopick],[data-soadd],[data-sostep],[data-sogo]");
+  if(sp){
+    if(sp.dataset.sopick){ const id=sp.dataset.sopick; soloSel=[id, ...soloSel.slice(1).filter(x=>x!==id)]; }
+    else if(sp.dataset.soadd){ const id=sp.dataset.soadd; if(soloSel.includes(id)){ if(soloSel.length>1) soloSel=soloSel.filter(x=>x!==id); } else { soloSel=[...soloSel, id].slice(-3); } }
+    else if(sp.dataset.sostep){ const [id,d]=sp.dataset.sostep.split("|"); soloStep(id,+d); return; }
+    else if(sp.dataset.sogo){ const [id,k]=sp.dataset.sogo.split("|"); soloIdx[id]=+k; }
+    render(); return;
+  }
   const g=e.target.closest("[data-soguide],[data-soedit],[data-sooff],[data-sogrp]"); if(!g) return;
   if(g.dataset.sogrp){ soloGroup=g.dataset.sogrp; try{ localStorage.setItem("monster-ref-sologroup",soloGroup); }catch{} render(); return; }
   const m=allRefs.find(x=>x.id===(g.dataset.soguide||g.dataset.soedit||g.dataset.sooff)); if(!m) return;
