@@ -315,6 +315,29 @@ def main():
         pg.keyboard.press("Escape"); pg.wait_for_timeout(100)
         if pg.is_visible("#scrim"): pg.click("#gClose")
 
+        # 7-4) 용어집: PC 특징을 표준 용어로 묶기 (같은 말·비슷한 말), 올리면 표준 용어, 검색·모아 보기
+        pg.goto(url + "#pc"); pg.wait_for_timeout(300)
+        def add_pc(game, name, traits):
+            pg.click("#addBtn"); pg.wait_for_timeout(100); pick_or_type(pg, "f_game", game)
+            pg.fill("#f_name", name); pg.fill("#f_traits", traits); pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(250)
+        def link(term, rel="same"):
+            pg.wait_for_timeout(900); pg.locator("#toast button", has_text="연결하기").click(); pg.wait_for_timeout(150)
+            pg.fill("#t_name", term); pg.check(f'input[name="t_rel"][value="{rel}"]'); pg.click("#fSave"); pg.wait_for_timeout(250)
+        add_pc("게임 A", "PC 하나", "명파"); link("방어 무시")
+        add_pc("게임 B", "PC 둘", "관통"); link("방어 무시")
+        add_pc("게임 C", "PC 셋", "방어 무시"); pg.wait_for_timeout(900)
+        no_prompt = pg.locator("#toast button", has_text="연결하기").count() == 0 or not pg.is_visible("#toast")
+        add_pc("게임 D", "PC 넷", "융해"); link("방어 무시", "similar")
+        pg.locator('#rows [data-tword="명파"]').first.hover(); pg.wait_for_timeout(250)
+        card = pg.inner_text(".mcard") if pg.locator(".mcard").count() else ""
+        check("용어집: 연결·올리면 표준 용어", no_prompt and "방어 무시" in card and "관통" in card and "융해" in card, card[:120])
+        pg.mouse.move(5, 5); pg.wait_for_timeout(200)
+        pg.fill("#q", "방어 무시"); pg.wait_for_timeout(200)
+        names = pg.locator("#rows td.name .nm").all_inner_texts()
+        check("용어집: 표준 용어로 검색하면 같은 말만 모임", sorted(names) == ["PC 둘", "PC 셋", "PC 하나"], str(names))
+        pg.fill("#q", ""); pg.goto(url + "#terms"); pg.wait_for_timeout(300)
+        check("용어집 화면", pg.locator(".tcard").count() == 1 and "명파" in pg.inner_text(".tcard") and "3곳" in pg.inner_text(".tcard"))
+
         # 8) 새로고침 후 유지
         pg.reload(); pg.wait_for_timeout(500); pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         check("새로고침 후 데이터 유지", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)
