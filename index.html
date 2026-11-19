@@ -971,6 +971,8 @@ const CATS = [
   {key:"looks",  label:"외형",            cls:"c-look"},
   {key:"weapons",label:"무기",            cls:"c-weapon"},
   {key:"traits", label:"특징",            cls:"c-trait"},
+  {key:"roles",  label:"역할",            cls:"c-level"},
+  {key:"styles", label:"전투 방식",        cls:"c-hook"},
   {key:"systems",label:"전투 확장 시스템", cls:"c-sys", deep:true, root:"몬스터 전투 확장 시스템"},
   {key:"pcs",    label:"대응 PC 도구",     cls:"c-pc",  deep:true, root:"대응 PC 도구"},
   {key:"cats",    label:"분류",            cls:"c-pc"},
@@ -980,7 +982,7 @@ const CAT = Object.fromEntries(CATS.map(c=>[c.key,c]));
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 /* 태그는 넣은 순서가 아니라 가나다순으로 보여 줌 */
-const TAG_KEYS=["hooks","theme","levels","looks","weapons","traits","cats","keywords","similar"], DEEP_KEYS=["systems","pcs"];
+const TAG_KEYS=["hooks","theme","levels","looks","weapons","traits","roles","styles","cats","keywords","similar"], DEEP_KEYS=["systems","pcs"];
 const koCmp=(a,b)=>String(a).localeCompare(String(b),"ko",{numeric:true});
 function tagSort(m){
   if(!m || typeof m!=="object") return m;
@@ -1074,14 +1076,16 @@ let monsters = [];  /* 지금 보고 있는 종류만 */
 let kind = "monster";
 const KINDS = {
   monster:{ label:"몬스터", counter:"대응 PC 도구", counterPh:"엽빛나", namePh:"태초의 악몽", guide:"공략", enPh:"Primordial Nightmare" },
-  pc:     { label:"PC",    counter:"대응 몬스터",  counterPh:"태초의 악몽", namePh:"엽빛나", guide:"공략", enPh:"Ye Shunguang" },
+  pc:     { label:"PC",    counter:"대응 몬스터",  counterPh:"태초의 악몽", namePh:"엽빛나", guide:"운용", enPh:"Ye Shunguang" },
   system: { label:"시스템", counter:"대응 항목",   counterPh:"", namePh:"태그 교체", guide:"설명", enPh:"Tag Switch" },
   game:   { label:"게임 정리", counter:"",         counterPh:"", namePh:"", guide:"정리", enPh:"" },
   idea:   { label:"아이디어", counter:"",         counterPh:"", namePh:"폐허 위 거대한 실루엣", guide:"메모", enPh:"" },
 };
 const kindOf = m => m.kind==="pc" ? "pc" : m.kind==="system" ? "system" : m.kind==="idea" ? "idea" : m.kind==="game" ? "game" : m.kind==="term" ? "term" : "monster";
 const SYS_KEYS=["game","cats","keywords"], IDEA_KEYS=["keywords","game"];
-const railCats = () => kind==="game" ? [CAT.keywords] : kind==="idea" ? IDEA_KEYS.map(k=>CAT[k]) : CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key) && (c.key!=="traits" || kind==="pc"));
+const railCats = () => kind==="game" ? [CAT.keywords] : kind==="idea" ? IDEA_KEYS.map(k=>CAT[k]) : CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key) && (!["traits","roles","styles"].includes(c.key) || kind==="pc") && (kind!=="pc" || !["hooks","levels"].includes(c.key) || pcLegacy()[c.key]));
+/* PC에서 빠진 칸(후킹 이미지·레벨 테마): 예전에 적어 둔 PC가 있을 때만 보임 */
+const pcLegacy = () => { const ps=allRefs.filter(m=>kindOf(m)==="pc"); return {hooks:ps.some(m=>(m.hooks||[]).length), levels:ps.some(m=>(m.levels||[]).length)}; };
 /* 아이디어 분류: 개별 패턴 / 이미지 */
 const ITYPES={pattern:"개별 패턴", image:"이미지"};
 const ideaTypeOf = m => m.type==="pattern" ? "pattern" : "image";
@@ -1089,11 +1093,13 @@ const THEAD = {
   ref: `<th class="grip" aria-label="순서"></th><th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th>공략</th><th></th>`,
   system: `<th class="grip" aria-label="순서"></th><th id="thName">시스템 및 확장</th><th>이미지</th><th>분류</th><th>키워드</th><th>설명</th><th></th>`,
 };
+const pcHead = L => `<th class="grip" aria-label="순서"></th><th id="thName">PC</th><th>이미지</th><th>역할</th><th>전투 방식</th><th>컨셉</th><th>외형</th><th>무기</th><th>특징</th>${L.hooks?`<th title="예전 칸 · 적어 둔 PC가 있어서 보여요">후킹 이미지</th>`:""}${L.levels?`<th title="예전 칸 · 적어 둔 PC가 있어서 보여요">레벨 테마</th>`:""}<th>전투 확장 시스템</th><th id="thCounter">대응 몬스터</th><th>운용</th><th></th>`;
 function syncKind(){
   monsters = allRefs.filter(m=>kindOf(m)===kind);
   const K=KINDS[kind];
-  const head=$("#thead"); const want = kind==="system" ? "system" : "ref";
-  if(head && head.dataset.k!==want){ head.innerHTML=`<tr>${THEAD[want]}</tr>`; head.dataset.k=want; }
+  const head=$("#thead"); const L=pcLegacy(); const want = kind==="system" ? "system" : kind==="pc" ? `pc${+L.hooks}${+L.levels}` : "ref";
+  CAT.theme.label = kind==="pc" ? "컨셉" : "테마";
+  if(head && head.dataset.k!==want){ head.innerHTML=`<tr>${kind==="pc"?pcHead(L):THEAD[want]}</tr>`; head.dataset.k=want; }
   CAT.pcs.label = K.counter; CAT.pcs.root = K.counter;
   CAT.systems.root = `${K.label} 전투 확장 시스템`;
   const th=$("#thName"); if(th) th.textContent = kind==="system" ? "시스템 및 확장" : K.label;
@@ -1201,8 +1207,8 @@ function wireVideos(root, ob){
 
 /* ---------- filtering ---------- */
 function haystack(m){
-  const parts=[m.game,m.version,m.name,m.nameEn,m.link,m.guide,...(m.cats||[]),...(m.keywords||[]),...(m.parents||[]),...(m.similar||[]),m.ext,m.oneLine,...(m.variants||[]).flatMap(x=>[x.src,x.diff]),...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[])];
-  [...(m.traits||[]),...(m.keywords||[]),...(m.theme||[]),...(m.weapons||[]),...(m.looks||[]),...(m.cats||[])].forEach(w=>{ const t=termFor(w,m.game); if(t && t.rel==="same") parts.push(t.term.name, t.term.name.replace(/\s+/g,"")); });
+  const parts=[m.game,m.version,m.name,m.nameEn,m.link,m.guide,...(m.cats||[]),...(m.keywords||[]),...(m.parents||[]),...(m.similar||[]),m.ext,m.oneLine,...(m.variants||[]).flatMap(x=>[x.src,x.diff]),...(m.theme||[]),...(m.levels||[]),...(m.hooks||[]),...(m.looks||[]),...(m.weapons||[]),...(m.traits||[]),...(m.roles||[]),...(m.styles||[])];
+  [...(m.traits||[]),...(m.roles||[]),...(m.styles||[]),...(m.keywords||[]),...(m.theme||[]),...(m.weapons||[]),...(m.looks||[]),...(m.cats||[])].forEach(w=>{ const t=termFor(w,m.game); if(t && t.rel==="same") parts.push(t.term.name, t.term.name.replace(/\s+/g,"")); });
   for (const e of (m.systems||[])){ const sr=sysRefFor(m.game,e.name); parts.push(e.name, sr&&sr.nameEn, ...((sr&&sr.keywords)||[])); }
   for (const e of (m.pcs||[])){ const d=getDef(kindOf(m),"pcs",e.name); parts.push(e.name,d.nameEn,d.label,d.note); }
   return parts.filter(Boolean).join(" ").toLowerCase();
@@ -1424,7 +1430,7 @@ function setView(v){
   if(VIEWMAP[v].kind){ kind=VIEWMAP[v].kind; }
   if(kind!==prevKind){ filters.clear(); query=""; const q=$("#q"); if(q) q.value=""; }
   syncKind();
-  const q=$("#q"); if(q) q.placeholder=`게임, ${KINDS[kind].label}, 태그, 공략 내용까지 검색 — 띄어쓰기로 여러 단어 AND`;
+  const q=$("#q"); if(q) q.placeholder=`게임, ${KINDS[kind].label}, 태그, ${KINDS[kind].guide} 내용까지 검색 — 띄어쓰기로 여러 단어 AND`;
 }
 const listHash = () => kind==="pc" ? "#pc" : kind==="system" ? "#sysref" : kind==="idea" ? "#ideas" : kind==="game" ? "#games" : "#monsters";
 let groupEdit = null;   /* "monsterId|cat|index" */
@@ -1939,7 +1945,7 @@ function confirmNoteDelete(mid, cat, i){
 
 /* ---------- 자동완성: 이미 등록된 게임·태그를 드롭다운으로 ---------- */
 const AC_SINGLE=new Set(["game","version"]);
-const AC_SRC={w_tags:"worktags", f_similar:"parents", f_cats:"cats", f_keywords:"keywords", f_version:"version", f_hooks:"hooks", f_levels:"levels", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_traits:"traits", f_systems:"systems", f_pcs:"pcs"};
+const AC_SRC={w_tags:"worktags", f_similar:"parents", f_cats:"cats", f_keywords:"keywords", f_version:"version", f_hooks:"hooks", f_levels:"levels", f_theme:"theme", f_looks:"looks", f_weapons:"weapons", f_traits:"traits", f_roles:"roles", f_styles:"styles", f_systems:"systems", f_pcs:"pcs"};
 let acBox=null, acInput=null, acItems=[], acIdx=-1;
 function acValues(cat){
   const cnt=new Map();
@@ -2323,7 +2329,6 @@ function rowHTML(m, g){
   const nameTd=`<td class="name" ${gp&&gp.depth?`style="padding-left:${10+gp.depth*24}px"`:""}><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}${kindOf(m)==="system"&&(m.parents||[]).length?`<span class="par">↳ ${esc(m.parents.join(" + "))}에서 확장</span>`:""}${kindOf(m)==="system"&&m.ext?`<span class="ext">${esc(m.ext)}</span>`:""}${sims.length?`<span class="sim">≈ 비슷: ${esc(sims.join(", "))}</span>`:""}${kindOf(m)==="system"?(()=>{ const us=sysUsers(m); if(!us.length) return "";
       const mon=us.filter(u=>kindOf(u)==="monster").length, pc=us.filter(u=>kindOf(u)==="pc").length;
       return `${mon?`<button type="button" class="usechip" data-gouse="monster|${esc(m.game||"")}|${esc(m.name)}" title="이 시스템을 쓰는 몬스터 보기">몬스터 ${mon}</button>`:""}${pc?`<button type="button" class="usechip" data-gouse="pc|${esc(m.game||"")}|${esc(m.name)}" title="이 시스템을 쓰는 PC 보기">PC ${pc}</button>`:""}`; })():""}${gp&&gp.kids?`<button type="button" class="sgt ${gp.open?"open":""}" data-sgt="${esc(tkey(m.game,m.name))}" aria-expanded="${gp.open}">${gp.open?"▾":"▸"} 하위 ${gp.kids}개</button>`:""}
-      ${kindOf(m)==="pc"&&(m.traits||[]).length?`<div class="cell">${m.traits.map(v=>tagBtn("traits",v)).join("")}</div>`:""}
       ${(m.game||(m.version&&kindOf(m)!=="system"))?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version&&kindOf(m)!=="system"?tagBtn("version",m.version):""}</div>`:""}
       ${link}</td>`;
   const acts=`<td><div class="rowact"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>`;
@@ -2333,6 +2338,11 @@ function rowHTML(m, g){
   }
   if(false)
     return `${tr}${grip}${nameTd}<td>${thumbHTML(m,240)}</td><td>${cells("cats")}</td><td>${cells("keywords")}</td><td class="guide">${guideCell(m)}</td>${acts}</tr>`;
+  if(kindOf(m)==="pc"){ const L=pcLegacy();
+    return `${tr}${grip}${nameTd}<td>${thumbHTML(m,240)}</td>
+    <td>${cells("roles")}</td><td>${cells("styles")}</td><td>${cells("theme")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td><td>${cells("traits")}</td>
+    ${L.hooks?`<td>${cells("hooks")}</td>`:""}${L.levels?`<td>${cells("levels")}</td>`:""}
+    <td>${deep("systems")}</td><td>${deep("pcs")}</td><td class="guide">${guideCell(m)}</td>${acts}</tr>`; }
   return `${tr}${grip}${nameTd}
     <td>${thumbHTML(m,240)}</td>
     <td>${cells("hooks")}</td>
@@ -2349,7 +2359,7 @@ function renderRail(){
   for (const m of scoped()) for (const c of RC) for (const v of new Set(vals(m,c.key))) counts[c.key].set(v,(counts[c.key].get(v)||0)+1);
   $("#rail").innerHTML = RC.map(c=>{
     const arr=[...counts[c.key]].sort(c.key==="version" ? (a,b)=>cmpVersion(b[0],a[0]) : (a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
-    return `<div class="group"><h3><i style="background:var(--${{game:"t-game",version:"t-ver",theme:"t-theme",levels:"t-level",hooks:"t-hook",looks:"t-look",weapons:"t-weapon",traits:"t-trait",systems:"t-sys",pcs:"t-pc",cats:"t-pc",keywords:"t-theme"}[c.key]})"></i>${c.label}</h3>
+    return `<div class="group"><h3><i style="background:var(--${{game:"t-game",version:"t-ver",theme:"t-theme",levels:"t-level",hooks:"t-hook",looks:"t-look",weapons:"t-weapon",traits:"t-trait",roles:"t-level",styles:"t-hook",systems:"t-sys",pcs:"t-pc",cats:"t-pc",keywords:"t-theme"}[c.key]})"></i>${c.label}</h3>
       <div class="chips">${arr.length?arr.map(([v,n])=>{const on=filters.has(c.key+"|"+v);return `<button type="button" class="tag ${c.cls} ${on?"on":""}" data-tag="${esc(c.key)}|${esc(v)}">${esc(v)} <span class="n">${n}</span></button>`}).join(""):`<span class="empty-note">—</span>`}</div></div>`;
   }).join("");
 }
@@ -2515,7 +2525,7 @@ function openForm(m, copyFrom, opts){
       <div class="field full"><label class="solock"><input type="checkbox" id="f_solo" ${v?.solo?"checked":""}><span><b>연출 비교</b> <small>— 체크하면 ‘연출 비교’에서만 보여요 (이미지 여러 장을 넘겨 보며 다른 게임과 나란히)</small></span></label></div>`
       : `<div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${K.enPh}" lang="en" autocomplete="off"></div>`}
-      ${SYS?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>`}
+      ${SYS||(fKind==="pc"&&!(v?.hooks||[]).length)?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지${fKind==="pc"?` <small style="font-weight:400">· 예전 칸, 비우면 사라져요</small>`:""}</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>`}
       ${mediaFieldHTML(SYS?"대표 이미지":"이미지", SYS)}
       ${SYS?galleryFieldHTML("이미지 여러 장","한 번에 여러 개 · 연출 비교에서 넘겨 봐요",true):""}
       ${SYS?`${EXT?"":`<div class="field"><label for="f_cats"><i style="background:var(--t-pc)"></i>분류</label><input id="f_cats" type="text" value="${esc(j(v?.cats))}" placeholder="전투 / 성장 / 재화"><small>시스템 종류 · / 로 구분</small></div>`}
@@ -2528,15 +2538,17 @@ function openForm(m, copyFrom, opts){
         <small>같은 게임에 등록된 시스템에서 골라요 · 여러 개 가능 · 부모를 모두 빼면 기본 시스템이 돼요</small></div>
       <div class="field full"><label for="f_ext">확장 포인트</label><input id="f_ext" type="text" value="${esc(v?.ext)}" placeholder="강공격을 패링하면 상대가 더 크게 밀려남"><small>부모 시스템과 비교해 무엇이 달라졌는지 한 줄로</small></div>`:""}
       <div class="field"><label for="f_similar"><i style="background:var(--t-theme)"></i>비슷한 시스템</label><input id="f_similar" type="text" value="${esc(j(v?.similar))}" placeholder="저스트 가드"><small>확장 관계는 아니지만 역할이 비슷한 시스템 · / 로 구분 · 양쪽에 자동으로 표시돼요</small></div>`:`
-      <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>테마</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="변이 / 비행기 / 빠름 / 에너지"><small>/ 로 구분</small></div>
-      <div class="field full"><label for="f_levels"><i style="background:var(--t-level)"></i>레벨 테마</label><input id="f_levels" type="text" value="${esc(j(v?.levels))}" placeholder="폐허 도시 / 우주 정거장"><small>등장 스테이지의 분위기 · / 로 구분</small></div>
+      ${fKind==="pc"?`<div class="field"><label for="f_roles"><i style="background:var(--t-level)"></i>역할</label><input id="f_roles" type="text" value="${esc(j(v?.roles))}" placeholder="딜러 / 탱커 / 서포터 / 힐러"><small>파티에서 맡는 일 · / 로 구분</small></div>
+      <div class="field"><label for="f_styles"><i style="background:var(--t-hook)"></i>전투 방식</label><input id="f_styles" type="text" value="${esc(j(v?.styles))}" placeholder="근접 / 원거리 / 소환 / 변신"><small>싸우는 방식 · / 로 구분</small></div>`:""}
+      <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>${fKind==="pc"?"컨셉":"테마"}</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="${fKind==="pc"?"사무라이 / 냉정함 / 기계 팔":"변이 / 비행기 / 빠름 / 에너지"}"><small>/ 로 구분</small></div>
+      ${fKind==="pc"&&!(v?.levels||[]).length?"":`<div class="field full"><label for="f_levels"><i style="background:var(--t-level)"></i>레벨 테마</label><input id="f_levels" type="text" value="${esc(j(v?.levels))}" placeholder="폐허 도시 / 우주 정거장"><small>${fKind==="pc"?"예전 칸 · 비우면 사라져요":"등장 스테이지의 분위기 · / 로 구분"}</small></div>`}
       <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
       <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(v?.weapons))}" placeholder="에너지 / 검"></div>
       ${fKind==="pc"?`<div class="field full"><label for="f_traits"><i style="background:var(--t-trait)"></i>특징</label><input id="f_traits" type="text" value="${esc(j(v?.traits))}" placeholder="명파 / 염 속성 / 반격"><small>게임에서 쓰는 말 그대로 · / 로 구분 · 용어집에 연결하면 마우스를 올렸을 때 표준 용어가 보여요</small></div>`:""}
       <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>같은 게임의 시스템 레퍼런스와 이어져요 · 게임을 먼저 고르면 그 게임의 시스템이 추천돼요</small></div>
       <div class="field"><label for="f_pcs"><i style="background:var(--t-pc)"></i>${KINDS[fKind].counter}</label><input id="f_pcs" type="text" value="${esc(j((v?.pcs||[]).map(e=>e.name)))}" placeholder="${KINDS[fKind].counterPh}"></div>`}
       <div class="field${SYS?"":" full"}"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v?.link)}" placeholder="https://www.youtube.com/watch?v=…"></div>
-      <div class="field full"><label for="f_guide">${K.guide}</label><textarea id="f_guide" style="min-height:${SYS?140:220}px" placeholder="${SYS?"## 규칙&#10;…&#10;&#10;## 특징&#10;- …":"## 패턴 요약&#10;…&#10;&#10;## 공략 포인트&#10;- …"}">${esc(v?.guide||"")}</textarea><small>길게 써도 돼요 · ‘## 제목’ 줄은 소제목, 빈 줄로 문단 구분</small></div>
+      <div class="field full"><label for="f_guide">${K.guide}</label><textarea id="f_guide" style="min-height:${SYS?140:220}px" placeholder="${SYS?"## 규칙&#10;…&#10;&#10;## 특징&#10;- …":fKind==="pc"?"## 운용 요약&#10;…&#10;&#10;## 스킬 구성·순서&#10;- …&#10;&#10;## 팁&#10;- …":"## 패턴 요약&#10;…&#10;&#10;## 공략 포인트&#10;- …"}">${esc(v?.guide||"")}</textarea><small>길게 써도 돼요 · ‘## 제목’ 줄은 소제목, 빈 줄로 문단 구분</small></div>
       ${SYS?varFieldHTML():""}
       <div class="err" id="fErr" hidden></div>
       <div class="foot">${m?`<button type="button" class="btn" id="fCopy" title="지금 입력된 내용을 텍스트로 복사">복사</button><button type="button" class="btn" id="fDup" title="지금 입력된 내용으로 새 레퍼런스 만들기" style="margin-right:auto">복제</button>`:""}<button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
@@ -3592,7 +3604,7 @@ function formSnapshot(m){
   const keep=(names, old)=>names.map(n=>{ const o=(old||[]).find(e=>e.name===n); return o?{...o}:{name:n,label:"공략",note:""}; });
   return { ...m,
     game:$("#f_game").value.trim(), name:$("#f_name").value.trim(), nameEn:$("#f_nameEn").value.trim(), version:fv("f_version").trim(),
-    hooks:splitTags(fv("f_hooks")), levels:splitTags(fv("f_levels")),
+    hooks:tagsOr("f_hooks", m?.hooks), levels:tagsOr("f_levels", m?.levels), roles:tagsOr("f_roles", m?.roles), styles:tagsOr("f_styles", m?.styles),
     theme:splitTags(fv("f_theme")), looks:splitTags(fv("f_looks")), weapons:splitTags(fv("f_weapons")), traits:tagsOr("f_traits", m?.traits),
     systems:keep(splitTags(fv("f_systems")), m?.systems), pcs:keep(splitTags(fv("f_pcs")), m?.pcs),
     cats:tagsOr("f_cats",m?.cats), keywords:splitTags(fv("f_keywords")), parents:tagsOr("f_parents",m?.parents), similar:splitTags(fv("f_similar")), ext:textOr("f_ext",m?.ext),
@@ -3749,7 +3761,7 @@ async function saveForm(m, src){
   const data={
     kind: src ? kindOf(src) : kind,
     game, name, nameEn:$("#f_nameEn").value.trim(),
-    version:fv("f_version").trim(), hooks:splitTags(fv("f_hooks")), levels:splitTags(fv("f_levels")),
+    version:fv("f_version").trim(), hooks:tagsOr("f_hooks", src?.hooks), levels:tagsOr("f_levels", src?.levels), roles:tagsOr("f_roles", src?.roles), styles:tagsOr("f_styles", src?.styles),
     theme:splitTags(fv("f_theme")), looks:splitTags(fv("f_looks")), weapons:splitTags(fv("f_weapons")), traits:tagsOr("f_traits", src?.traits),
     systems:keep(splitTags(fv("f_systems")), src?.systems), pcs:keep(splitTags(fv("f_pcs")), src?.pcs),
     cats:tagsOr("f_cats",src?.cats), keywords:splitTags(fv("f_keywords")), parents:tagsOr("f_parents",src?.parents), similar:splitTags(fv("f_similar")), ext:textOr("f_ext",src?.ext),
