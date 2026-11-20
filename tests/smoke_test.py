@@ -343,11 +343,11 @@ def main():
         pg.goto(url + "#pc"); pg.wait_for_timeout(300)
         heads = pg.locator("#thead th").all_inner_texts()
         pg.click("#addBtn"); pg.wait_for_timeout(100)
-        form_ok = pg.locator("#f_roles").count() == 1 and pg.locator("#f_styles").count() == 1 and pg.locator("#f_hooks").count() == 0 and pg.locator("#f_levels").count() == 0
+        form_ok = pg.locator("#f_roles").count() == 1 and pg.locator("#f_styles").count() == 1 and pg.locator("#f_hooks").count() == 1 and pg.locator("#f_levels").count() == 0
         pick_or_type(pg, "f_game", "게임 A"); pg.fill("#f_name", "역할 PC"); pg.fill("#f_roles", "딜러"); pg.fill("#f_styles", "근접")
         pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(250)
-        check("PC 칸: 역할·전투 방식·운용, 후킹·레벨 없음", form_ok and "역할" in heads and "전투 방식" in heads and "컨셉" in heads and "운용" in heads
-              and "후킹 이미지" not in heads and "레벨 테마" not in heads and pg.locator('#rows [data-tag="roles|딜러"]').count() == 1, str(heads))
+        check("PC 칸: 핵심 이미지·역할·전투 방식·운용, 레벨 없음", form_ok and "역할" in heads and "전투 방식" in heads and "컨셉" in heads and "운용" in heads
+              and "핵심 이미지" in heads and "후킹 이미지" not in heads and "레벨 테마" not in heads and pg.locator('#rows [data-tag="roles|딜러"]').count() == 1, str(heads))
         pg.evaluate("""()=>{ const k='monster-ref-v1', d=JSON.parse(localStorage.getItem(k));
             d.forEach(m=>{ if(m.kind==='pc'&&m.name==='역할 PC') m.levels=['예전 레벨']; }); localStorage.setItem(k, JSON.stringify(d)); }""")
         pg.reload(); pg.wait_for_timeout(500)

@@ -1094,7 +1094,7 @@ const KINDS = {
 };
 const kindOf = m => m.kind==="pc" ? "pc" : m.kind==="system" ? "system" : m.kind==="idea" ? "idea" : m.kind==="game" ? "game" : m.kind==="term" ? "term" : "monster";
 const SYS_KEYS=["game","cats","keywords"], IDEA_KEYS=["keywords","game"];
-const railCats = () => kind==="game" ? [CAT.keywords] : kind==="idea" ? IDEA_KEYS.map(k=>CAT[k]) : CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key) && (!["traits","roles","styles"].includes(c.key) || kind==="pc") && (kind!=="pc" || !["hooks","levels"].includes(c.key) || pcLegacy()[c.key]));
+const railCats = () => kind==="game" ? [CAT.keywords] : kind==="idea" ? IDEA_KEYS.map(k=>CAT[k]) : CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key) && (!["traits","roles","styles"].includes(c.key) || kind==="pc") && (kind!=="pc" || c.key!=="levels" || pcLegacy().levels));
 /* PC에서 빠진 칸(후킹 이미지·레벨 테마): 예전에 적어 둔 PC가 있을 때만 보임 */
 const pcLegacy = () => { const ps=allRefs.filter(m=>kindOf(m)==="pc"); return {hooks:ps.some(m=>(m.hooks||[]).length), levels:ps.some(m=>(m.levels||[]).length)}; };
 /* 아이디어 분류: 개별 패턴 / 이미지 */
@@ -1104,12 +1104,13 @@ const THEAD = {
   ref: `<th class="grip" aria-label="순서"></th><th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th>공략</th><th></th>`,
   system: `<th class="grip" aria-label="순서"></th><th id="thName">시스템 및 확장</th><th>이미지</th><th>분류</th><th>키워드</th><th>설명</th><th></th>`,
 };
-const pcHead = L => `<th class="grip" aria-label="순서"></th><th id="thName">PC</th><th>이미지</th><th>역할</th><th>전투 방식</th><th>컨셉</th><th>외형</th><th>무기</th><th>특징</th>${L.hooks?`<th title="예전 칸 · 적어 둔 PC가 있어서 보여요">후킹 이미지</th>`:""}${L.levels?`<th title="예전 칸 · 적어 둔 PC가 있어서 보여요">레벨 테마</th>`:""}<th>전투 확장 시스템</th><th id="thCounter">대응 몬스터</th><th>운용</th><th></th>`;
+const pcHead = L => `<th class="grip" aria-label="순서"></th><th id="thName">PC</th><th>이미지</th><th>핵심 이미지</th><th>역할</th><th>전투 방식</th><th>컨셉</th><th>외형</th><th>무기</th><th>특징</th>${L.levels?`<th title="예전 칸 · 적어 둔 PC가 있어서 보여요">레벨 테마</th>`:""}<th>전투 확장 시스템</th><th id="thCounter">대응 몬스터</th><th>운용</th><th></th>`;
 function syncKind(){
   monsters = allRefs.filter(m=>kindOf(m)===kind);
   const K=KINDS[kind];
-  const head=$("#thead"); const L=pcLegacy(); const want = kind==="system" ? "system" : kind==="pc" ? `pc${+L.hooks}${+L.levels}` : "ref";
+  const head=$("#thead"); const L=pcLegacy(); const want = kind==="system" ? "system" : kind==="pc" ? `pc${+L.levels}` : "ref";
   CAT.theme.label = kind==="pc" ? "컨셉" : "테마";
+  CAT.hooks.label = kind==="pc" ? "핵심 이미지" : "후킹 이미지";
   if(head && head.dataset.k!==want){ head.innerHTML=`<tr>${kind==="pc"?pcHead(L):THEAD[want]}</tr>`; head.dataset.k=want; }
   CAT.pcs.label = K.counter; CAT.pcs.root = K.counter;
   CAT.systems.root = `${K.label} 전투 확장 시스템`;
@@ -2352,9 +2353,9 @@ function rowHTML(m, g){
   if(false)
     return `${tr}${grip}${nameTd}<td>${thumbHTML(m,240)}</td><td>${cells("cats")}</td><td>${cells("keywords")}</td><td class="guide">${guideCell(m)}</td>${acts}</tr>`;
   if(kindOf(m)==="pc"){ const L=pcLegacy();
-    return `${tr}${grip}${nameTd}<td>${thumbHTML(m,240)}</td>
+    return `${tr}${grip}${nameTd}<td>${thumbHTML(m,240)}</td><td>${cells("hooks")}</td>
     <td>${cells("roles")}</td><td>${cells("styles")}</td><td>${cells("theme")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td><td>${cells("traits")}</td>
-    ${L.hooks?`<td>${cells("hooks")}</td>`:""}${L.levels?`<td>${cells("levels")}</td>`:""}
+    ${L.levels?`<td>${cells("levels")}</td>`:""}
     <td>${deep("systems")}</td><td>${deep("pcs")}</td><td class="guide">${guideCell(m)}</td>${acts}</tr>`; }
   return `${tr}${grip}${nameTd}
     <td>${thumbHTML(m,240)}</td>
@@ -2558,7 +2559,7 @@ function openForm(m, copyFrom, opts){
       <div class="field full"><label class="solock"><input type="checkbox" id="f_solo" ${v?.solo?"checked":""}><span><b>연출 비교</b> <small>— 체크하면 ‘연출 비교’에서만 보여요 (이미지 여러 장을 넘겨 보며 다른 게임과 나란히)</small></span></label></div>`
       : `<div class="field"><label for="f_name">${KINDS[fKind].label} 이름</label><input id="f_name" type="text" value="${esc(v?.name)}" placeholder="${KINDS[fKind].namePh}" required></div>
       <div class="field"><label for="f_nameEn">영문 이름</label><input id="f_nameEn" type="text" value="${esc(v?.nameEn)}" placeholder="${K.enPh}" lang="en" autocomplete="off"></div>`}
-      ${SYS||(fKind==="pc"&&!(v?.hooks||[]).length)?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>후킹 이미지${fKind==="pc"?` <small style="font-weight:400">· 예전 칸, 비우면 사라져요</small>`:""}</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="압도적 크기 / 공포"><small>첫인상 키워드 · / 로 구분</small></div>`}
+      ${SYS?"":`<div class="field"><label for="f_hooks"><i style="background:var(--t-hook)"></i>${fKind==="pc"?"핵심 이미지":"후킹 이미지"}</label><input id="f_hooks" type="text" value="${esc(j(v?.hooks))}" placeholder="${fKind==="pc"?"암살자 / 그림자 / 날렵함":"압도적 크기 / 공포"}"><small>${fKind==="pc"?"이 캐릭터 하면 딱 떠오르는 인상":"첫인상 키워드"} · / 로 구분</small></div>`}
       ${mediaFieldHTML(SYS?"대표 이미지":"이미지", SYS)}
       ${SYS?galleryFieldHTML("이미지 여러 장","한 번에 여러 개 · 연출 비교에서 넘겨 봐요",true):""}
       ${SYS?`${EXT?"":`<div class="field"><label for="f_cats"><i style="background:var(--t-pc)"></i>분류</label><input id="f_cats" type="text" value="${esc(j(v?.cats))}" placeholder="전투 / 성장 / 재화"><small>시스템 종류 · / 로 구분</small></div>`}
