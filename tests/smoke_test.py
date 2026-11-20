@@ -381,6 +381,20 @@ def main():
         check("패치 타임라인(가로): 몬스터·PC 한 줄씩, 끄고 켜기", both and pg.locator(".tlpk .tvchip.pcm").count() == 0 and pg.locator(".tlpk .tvchip.mon").count() == 1)
         pg.check('[data-tlshow="pc"]'); pg.wait_for_timeout(100)
 
+        # 7-6b) 타임라인 우클릭: 칸에서 PC 추가(게임·버전 채워짐), 이름표 메뉴
+        pg.click('[data-tlview="bars"]'); pg.wait_for_timeout(200)
+        pg.locator('.tlpack.k-pc .tlpk[data-ver="1.2"]').click(button="right"); pg.wait_for_timeout(200)
+        menu = pg.inner_text(".ctx")
+        pg.locator(".ctx button", has_text="PC 추가").click(); pg.wait_for_timeout(300)
+        seeded = pg.input_value("#f_version") == "1.2" and "타임 게임" in pg.inner_html("#form")
+        pg.fill("#f_name", "우클릭 PC"); pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(400)
+        made = pg.evaluate("(JSON.parse(localStorage.getItem('monster-ref-v1'))||[]).find(m=>m.name==='우클릭 PC')||{}")
+        pg.goto(url + "#patches"); pg.wait_for_timeout(300); pg.select_option("#tlGameSel", "타임 게임"); pg.wait_for_timeout(200)
+        pg.locator(".tlpk .tvchip", has_text="우클릭 PC").click(button="right"); pg.wait_for_timeout(200)
+        cmenu = pg.inner_text(".ctx"); pg.keyboard.press("Escape")
+        check("타임라인 우클릭으로 추가·이름표 메뉴", "PC 추가" in menu and "몬스터 추가" in menu and seeded and made.get("kind") == "pc" and made.get("version") == "1.2" and made.get("game") == "타임 게임" and "편집" in cmenu and "삭제" in cmenu, f"{menu!r},{seeded},{made.get('kind')},{made.get('version')},{cmenu!r}")
+        pg.click('[data-tlview="table"]'); pg.wait_for_timeout(100); pg.click('[data-tlview="bars"]'); pg.wait_for_timeout(100)
+
         # 7-7) 영상 링크: 새 탭 대신 화면 위 재생
         pg.route("**/youtube-nocookie.com/**", lambda r: r.fulfill(body="<html></html>", content_type="text/html"))
         pg.route("**/i.ytimg.com/**", lambda r: r.abort())

@@ -1910,7 +1910,7 @@ function renderTimeline(){
   }
   const cells=(on)=>vers.map((_,k)=>`<div class="tlc ${on&&on.has(k)?"cur":""}" style="grid-column:${k+1}"></div>`).join("");
   const head=`<div class="tlrow tlhead"><div class="tln">패치</div><div class="tlt">${vers.map((v,k)=>{ const a=perVer[k], nm=a.filter(m=>kindOf(m)==="monster").length, np=a.length-nm;
-    return `<div class="tlv" style="grid-column:${k+1}"><b>${esc(v)}</b><span>${[nm?`몬 ${nm}`:"",np?`PC ${np}`:""].filter(Boolean).join(" · ")}</span></div>`; }).join("")}</div></div>`;
+    return `<div class="tlv" data-ver="${esc(v)}" style="grid-column:${k+1}"><b>${esc(v)}</b><span>${[nm?`몬 ${nm}`:"",np?`PC ${np}`:""].filter(Boolean).join(" · ")}</span></div>`; }).join("")}</div></div>`;
   const entRow=m=>{ const c=col(m.version), th=(m.media||m.image)?mediaHTML(m,96):"", pc=kindOf(m)==="pc";
     return `<div class="tlrow"><div class="tln"><b>${esc(m.name)}</b><small>${pc?"PC":"몬스터"}${m.nameEn?` · <span lang="en">${esc(m.nameEn)}</span>`:""}</small></div>
       <div class="tlt">${cells(new Set([c]))}<button type="button" class="tlbar ${pc?"pcm":"mon"}" style="grid-column:${c+1}/${c+2}" data-tlmon="${esc(m.id)}" title="${esc(m.name)} · ${pc?"PC":"몬스터"} · ${esc(m.version)}">${th}${esc(m.name)}</button></div></div>`; };
@@ -1918,8 +1918,8 @@ function renderTimeline(){
   const pchip=m=>{ const pc=kindOf(m)==="pc", th=(m.media||m.image)?mediaHTML(m,96):"";
     return `<button type="button" class="tvchip ${pc?"pcm":"mon"} ${th?"":"noth"}" data-tlmon="${esc(m.id)}" title="${esc(m.name)}${m.nameEn?` · ${esc(m.nameEn)}`:""} · ${esc(m.version)}">${th}<span>${esc(m.name)}</span></button>`; };
   const lane=(k,label,arr)=>`<div class="tlrow tlpack ${k==="pc"?"k-pc":"k-mon"}"><div class="tln"><b>${label}</b><small>${arr.length}개</small></div><div class="tlt">${vers.map((v,i)=>{ const xs=arr.filter(m=>m.version.trim()===v).sort(byNm);
-      return `<div class="tlpk" style="grid-column:${i+1}">${xs.map(pchip).join("")}</div>`; }).join("")}</div></div>`;
-  const contentLane=(tlShow.monster&&mons.length?lane("monster","몬스터",mons):"")+(tlShow.pc&&pcs.length?lane("pc","PC",pcs):"");
+      return `<div class="tlpk" data-ver="${esc(v)}" style="grid-column:${i+1}">${xs.map(pchip).join("")}</div>`; }).join("")}</div></div>`;
+  const contentLane=(tlShow.monster&&(mons.length||canEdit())?lane("monster","몬스터",mons):"")+(tlShow.pc&&(pcs.length||canEdit())?lane("pc","PC",pcs):"");
   /* 전투 확장 시스템: 몬스터·PC 어느 쪽에서 쓰였든 처음~마지막 패치 */
   const map=new Map();
   withV.forEach(m=>(m.systems||[]).forEach(e=>{ const x=map.get(e.name)||{name:e.name,cols:new Set(),users:[]}; x.cols.add(col(m.version)); x.users.push(m); map.set(e.name,x); }));
@@ -1934,6 +1934,22 @@ function renderTimeline(){
 }
 function wireTl(){
   const sel=$("#tlGameSel"); if(sel) sel.onchange=e=>{ tlGame=e.target.value; render(); };
+  const tlEl=document.querySelector(".tl.packed");
+  if(tlEl) tlEl.addEventListener("contextmenu",e=>{
+    if(!canEdit()) return;
+    const chip=e.target.closest("[data-tlmon]"), cell=e.target.closest(".tlpk"), head=e.target.closest(".tlv");
+    const game=$("#tlGameSel")?$("#tlGameSel").value:"";
+    if(chip){ const m=allRefs.find(x=>x.id===chip.dataset.tlmon); if(!m) return; e.preventDefault();
+      openCtx(e.clientX,e.clientY,[{label:"보기",run:()=>chip.click()},{label:"편집",run:()=>openForm(m)},{label:"복제",run:()=>openForm(null,m)},"-",{label:"삭제",danger:true,run:()=>confirmDelete(m.id)}], m.name); return; }
+    let ver="", lane="";
+    if(cell){ const row=cell.closest(".tlpack"); lane=row&&row.classList.contains("k-pc")?"pc":"monster"; ver=cell.dataset.ver||""; }
+    else if(head) ver=head.dataset.ver||"";
+    if(!ver) return; e.preventDefault();
+    const add=k=>openForm(null,null,{seed:{kind:k==="pc"?"pc":undefined,game,version:ver}});
+    const items=lane==="pc"?[{label:"PC 추가",hint:ver,run:()=>add("pc")},{label:"몬스터 추가",hint:ver,run:()=>add("monster")}]
+      :[{label:"몬스터 추가",hint:ver,run:()=>add("monster")},{label:"PC 추가",hint:ver,run:()=>add("pc")}];
+    openCtx(e.clientX,e.clientY,items,`${game} · ${ver}`);
+  });
   document.querySelectorAll("[data-tlview]").forEach(b=>b.onclick=()=>{ tlView=b.dataset.tlview; try{ localStorage.setItem("monster-ref-tlview",tlView); }catch{} render(); });
   document.querySelectorAll("[data-tlshow]").forEach(c=>c.onchange=()=>{ tlShow[c.dataset.tlshow]=c.checked; try{ localStorage.setItem("monster-ref-tlshow",JSON.stringify(tlShow)); }catch{} render(); });
 }
@@ -2638,7 +2654,7 @@ function openForm(m, copyFrom, opts){
   if((m && kindOf(m)==="game") || (!m && !copyFrom && kind==="game")) return openGameForm(m);
   hidePop(true);
   /* 복제: 원본 내용을 채운 새 레퍼런스 (공략 메모·이미지도 그대로) */
-  const v = copyFrom ? {...copyFrom, name: copyFrom.name+" (복사본)"} : m;
+  const v = copyFrom ? {...copyFrom, name: copyFrom.name+" (복사본)"} : (m || (opts&&opts.seed) || null);
   const fKind = v ? kindOf(v) : kind;
   formImage = v && v.image ? v.image : null;
   formMedia = v && v.media ? v.media : null; uploading = false;
