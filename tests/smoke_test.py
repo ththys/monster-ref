@@ -395,6 +395,20 @@ def main():
         check("타임라인 우클릭으로 추가·이름표 메뉴", "PC 추가" in menu and "몬스터 추가" in menu and seeded and made.get("kind") == "pc" and made.get("version") == "1.2" and made.get("game") == "타임 게임" and "편집" in cmenu and "삭제" in cmenu, f"{menu!r},{seeded},{made.get('kind')},{made.get('version')},{cmenu!r}")
         pg.click('[data-tlview="table"]'); pg.wait_for_timeout(100); pg.click('[data-tlview="bars"]'); pg.wait_for_timeout(100)
 
+        # 7-6c) 대응 PC 도구 줄, PC 없으면 PC 줄 숨김, 패치 순서(입력 순서 + 끌어서 바꾸기)
+        pg.evaluate("""()=>{ const a=JSON.parse(localStorage.getItem('monster-ref-v1'))||[]; const t=Date.now();
+          a.push({id:'sk1',name:'오니교부',game:'도구 게임',version:'첫 보스',createdAt:t-3000,pcs:[{name:'폭죽',label:'',note:''}]});
+          a.push({id:'sk2',name:'겐이치로',game:'도구 게임',version:'두번째',createdAt:t-2000,pcs:[{name:'폭죽',label:'',note:''},{name:'간파 베기',label:'',note:''}]});
+          a.push({id:'sk3',name:'잇신',game:'도구 게임',version:'마지막',createdAt:t-1000,pcs:[{name:'간파 베기',label:'',note:''}]});
+          localStorage.setItem('monster-ref-v1',JSON.stringify(a)); }""")
+        pg.reload(); pg.wait_for_timeout(400); pg.goto(url + "#patches"); pg.wait_for_timeout(300); pg.select_option("#tlGameSel", "도구 게임"); pg.wait_for_timeout(200)
+        order = pg.eval_on_selector_all(".tlhead .tlv", "e=>e.map(x=>x.dataset.ver)")
+        tool = pg.locator(".tlbar.c-tool").count() == 2 and "첫 보스 → 두번째" in pg.inner_text(".tlbar.c-tool >> nth=0")
+        nopc = pg.locator(".tlpack.k-pc").count() == 0
+        pg.drag_and_drop('.tlhead .tlv[data-ver="마지막"]', '.tlhead .tlv[data-ver="첫 보스"]', target_position={"x": 5, "y": 10}); pg.wait_for_timeout(300)
+        order2 = pg.eval_on_selector_all(".tlhead .tlv", "e=>e.map(x=>x.dataset.ver)")
+        check("대응 PC 도구 줄·빈 PC 줄 숨김·패치 순서 끌기", order == ["첫 보스", "두번째", "마지막"] and tool and nopc and order2 == ["마지막", "첫 보스", "두번째"], f"{order},{tool},{nopc},{order2}")
+
         # 7-7) 영상 링크: 새 탭 대신 화면 위 재생
         pg.route("**/youtube-nocookie.com/**", lambda r: r.fulfill(body="<html></html>", content_type="text/html"))
         pg.route("**/i.ytimg.com/**", lambda r: r.abort())

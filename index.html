@@ -245,6 +245,11 @@ tr.sub td.name .nm::before{content:"└ ";color:var(--muted);font-weight:400}
 .tvchip small{font-weight:500;color:var(--muted)}
 .tl.packed{min-width:calc(150px + var(--n) * var(--cw))}
 .tl.packed .tlrow{grid-template-columns:150px minmax(0,1fr)}
+.c-tool{--c:var(--t-trait);--c-bg:var(--t-trait-bg)}
+.tvchip.tool{--c:var(--t-trait);--c-bg:var(--t-trait-bg)}
+.tvt thead th.k-tool{color:var(--t-trait)}
+.tlv.tlvdrag{cursor:grab} .tlv.dragging{opacity:.4}
+.tlv.tlvl{box-shadow:inset 3px 0 0 var(--accent)} .tlv.tlvr{box-shadow:inset -3px 0 0 var(--accent)}
 .tlpk{grid-row:1;border-left:1px dashed var(--line);padding:6px 5px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px;min-width:0}
 .tlpk .tvchip{max-width:100%;height:auto;min-height:26px;padding:3px 7px 3px 3px;font-size:12px}
 .tlpk .tvchip.noth{padding-left:6px}
@@ -1869,7 +1874,15 @@ $("#groupbox").addEventListener("click", e=>{
 /* ---------- 패치 타임라인: 게임 하나를 골라 패치(버전) 순서로 ---------- */
 let tlGame="";
 let tlView=(()=>{ try{ return localStorage.getItem("monster-ref-tlview")||"bars"; }catch{ return "bars"; } })();
-let tlShow=(()=>{ try{ return JSON.parse(localStorage.getItem("monster-ref-tlshow")||"null")||{monster:true,pc:true,sys:true}; }catch{ return {monster:true,pc:true,sys:true}; } })();
+let tlShow=(()=>{ try{ return JSON.parse(localStorage.getItem("monster-ref-tlshow")||"null")||{monster:true,pc:true,sys:true,tool:true}; }catch{ return {monster:true,pc:true,sys:true,tool:true}; } })();
+if(tlShow.tool===undefined) tlShow.tool=true;
+/* 패치 칸 순서(게임마다): 관리자는 클라우드 프로필에도 저장 */
+const TLORD_KEY="monster-ref-tlorder";
+const tlOrderOf=g=>{ const p=(profile||{}).tlOrder; if(p&&Array.isArray(p[g])) return p[g]; try{ const o=JSON.parse(localStorage.getItem(TLORD_KEY)||"{}"); return Array.isArray(o[g])?o[g]:null; }catch{ return null; } };
+function saveTlOrder(g, arr){
+  try{ const o=JSON.parse(localStorage.getItem(TLORD_KEY)||"{}"); o[g]=arr; localStorage.setItem(TLORD_KEY,JSON.stringify(o)); }catch{}
+  if(mode==="cloud" && canEdit()){ const t={...((profile||{}).tlOrder||{}), [g]:arr}; profile={...profile, tlOrder:t}; wstore.saveProfile(profile).catch(()=>toast("순서를 클라우드에 저장하지 못했어요")); }
+}
 /* 패치 타임라인: 게임 하나를 골라 몬스터·PC·전투 확장 시스템을 패치 순서대로 함께 */
 function renderTimeline(){
   const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
@@ -1881,14 +1894,22 @@ function renderTimeline(){
   if(!g){ gb.innerHTML=box("게임 이름이 들어간 몬스터·PC가 없어요","추가·편집에서 게임 이름과 버전을 적으면 패치별로 볼 수 있어요."); $("#count").textContent=""; return; }
   tlGame=g;
   const rows=src.filter(m=>m.game===g), withV=rows.filter(m=>(m.version||"").trim()), noV=rows.length-withV.length;
-  const vers=[...new Set(withV.map(m=>m.version.trim()))].sort(cmpVersion), N=vers.length, col=v=>vers.indexOf((v||"").trim());
+  const vset=[...new Set(withV.map(m=>m.version.trim()))], numeric=vset.every(v=>/^\d/.test(v));
+  const firstAt=v=>Math.min(...withV.filter(m=>m.version.trim()===v).map(m=>m.createdAt||0));
+  let vers=numeric?vset.sort(cmpVersion):vset.sort((a,b)=>firstAt(a)-firstAt(b)||cmpVersion(a,b));
+  const ord=tlOrderOf(g); if(ord){ const ix=v=>{ const i=ord.indexOf(v); return i<0?1e9:i; }; vers=vers.map((v,i)=>[v,i]).sort((a,b)=>(ix(a[0])-ix(b[0]))||(a[1]-b[1])).map(x=>x[0]); }
+  const N=vers.length, col=v=>vers.indexOf((v||"").trim());
   const mons=withV.filter(m=>kindOf(m)==="monster"), pcs=withV.filter(m=>kindOf(m)==="pc");
+  /* 대응 PC 도구: 몬스터에 적힌 도구가 처음~마지막으로 쓰인 패치 */
+  const toolMap=new Map();
+  mons.forEach(m=>(m.pcs||[]).forEach(e=>{ const x=toolMap.get(e.name)||{name:e.name,cols:new Set(),users:[]}; x.cols.add(col(m.version)); x.users.push(m); toolMap.set(e.name,x); }));
+  const tools=[...toolMap.values()].map(x=>({...x,s:Math.min(...x.cols),e:Math.max(...x.cols)})).sort((a,b)=>a.s-b.s||b.users.length-a.users.length||a.name.localeCompare(b.name,"ko"));
   $("#count").textContent="";
   const tog=(k,l,cls,n)=>`<label class="tltog ${cls}"><input type="checkbox" data-tlshow="${k}" ${tlShow[k]?"checked":""}><i></i>${l} ${n}</label>`;
   const top=`<div class="hhead"><h2>패치 타임라인</h2><p>게임 하나를 골라 몬스터·PC·전투 확장 시스템이 어느 패치에 나왔는지 함께 봐요.</p></div>
     <div class="tlbar-top"><label class="sortbox" for="tlGameSel" style="font-weight:600;color:var(--ink)">게임
       <select id="tlGameSel">${gameList.map(([n,c])=>`<option value="${esc(n)}" ${n===g?"selected":""}>${esc(n)} (${c})</option>`).join("")}</select></label>
-      <span class="lg">${tog("monster","몬스터","tl-mon",mons.length)}${tog("pc","PC","tl-pc",pcs.length)}${tog("sys","전투 확장 시스템","c-sys","")}</span>
+      <span class="lg">${tog("monster","몬스터","tl-mon",mons.length)}${tog("pc","PC","tl-pc",pcs.length)}${tog("sys","전투 확장 시스템","c-sys","")}${tools.length?tog("tool","대응 PC 도구","c-tool",tools.length):""}</span>
       <span class="tvseg"><button type="button" data-tlview="bars" class="${tlView!=="table"?"on":""}">가로(간트)</button><button type="button" data-tlview="table" class="${tlView==="table"?"on":""}">세로 표</button></span>
       ${noV?`<span class="note">버전이 비어 있는 ${noV}개는 빠져 있어요</span>`:""}</div>`;
   if(!N){ gb.innerHTML=`<div class="home">${top}${box(`${esc(g)}에 버전이 적힌 몬스터·PC가 없어요`,"편집에서 버전(예: 1.4)을 적어 주세요.")}</div>`; wireTl(); return; }
@@ -1896,15 +1917,15 @@ function renderTimeline(){
   if(tlView==="table"){
     const sysFirst=new Map();
     withV.forEach(m=>(m.systems||[]).forEach(e=>{ const c=col(m.version); if(!sysFirst.has(e.name)||c<sysFirst.get(e.name).c) sysFirst.set(e.name,{c,name:e.name}); }));
-    const showSys=tlShow.sys&&sysFirst.size;
+    const showSys=tlShow.sys&&sysFirst.size, showTool=tlShow.tool&&tools.length, showPc=tlShow.pc&&pcs.length;
     const chip=m=>{ const pc=kindOf(m)==="pc", th=(m.media||m.image)?mediaHTML(m,96):"";
       return `<button type="button" class="tvchip ${pc?"pcm":"mon"} ${th?"":"noth"}" data-tlmon="${esc(m.id)}" title="${esc(m.name)}${m.nameEn?` · ${esc(m.nameEn)}`:""}">${th}<span>${esc(m.name)}</span></button>`; };
     const cell=(arr,cls)=>`<td class="${cls}">${arr.length?`<div class="tvchips">${arr.join("")}</div>`:`<span class="tvnone">–</span>`}</td>`;
     const byName=(a,b)=>a.name.localeCompare(b.name,"ko");
     const rowsH=vers.map((v,k)=>{ const a=perVer[k], ms=a.filter(m=>kindOf(m)==="monster").sort(byName), ps=a.filter(m=>kindOf(m)==="pc").sort(byName);
       const ss=[...sysFirst.values()].filter(x=>x.c===k).sort(byName);
-      return `<tr><td class="tvver"><b>${esc(v)}</b><small>${[ms.length?`몬 ${ms.length}`:"",ps.length?`PC ${ps.length}`:""].filter(Boolean).join(" · ")}</small></td>${tlShow.monster?cell(ms.map(chip),"k-mon"):""}${tlShow.pc?cell(ps.map(chip),"k-pc"):""}${showSys?cell(ss.map(x=>`<button type="button" class="tvchip sys noth" data-tldef="systems|${esc(x.name)}"><span>${esc(x.name)}</span></button>`),"k-sys"):""}</tr>`; }).join("");
-    const headH=`<tr><th>패치</th>${tlShow.monster?`<th class="k-mon"><i></i>몬스터 ${mons.length}</th>`:""}${tlShow.pc?`<th class="k-pc"><i></i>PC ${pcs.length}</th>`:""}${showSys?`<th class="k-sys"><i></i>처음 나온 전투 확장 시스템</th>`:""}</tr>`;
+      return `<tr><td class="tvver"><b>${esc(v)}</b><small>${[ms.length?`몬 ${ms.length}`:"",ps.length?`PC ${ps.length}`:""].filter(Boolean).join(" · ")}</small></td>${tlShow.monster?cell(ms.map(chip),"k-mon"):""}${showPc?cell(ps.map(chip),"k-pc"):""}${showSys?cell(ss.map(x=>`<button type="button" class="tvchip sys noth" data-tldef="systems|${esc(x.name)}"><span>${esc(x.name)}</span></button>`),"k-sys"):""}${showTool?cell(tools.filter(x=>x.s===k).map(x=>`<button type="button" class="tvchip tool noth" data-tldef="pcs|${esc(x.name)}"><span>${esc(x.name)}</span></button>`),"k-tool"):""}</tr>`; }).join("");
+    const headH=`<tr><th>패치</th>${tlShow.monster?`<th class="k-mon"><i></i>몬스터 ${mons.length}</th>`:""}${showPc?`<th class="k-pc"><i></i>PC ${pcs.length}</th>`:""}${showSys?`<th class="k-sys"><i></i>처음 나온 전투 확장 시스템</th>`:""}${showTool?`<th class="k-tool"><i></i>처음 필요해진 대응 PC 도구</th>`:""}</tr>`;
     gb.innerHTML=`<div class="home">${top}<div class="tvwrap"><table class="tvt"><thead>${headH}</thead><tbody>${rowsH}</tbody></table></div></div>`;
     wireVideos(gb); wireTl(); return;
   }
@@ -1919,7 +1940,7 @@ function renderTimeline(){
     return `<button type="button" class="tvchip ${pc?"pcm":"mon"} ${th?"":"noth"}" data-tlmon="${esc(m.id)}" title="${esc(m.name)}${m.nameEn?` · ${esc(m.nameEn)}`:""} · ${esc(m.version)}">${th}<span>${esc(m.name)}</span></button>`; };
   const lane=(k,label,arr)=>`<div class="tlrow tlpack ${k==="pc"?"k-pc":"k-mon"}"><div class="tln"><b>${label}</b><small>${arr.length}개</small></div><div class="tlt">${vers.map((v,i)=>{ const xs=arr.filter(m=>m.version.trim()===v).sort(byNm);
       return `<div class="tlpk" data-ver="${esc(v)}" style="grid-column:${i+1}">${xs.map(pchip).join("")}</div>`; }).join("")}</div></div>`;
-  const contentLane=(tlShow.monster&&(mons.length||canEdit())?lane("monster","몬스터",mons):"")+(tlShow.pc&&(pcs.length||canEdit())?lane("pc","PC",pcs):"");
+  const contentLane=(tlShow.monster&&(mons.length||canEdit())?lane("monster","몬스터",mons):"")+(tlShow.pc&&pcs.length?lane("pc","PC",pcs):"");
   /* 전투 확장 시스템: 몬스터·PC 어느 쪽에서 쓰였든 처음~마지막 패치 */
   const map=new Map();
   withV.forEach(m=>(m.systems||[]).forEach(e=>{ const x=map.get(e.name)||{name:e.name,cols:new Set(),users:[]}; x.cols.add(col(m.version)); x.users.push(m); map.set(e.name,x); }));
@@ -1929,12 +1950,31 @@ function renderTimeline(){
       <div class="tlt">${cells(x.cols)}<button type="button" class="tlbar c-sys" style="grid-column:${x.s+1}/${x.e+2}" data-tldef="systems|${esc(x.name)}" title="${esc(x.name)} · ${esc(vers[x.s])}${x.s!==x.e?" → "+esc(vers[x.e]):""} · ${x.users.map(u=>u.name).join(", ")}">
         ${x.s!==x.e?`${esc(vers[x.s])} → ${esc(vers[x.e])}`:esc(vers[x.s])} · ${x.users.length}</button></div></div>`; };
   const sysLane = tlShow.sys && sys.length ? `<div class="tlsec">전투 확장 시스템 · ${sys.length}개</div>`+sys.map(sysRow).join("") : "";
-  gb.innerHTML = `<div class="home">${top}<div class="tlwrap"><div class="tl packed" style="--n:${N};--cw:128px">${head}${contentLane}${sysLane}</div></div></div>`;
+  const toolRow=x=>`<div class="tlrow"><div class="tln"><b>${esc(x.name)}</b><small>몬스터 ${x.users.length}</small></div>
+      <div class="tlt">${cells(x.cols)}<button type="button" class="tlbar c-tool" style="grid-column:${x.s+1}/${x.e+2}" data-tldef="pcs|${esc(x.name)}" title="${esc(x.name)} · ${esc(vers[x.s])}${x.s!==x.e?" → "+esc(vers[x.e]):""} · ${x.users.map(u=>esc(u.name)).join(", ")}">
+        ${x.s!==x.e?`${esc(vers[x.s])} → ${esc(vers[x.e])}`:esc(vers[x.s])} · ${x.users.length}</button></div></div>`;
+  const toolLane = tlShow.tool && tools.length ? `<div class="tlsec">대응 PC 도구 · ${tools.length}개</div>`+tools.map(toolRow).join("") : "";
+  gb.innerHTML = `<div class="home">${top}<div class="tlwrap"><div class="tl packed" style="--n:${N};--cw:128px">${head}${contentLane}${toolLane}${sysLane}</div></div>${canEdit()&&N>1?`<p class="note" style="margin:6px 2px 0">패치 머리를 끌어서 순서를 바꿀 수 있어요${ord?` · <button type="button" class="linkbtn" id="tlOrdReset">원래 순서로</button>`:""}</p>`:""}</div>`;
   wireVideos(gb); wireTl();
 }
 function wireTl(){
   const sel=$("#tlGameSel"); if(sel) sel.onchange=e=>{ tlGame=e.target.value; render(); };
   const tlEl=document.querySelector(".tl.packed");
+  const rs=$("#tlOrdReset"); if(rs) rs.onclick=()=>{ saveTlOrder(tlGame,null); if(profile&&profile.tlOrder){ const t={...profile.tlOrder}; delete t[tlGame]; profile={...profile,tlOrder:t}; } render(); };
+  if(tlEl && canEdit()){
+    const hs=[...tlEl.querySelectorAll(".tlhead .tlv")];
+    if(hs.length>1) hs.forEach(h=>{ h.draggable=true; h.classList.add("tlvdrag");
+      h.addEventListener("dragstart",e=>{ e.dataTransfer.setData("text/tlver",h.dataset.ver); e.dataTransfer.effectAllowed="move"; h.classList.add("dragging"); });
+      h.addEventListener("dragend",()=>{ hs.forEach(x=>x.classList.remove("dragging","tlvl","tlvr")); });
+      h.addEventListener("dragover",e=>{ if(!e.dataTransfer.types.includes("text/tlver")) return; e.preventDefault(); const r=h.getBoundingClientRect(), right=e.clientX>r.left+r.width/2;
+        hs.forEach(x=>x.classList.remove("tlvl","tlvr")); h.classList.add(right?"tlvr":"tlvl"); });
+      h.addEventListener("dragleave",()=>h.classList.remove("tlvl","tlvr"));
+      h.addEventListener("drop",e=>{ const from=e.dataTransfer.getData("text/tlver"); if(!from) return; e.preventDefault();
+        const r=h.getBoundingClientRect(), right=e.clientX>r.left+r.width/2, cur=hs.map(x=>x.dataset.ver);
+        if(from===h.dataset.ver) return; const arr=cur.filter(v=>v!==from); let i=arr.indexOf(h.dataset.ver); if(right) i++; arr.splice(i,0,from);
+        saveTlOrder(tlGame,arr); if(mode!=="cloud"||!canEdit()) {} render(); });
+    });
+  }
   if(tlEl) tlEl.addEventListener("contextmenu",e=>{
     if(!canEdit()) return;
     const chip=e.target.closest("[data-tlmon]"), cell=e.target.closest(".tlpk"), head=e.target.closest(".tlv");
@@ -1957,7 +1997,7 @@ $("#groupbox").addEventListener("click", e=>{
   const t=e.target.closest("[data-tldef],[data-tlmon]"); if(!t) return;
   if(t.dataset.tldef){ const k=t.dataset.tldef.indexOf("|"); const cat=t.dataset.tldef.slice(0,k), name=t.dataset.tldef.slice(k+1);
     if(cat==="systems"){ const sr=sysRefFor(tlGame,name); if(sr) goSysRef(sr.id); else addSysRef(tlGame,name); }
-    else if(canEdit()) openDefForm(kind,cat,name,null); }
+    else if(canEdit()) openDefForm(cat==="pcs"?"monster":kind,cat,name,null); }
   else { const m=allRefs.find(x=>x.id===t.dataset.tlmon); if(m) openGuide(m); }
 });
 function renderGroups(list){
