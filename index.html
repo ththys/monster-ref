@@ -282,6 +282,12 @@ td .cell .tag{white-space:normal;word-break:keep-all}
 .link.lsm{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;padding:2px 4px;line-height:1.4}
 .link.lsm .lstate{font-size:9px}
 .link.lsm:has(.lstate.dead){color:var(--t-weapon)}
+.thwrap{position:relative;width:84px}
+.thwrap .link.lsm{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.72);color:#fff;border-radius:5px;font-size:11px;padding:2px 6px;gap:3px}
+.thwrap .link.lsm:hover{background:rgba(0,0,0,.88)}
+.thwrap .link.lsm:has(.lstate.dead){color:#fff}
+.thwrap .yt::after{display:none}
+.thwrap .link.lsm .lstate.ok{color:#69db7c} .thwrap .link.lsm .lstate.dead{color:#ff8787}
 .lstate.dead{color:var(--t-weapon);font-weight:500}
 .lstate.ok{color:#2f9e44}
 .thumb .yt{position:relative;width:100%;height:100%}
@@ -2261,6 +2267,8 @@ async function copyText(text, btn){
   ta.remove(); ok ? done() : toast("복사하지 못했어요. 브라우저 권한을 확인해 주세요");
 }
 
+/* 표의 이미지 칸: 영상·링크는 이미지 위 모서리에 작게 (행 높이를 늘리지 않게) */
+const thumbLink = (m, link) => link ? `<div class="thwrap">${thumbHTML(m,240)}${link}</div>` : thumbHTML(m,240);
 function thumbHTML(m, w){
   const yid=ytId(m.link);
   if (m.media||m.image) return `<button type="button" class="thumb" data-zoom="${esc(m.id)}" aria-label="${esc(m.name)} 크게 보기">${mediaHTML(m,w)}</button>`;
@@ -2344,21 +2352,21 @@ function rowHTML(m, g){
   const nameTd=`<td class="name" ${gp&&gp.depth?`style="padding-left:${10+gp.depth*24}px"`:""}><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}${kindOf(m)==="system"&&(m.parents||[]).length?`<span class="par">↳ ${esc(m.parents.join(" + "))}에서 확장</span>`:""}${kindOf(m)==="system"&&m.ext?`<span class="ext">${esc(m.ext)}</span>`:""}${sims.length?`<span class="sim">≈ 비슷: ${esc(sims.join(", "))}</span>`:""}${kindOf(m)==="system"?(()=>{ const us=sysUsers(m); if(!us.length) return "";
       const mon=us.filter(u=>kindOf(u)==="monster").length, pc=us.filter(u=>kindOf(u)==="pc").length;
       return `${mon?`<button type="button" class="usechip" data-gouse="monster|${esc(m.game||"")}|${esc(m.name)}" title="이 시스템을 쓰는 몬스터 보기">몬스터 ${mon}</button>`:""}${pc?`<button type="button" class="usechip" data-gouse="pc|${esc(m.game||"")}|${esc(m.name)}" title="이 시스템을 쓰는 PC 보기">PC ${pc}</button>`:""}`; })():""}${gp&&gp.kids?`<button type="button" class="sgt ${gp.open?"open":""}" data-sgt="${esc(tkey(m.game,m.name))}" aria-expanded="${gp.open}">${gp.open?"▾":"▸"} 하위 ${gp.kids}개</button>`:""}
-      ${(m.game||(m.version&&kindOf(m)!=="system")||link)?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version&&kindOf(m)!=="system"?tagBtn("version",m.version):""}${link}</div>`:""}</td>`;
+      ${(m.game||(m.version&&kindOf(m)!=="system"))?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version&&kindOf(m)!=="system"?tagBtn("version",m.version):""}</div>`:""}</td>`;
   const acts=`<td><div class="rowact"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>`;
   if(kindOf(m)==="system"){
     const actsS=`<td><div class="rowact"><button type="button" class="iconbtn edit-only" data-ext="${esc(m.id)}" title="${esc(m.name)}에서 확장된 시스템 추가">+ 확장</button><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>`;
-    return `${tr}${grip}${nameTd}<td>${thumbHTML(m,240)}</td><td>${cells("cats")}</td><td>${cells("keywords")}</td><td class="guide">${guideCell(m)}</td>${actsS}</tr>`;
+    return `${tr}${grip}${nameTd}<td>${thumbLink(m, link)}</td><td>${cells("cats")}</td><td>${cells("keywords")}</td><td class="guide">${guideCell(m)}</td>${actsS}</tr>`;
   }
   if(false)
-    return `${tr}${grip}${nameTd}<td>${thumbHTML(m,240)}</td><td>${cells("cats")}</td><td>${cells("keywords")}</td><td class="guide">${guideCell(m)}</td>${acts}</tr>`;
+    return `${tr}${grip}${nameTd}<td>${thumbLink(m, link)}</td><td>${cells("cats")}</td><td>${cells("keywords")}</td><td class="guide">${guideCell(m)}</td>${acts}</tr>`;
   if(kindOf(m)==="pc"){ const L=pcLegacy();
-    return `${tr}${grip}${nameTd}<td>${thumbHTML(m,240)}</td><td>${cells("hooks")}</td>
+    return `${tr}${grip}${nameTd}<td>${thumbLink(m, link)}</td><td>${cells("hooks")}</td>
     <td>${cells("roles")}</td><td>${cells("styles")}</td><td>${cells("theme")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td><td>${cells("traits")}</td>
     ${L.levels?`<td>${cells("levels")}</td>`:""}
     <td>${deep("systems")}</td><td>${deep("pcs")}</td><td class="guide">${guideCell(m)}</td>${acts}</tr>`; }
   return `${tr}${grip}${nameTd}
-    <td>${thumbHTML(m,240)}</td>
+    <td>${thumbLink(m, link)}</td>
     <td>${cells("hooks")}</td>
     <td>${cells("theme")}</td><td>${cells("levels")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td>
     <td>${deep("systems")}</td><td>${deep("pcs")}</td>
