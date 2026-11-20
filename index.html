@@ -17,6 +17,7 @@
   --t-trait:#0b7285;--t-trait-bg:#e3f5f8;
   --t-sys:#b35900;   --t-sys-bg:#fff1dc;
   --t-pc:#1864ab;    --t-pc-bg:#e3eefb;
+  --t-mon:#c92a2a;   --t-mon-bg:#ffe5e5;
   --t-game:#343a40;  --t-game-bg:#e9ecef;
   --t-ver:#495057;   --t-ver-bg:#f1f3f5;
   --t-level:#2b8a3e; --t-level-bg:#e6f4ea;
@@ -35,6 +36,7 @@
   --t-trait:#66d9e8;--t-trait-bg:#123138;
   --t-sys:#ffb35c;   --t-sys-bg:#3a2a14;
   --t-pc:#74b4ff;    --t-pc-bg:#172a42;
+  --t-mon:#ff8787;   --t-mon-bg:#3d1b1e;
   --t-game:#ced4da;  --t-game-bg:#2a2e35;
   --t-ver:#ced4da;   --t-ver-bg:#262a31;
   --t-level:#8ce99a; --t-level-bg:#183222;
@@ -49,6 +51,7 @@
   --t-trait:#66d9e8;--t-trait-bg:#123138;
   --t-sys:#ffb35c;   --t-sys-bg:#3a2a14;
   --t-pc:#74b4ff;    --t-pc-bg:#172a42;
+  --t-mon:#ff8787;   --t-mon-bg:#3d1b1e;
   --t-game:#ced4da;  --t-game-bg:#2a2e35;
   --t-ver:#ced4da;   --t-ver-bg:#262a31;
   --t-level:#8ce99a; --t-level-bg:#183222;
@@ -200,7 +203,7 @@ tr.sub td.name .nm::before{content:"└ ";color:var(--muted);font-weight:400}
 .tlbar{grid-row:1;z-index:1;align-self:center;margin:6px 4px;min-height:26px;border-radius:6px;border:1px solid var(--c);background:var(--c-bg);color:var(--c);font-size:12px;font-weight:600;padding:3px 8px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
 .tlbar:hover{filter:brightness(.97);box-shadow:0 0 0 2px var(--c-bg)}
 .tlbar .dots{display:flex;gap:3px;margin-left:auto}
-.tlbar.mon{--c:var(--accent);--c-bg:var(--hover);color:var(--ink);font-weight:600}
+.tlbar.mon{--c:var(--t-mon);--c-bg:var(--t-mon-bg);color:var(--ink);font-weight:600}
 .vplay{width:min(1100px,92vw);aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
 .vplay.tall{width:min(420px,92vw);aspect-ratio:9/16;max-height:calc(100vh - 120px)}
 .vplay iframe{width:100%;height:100%;border:0;display:block}
@@ -209,7 +212,7 @@ tr.sub td.name .nm::before{content:"└ ";color:var(--muted);font-weight:400}
 .tltog{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px}
 .tltog input{accent-color:var(--accent)}
 .tltog i{width:12px;height:12px;border-radius:3px;background:var(--c-bg);border:2px solid var(--c)}
-.tltog.tl-mon{--c:var(--accent);--c-bg:var(--hover)} .tltog.tl-pc{--c:var(--t-pc);--c-bg:var(--t-pc-bg)}
+.tltog.tl-mon{--c:var(--t-mon);--c-bg:var(--t-mon-bg)} .tltog.tl-pc{--c:var(--t-pc);--c-bg:var(--t-pc-bg)}
 .tlbar.mon img,.tlbar.mon video{width:22px;height:22px;border-radius:4px;object-fit:cover;flex:none}
 .tlhead .tln{font-size:12px;color:var(--muted);font-weight:600}
 .tlhead .tlt{grid-template-rows:auto}
@@ -217,6 +220,29 @@ tr.sub td.name .nm::before{content:"└ ";color:var(--muted);font-weight:400}
 .tlv:first-child{border-left:0}
 .tlv b{font-size:13px;font-variant-numeric:tabular-nums}
 .tlv span{font-size:11px;color:var(--muted)}
+.tvseg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.tvseg button{border:0;background:var(--bg);color:var(--muted);padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer}
+.tvseg button.on{background:var(--ink);color:var(--panel)}
+.tvwrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+.tvt{width:100%;border-collapse:collapse;min-width:560px}
+.tvt th,.tvt td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top;text-align:left}
+.tvt tr:last-child td{border-bottom:0}
+.tvt thead th{font-size:12px;font-weight:700;background:var(--bg);white-space:nowrap}
+.tvt thead th.k-mon{color:var(--t-mon)} .tvt thead th.k-pc{color:var(--t-pc)} .tvt thead th.k-sys{color:var(--t-sys)}
+.tvt thead th i{display:inline-block;width:10px;height:10px;border-radius:3px;background:currentColor;margin-right:6px;vertical-align:-1px}
+.tvt td.tvver{width:64px;white-space:nowrap}
+.tvt td.tvver b{display:block;font-size:15px;font-variant-numeric:tabular-nums}
+.tvt td.tvver small{font-size:11px;color:var(--muted)}
+.tvt td.k-mon{background:color-mix(in srgb,var(--t-mon-bg) 35%,transparent)}
+.tvt td.k-pc{background:color-mix(in srgb,var(--t-pc-bg) 35%,transparent)}
+.tvchips{display:flex;flex-wrap:wrap;gap:5px}
+.tvnone{color:var(--muted);font-size:12px;line-height:28px}
+.tvchip{display:inline-flex;align-items:center;gap:6px;height:30px;max-width:240px;padding:0 10px 0 3px;border-radius:7px;border:1px solid var(--c);border-left-width:4px;background:var(--c-bg);color:var(--ink);font-size:12.5px;font-weight:600;cursor:pointer}
+.tvchip.noth{padding-left:8px}
+.tvchip.mon{--c:var(--t-mon);--c-bg:var(--t-mon-bg)} .tvchip.pcm{--c:var(--t-pc);--c-bg:var(--t-pc-bg)} .tvchip.sys{--c:var(--t-sys);--c-bg:var(--t-sys-bg)}
+.tvchip img,.tvchip video{width:24px;height:24px;border-radius:5px;object-fit:cover;flex:none}
+.tvchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tvchip small{font-weight:500;color:var(--muted)}
 .tlsec{position:sticky;left:0;padding:8px 12px;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
 .search{flex:1 1 320px;min-width:0;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 12px}
 .search svg{flex:none;color:var(--muted)}
@@ -1799,6 +1825,7 @@ $("#groupbox").addEventListener("click", e=>{
 });
 /* ---------- 패치 타임라인: 게임 하나를 골라 패치(버전) 순서로 ---------- */
 let tlGame="";
+let tlView=(()=>{ try{ return localStorage.getItem("monster-ref-tlview")||"table"; }catch{ return "table"; } })();
 let tlShow=(()=>{ try{ return JSON.parse(localStorage.getItem("monster-ref-tlshow")||"null")||{monster:true,pc:true,sys:true}; }catch{ return {monster:true,pc:true,sys:true}; } })();
 /* 패치 타임라인: 게임 하나를 골라 몬스터·PC·전투 확장 시스템을 패치 순서대로 함께 */
 function renderTimeline(){
@@ -1819,10 +1846,26 @@ function renderTimeline(){
     <div class="tlbar-top"><label class="sortbox" for="tlGameSel" style="font-weight:600;color:var(--ink)">게임
       <select id="tlGameSel">${gameList.map(([n,c])=>`<option value="${esc(n)}" ${n===g?"selected":""}>${esc(n)} (${c})</option>`).join("")}</select></label>
       <span class="lg">${tog("monster","몬스터","tl-mon",mons.length)}${tog("pc","PC","tl-pc",pcs.length)}${tog("sys","전투 확장 시스템","c-sys","")}</span>
+      <span class="tvseg"><button type="button" data-tlview="table" class="${tlView==="table"?"on":""}">버전별 표</button><button type="button" data-tlview="bars" class="${tlView==="bars"?"on":""}">가로 타임라인</button></span>
       ${noV?`<span class="note">버전이 비어 있는 ${noV}개는 빠져 있어요</span>`:""}</div>`;
   if(!N){ gb.innerHTML=`<div class="home">${top}${box(`${esc(g)}에 버전이 적힌 몬스터·PC가 없어요`,"편집에서 버전(예: 1.4)을 적어 주세요.")}</div>`; wireTl(); return; }
-  const cells=(on)=>vers.map((_,k)=>`<div class="tlc ${on&&on.has(k)?"cur":""}" style="grid-column:${k+1}"></div>`).join("");
   const perVer=vers.map(v=>withV.filter(m=>m.version.trim()===v));
+  if(tlView==="table"){
+    const sysFirst=new Map();
+    withV.forEach(m=>(m.systems||[]).forEach(e=>{ const c=col(m.version); if(!sysFirst.has(e.name)||c<sysFirst.get(e.name).c) sysFirst.set(e.name,{c,name:e.name}); }));
+    const showSys=tlShow.sys&&sysFirst.size;
+    const chip=m=>{ const pc=kindOf(m)==="pc", th=(m.media||m.image)?mediaHTML(m,96):"";
+      return `<button type="button" class="tvchip ${pc?"pcm":"mon"} ${th?"":"noth"}" data-tlmon="${esc(m.id)}" title="${esc(m.name)}${m.nameEn?` · ${esc(m.nameEn)}`:""}">${th}<span>${esc(m.name)}</span></button>`; };
+    const cell=(arr,cls)=>`<td class="${cls}">${arr.length?`<div class="tvchips">${arr.join("")}</div>`:`<span class="tvnone">–</span>`}</td>`;
+    const byName=(a,b)=>a.name.localeCompare(b.name,"ko");
+    const rowsH=vers.map((v,k)=>{ const a=perVer[k], ms=a.filter(m=>kindOf(m)==="monster").sort(byName), ps=a.filter(m=>kindOf(m)==="pc").sort(byName);
+      const ss=[...sysFirst.values()].filter(x=>x.c===k).sort(byName);
+      return `<tr><td class="tvver"><b>${esc(v)}</b><small>${[ms.length?`몬 ${ms.length}`:"",ps.length?`PC ${ps.length}`:""].filter(Boolean).join(" · ")}</small></td>${tlShow.monster?cell(ms.map(chip),"k-mon"):""}${tlShow.pc?cell(ps.map(chip),"k-pc"):""}${showSys?cell(ss.map(x=>`<button type="button" class="tvchip sys noth" data-tldef="systems|${esc(x.name)}"><span>${esc(x.name)}</span></button>`),"k-sys"):""}</tr>`; }).join("");
+    const headH=`<tr><th>패치</th>${tlShow.monster?`<th class="k-mon"><i></i>몬스터 ${mons.length}</th>`:""}${tlShow.pc?`<th class="k-pc"><i></i>PC ${pcs.length}</th>`:""}${showSys?`<th class="k-sys"><i></i>처음 나온 전투 확장 시스템</th>`:""}</tr>`;
+    gb.innerHTML=`<div class="home">${top}<div class="tvwrap"><table class="tvt"><thead>${headH}</thead><tbody>${rowsH}</tbody></table></div></div>`;
+    wireVideos(gb); wireTl(); return;
+  }
+  const cells=(on)=>vers.map((_,k)=>`<div class="tlc ${on&&on.has(k)?"cur":""}" style="grid-column:${k+1}"></div>`).join("");
   const head=`<div class="tlrow tlhead"><div class="tln">패치</div><div class="tlt">${vers.map((v,k)=>{ const a=perVer[k], nm=a.filter(m=>kindOf(m)==="monster").length, np=a.length-nm;
     return `<div class="tlv" style="grid-column:${k+1}"><b>${esc(v)}</b><span>${[nm?`몬 ${nm}`:"",np?`PC ${np}`:""].filter(Boolean).join(" · ")}</span></div>`; }).join("")}</div></div>`;
   const entRow=m=>{ const c=col(m.version), th=(m.media||m.image)?mediaHTML(m,96):"", pc=kindOf(m)==="pc";
@@ -1844,6 +1887,7 @@ function renderTimeline(){
 }
 function wireTl(){
   const sel=$("#tlGameSel"); if(sel) sel.onchange=e=>{ tlGame=e.target.value; render(); };
+  document.querySelectorAll("[data-tlview]").forEach(b=>b.onclick=()=>{ tlView=b.dataset.tlview; try{ localStorage.setItem("monster-ref-tlview",tlView); }catch{} render(); });
   document.querySelectorAll("[data-tlshow]").forEach(c=>c.onchange=()=>{ tlShow[c.dataset.tlshow]=c.checked; try{ localStorage.setItem("monster-ref-tlshow",JSON.stringify(tlShow)); }catch{} render(); });
 }
 $("#groupbox").addEventListener("click", e=>{
