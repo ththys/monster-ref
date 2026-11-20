@@ -279,6 +279,9 @@ td .cell .tag{white-space:normal;word-break:keep-all}
 .link:hover{text-decoration:underline}
 .linkcell{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
 .lstate{font-size:11px;font-family:var(--f-mono);color:var(--muted);white-space:nowrap}
+.link.lsm{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;padding:2px 4px;line-height:1.4}
+.link.lsm .lstate{font-size:9px}
+.link.lsm:has(.lstate.dead){color:var(--t-weapon)}
 .lstate.dead{color:var(--t-weapon);font-weight:500}
 .lstate.ok{color:#2f9e44}
 .thumb .yt{position:relative;width:100%;height:100%}
@@ -1191,7 +1194,7 @@ const linkState = new Map();   /* id -> checking | ok | dead */
 const YT_TXT = {checking:"확인 중", ok:"● 재생 가능", dead:"✕ 삭제·비공개 의심"};
 function paintYt(id){
   const st=linkState.get(id)||"checking";
-  document.querySelectorAll(`[data-yt="${id}"]`).forEach(el=>{ el.className="lstate "+st; el.textContent=YT_TXT[st]; });
+  document.querySelectorAll(`[data-yt="${id}"]`).forEach(el=>{ el.className="lstate "+st; el.textContent=st==="dead"?"✕":"●"; const a=el.closest("a"); if(a) a.title=YT_TXT[st]+" · 누르면 바로 재생"; });
   const n=monsters.filter(m=>{ const i=ytId(m.link); return i && linkState.get(i)==="dead"; }).length;
   const b=$("#deadBtn"); b.hidden=!n && !filters.has(DEAD); b.textContent=filters.has(DEAD)?`끊긴 링크만 보는 중 (${n}) ×`:`끊긴 링크 ${n}`;
 }
@@ -2333,15 +2336,14 @@ function rowHTML(m, g){
   const cells = k => `<div class="cell">${(m[k]||[]).map(v=>tagBtn(k,v)).join("")}</div>`;
   const deep = k => `<div class="cell">${(m[k]||[]).map((_,i)=>deepChip(m,k,i)).join("")}</div>`;
   let link = ""; const yid = ytId(m.link);
-  if (m.link){ try{ const u=new URL(m.link); link=`<div class="linkcell"><a class="link" href="${esc(u.href)}" target="_blank" rel="noopener">${yid?"▶ 영상":"↗ 열기"}</a>${yid?`<span class="lstate" data-yt="${esc(yid)}"></span>`:""}</div>`; }catch{ link=esc(m.link); } }
+  if (m.link){ try{ const u=new URL(m.link); link=`<a class="link lsm" href="${esc(u.href)}" target="_blank" rel="noopener">${yid?`<span class="lstate" data-yt="${esc(yid)}"></span>▶ 영상`:"↗ 열기"}</a>`; }catch{ link=esc(m.link); } }
   const pos = manualIndex.get(m.id);
   const tr=`<tr data-id="${esc(m.id)}" class="${gp&&gp.depth?"sub":""}" ${sortMode==="manual"&&!gp?'draggable="true"':""}>`;
   const grip=`<td class="grip"><div class="g"><button type="button" data-mv="${esc(m.id)}|-1" ${pos===0?"disabled":""} aria-label="위로">▲</button><span class="h" title="끌어서 순서 바꾸기">⠿</span><button type="button" data-mv="${esc(m.id)}|1" ${pos===monsters.length-1?"disabled":""} aria-label="아래로">▼</button></div></td>`;
   const nameTd=`<td class="name" ${gp&&gp.depth?`style="padding-left:${10+gp.depth*24}px"`:""}><span class="nm">${esc(m.name)}</span>${m.nameEn?`<span class="en" lang="en">${esc(m.nameEn)}</span>`:""}${kindOf(m)==="system"&&(m.parents||[]).length?`<span class="par">↳ ${esc(m.parents.join(" + "))}에서 확장</span>`:""}${kindOf(m)==="system"&&m.ext?`<span class="ext">${esc(m.ext)}</span>`:""}${sims.length?`<span class="sim">≈ 비슷: ${esc(sims.join(", "))}</span>`:""}${kindOf(m)==="system"?(()=>{ const us=sysUsers(m); if(!us.length) return "";
       const mon=us.filter(u=>kindOf(u)==="monster").length, pc=us.filter(u=>kindOf(u)==="pc").length;
       return `${mon?`<button type="button" class="usechip" data-gouse="monster|${esc(m.game||"")}|${esc(m.name)}" title="이 시스템을 쓰는 몬스터 보기">몬스터 ${mon}</button>`:""}${pc?`<button type="button" class="usechip" data-gouse="pc|${esc(m.game||"")}|${esc(m.name)}" title="이 시스템을 쓰는 PC 보기">PC ${pc}</button>`:""}`; })():""}${gp&&gp.kids?`<button type="button" class="sgt ${gp.open?"open":""}" data-sgt="${esc(tkey(m.game,m.name))}" aria-expanded="${gp.open}">${gp.open?"▾":"▸"} 하위 ${gp.kids}개</button>`:""}
-      ${(m.game||(m.version&&kindOf(m)!=="system"))?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version&&kindOf(m)!=="system"?tagBtn("version",m.version):""}</div>`:""}
-      ${link}</td>`;
+      ${(m.game||(m.version&&kindOf(m)!=="system")||link)?`<div class="cell">${m.game?tagBtn("game",m.game):""}${m.version&&kindOf(m)!=="system"?tagBtn("version",m.version):""}${link}</div>`:""}</td>`;
   const acts=`<td><div class="rowact"><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>`;
   if(kindOf(m)==="system"){
     const actsS=`<td><div class="rowact"><button type="button" class="iconbtn edit-only" data-ext="${esc(m.id)}" title="${esc(m.name)}에서 확장된 시스템 추가">+ 확장</button><button type="button" class="iconbtn edit-only" data-edit="${esc(m.id)}">편집</button><button type="button" class="iconbtn edit-only" data-del="${esc(m.id)}">삭제</button></div></td>`;
