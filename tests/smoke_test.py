@@ -404,6 +404,17 @@ def main():
         pg.set_input_files("#importFile", jf); pg.wait_for_timeout(500); n1 = cnt()
         pg.set_input_files("#importFile", jf); pg.wait_for_timeout(500); n2 = cnt()
         has_alt = pg.evaluate("JSON.parse(localStorage.getItem('monster-ref-v1')||'[]').some(m=>'_alt' in m)")
+        jf2 = _o.path.join(_t.mkdtemp(), "imp2.json")
+        open(jf2, "w", encoding="utf8").write(_j.dumps({"monsters": [{"kind": "pc", "game": "외형게임", "name": "외형 PC", "theme": ["기사"], "looks": ["갑옷"]}]}, ensure_ascii=False))
+        pg.set_input_files("#importFile", jf2); pg.wait_for_timeout(500)
+        pg.goto(url + "#pc"); pg.wait_for_timeout(300)
+        heads = pg.inner_text("#thead"); row = pg.locator("#rows tr", has_text="외형 PC")
+        merged = row.locator(".tag", has_text="갑옷").count() == 1 and row.locator(".tag", has_text="기사").count() == 1
+        row.locator("button", has_text="편집").click(); pg.wait_for_timeout(300)
+        noField = pg.locator("#f_looks").count() == 0 and "갑옷" in pg.input_value("#f_theme")
+        pg.click("#fSave"); pg.wait_for_timeout(300)
+        saved = pg.evaluate("(JSON.parse(localStorage.getItem('monster-ref-v1')||'[]').find(m=>m.name==='외형 PC')||{})")
+        check("PC 외형 칸 없음·예전 외형은 컨셉으로", "외형" not in heads and merged and noField and "갑옷" in saved.get("theme", []) and not saved.get("looks"), f"{merged},{noField},{saved.get('theme')}")
         check("불러오기: 겹치는 항목 건너뜀", n1 == 2 and n2 == 2 and not has_alt, f"{n1},{n2},{has_alt}")
 
         # 8) 새로고침 후 유지

@@ -1041,6 +1041,8 @@ const koCmp=(a,b)=>String(a).localeCompare(String(b),"ko",{numeric:true});
 function tagSort(m){
   if(!m || typeof m!=="object") return m;
   const o={...m};
+  /* PC는 외형 칸이 없음 → 예전 외형은 컨셉(theme)으로 합쳐 보여 줌(저장하면 그대로 옮겨짐) */
+  if(o.kind==="pc" && Array.isArray(o.looks) && o.looks.length){ o.theme=[...new Set([...(o.theme||[]),...o.looks])]; o.looks=[]; }
   TAG_KEYS.forEach(k=>{ if(Array.isArray(o[k])) o[k]=[...o[k]].sort(koCmp); });
   DEEP_KEYS.forEach(k=>{ if(Array.isArray(o[k])) o[k]=[...o[k]].sort((a,b)=>koCmp(a&&a.name||"",b&&b.name||"")); });
   return o;
@@ -1137,7 +1139,7 @@ const KINDS = {
 };
 const kindOf = m => m.kind==="pc" ? "pc" : m.kind==="system" ? "system" : m.kind==="idea" ? "idea" : m.kind==="game" ? "game" : m.kind==="term" ? "term" : "monster";
 const SYS_KEYS=["game","cats","keywords"], IDEA_KEYS=["keywords","game"];
-const railCats = () => kind==="game" ? [CAT.keywords] : kind==="idea" ? IDEA_KEYS.map(k=>CAT[k]) : CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key) && (!["traits","roles","styles"].includes(c.key) || kind==="pc") && (kind!=="pc" || c.key!=="levels" || pcLegacy().levels));
+const railCats = () => kind==="game" ? [CAT.keywords] : kind==="idea" ? IDEA_KEYS.map(k=>CAT[k]) : CATS.filter(c => kind==="system" ? SYS_KEYS.includes(c.key) : !["cats","keywords"].includes(c.key) && (!["traits","roles","styles"].includes(c.key) || kind==="pc") && (kind!=="pc" || c.key!=="levels" || pcLegacy().levels) && (kind!=="pc" || c.key!=="looks"));
 /* PC에서 빠진 칸(후킹 이미지·레벨 테마): 예전에 적어 둔 PC가 있을 때만 보임 */
 const pcLegacy = () => { const ps=allRefs.filter(m=>kindOf(m)==="pc"); return {hooks:ps.some(m=>(m.hooks||[]).length), levels:ps.some(m=>(m.levels||[]).length)}; };
 /* 아이디어 분류: 개별 패턴 / 이미지 */
@@ -1147,7 +1149,7 @@ const THEAD = {
   ref: `<th class="grip" aria-label="순서"></th><th id="thName">몬스터</th><th>이미지</th><th>후킹 이미지</th><th>테마</th><th>레벨 테마</th><th>외형</th><th>무기</th><th>전투 확장 시스템</th><th id="thCounter">대응 PC 도구</th><th>공략</th><th></th>`,
   system: `<th class="grip" aria-label="순서"></th><th id="thName">시스템 및 확장</th><th>이미지</th><th>분류</th><th>키워드</th><th>설명</th><th></th>`,
 };
-const pcHead = L => `<th class="grip" aria-label="순서"></th><th id="thName">PC</th><th>이미지</th><th>핵심 이미지</th><th>역할</th><th>전투 방식</th><th>컨셉</th><th>외형</th><th>무기</th><th>특징</th>${L.levels?`<th title="예전 칸 · 적어 둔 PC가 있어서 보여요">레벨 테마</th>`:""}<th>전투 확장 시스템</th><th id="thCounter">대응 몬스터</th><th>운용</th><th></th>`;
+const pcHead = L => `<th class="grip" aria-label="순서"></th><th id="thName">PC</th><th>이미지</th><th>핵심 이미지</th><th>역할</th><th>전투 방식</th><th>컨셉</th><th>무기</th><th>특징</th>${L.levels?`<th title="예전 칸 · 적어 둔 PC가 있어서 보여요">레벨 테마</th>`:""}<th>전투 확장 시스템</th><th id="thCounter">대응 몬스터</th><th>운용</th><th></th>`;
 function syncKind(){
   monsters = allRefs.filter(m=>kindOf(m)===kind);
   const K=KINDS[kind];
@@ -2421,7 +2423,7 @@ function rowHTML(m, g){
     return `${tr}${grip}${nameTd}<td>${thumbLink(m, link)}</td><td>${cells("cats")}</td><td>${cells("keywords")}</td><td class="guide">${guideCell(m)}</td>${acts}</tr>`;
   if(kindOf(m)==="pc"){ const L=pcLegacy();
     return `${tr}${grip}${nameTd}<td>${thumbLink(m, link)}</td><td>${cells("hooks")}</td>
-    <td>${cells("roles")}</td><td>${cells("styles")}</td><td>${cells("theme")}</td><td>${cells("looks")}</td><td>${cells("weapons")}</td><td>${cells("traits")}</td>
+    <td>${cells("roles")}</td><td>${cells("styles")}</td><td>${cells("theme")}</td><td>${cells("weapons")}</td><td>${cells("traits")}</td>
     ${L.levels?`<td>${cells("levels")}</td>`:""}
     <td>${deep("systems")}</td><td>${deep("pcs")}</td><td class="guide">${guideCell(m)}</td>${acts}</tr>`; }
   return `${tr}${grip}${nameTd}
@@ -2643,7 +2645,7 @@ function openForm(m, copyFrom, opts){
       <div class="field"><label for="f_styles"><i style="background:var(--t-hook)"></i>전투 방식</label><input id="f_styles" type="text" value="${esc(j(v?.styles))}" placeholder="근접 / 원거리 / 소환 / 변신"><small>싸우는 방식 · / 로 구분</small></div>`:""}
       <div class="field full"><label for="f_theme"><i style="background:var(--t-theme)"></i>${fKind==="pc"?"컨셉":"테마"}</label><input id="f_theme" type="text" value="${esc(j(v?.theme))}" placeholder="${fKind==="pc"?"사무라이 / 냉정함 / 기계 팔":"변이 / 비행기 / 빠름 / 에너지"}"><small>/ 로 구분</small></div>
       ${fKind==="pc"&&!(v?.levels||[]).length?"":`<div class="field full"><label for="f_levels"><i style="background:var(--t-level)"></i>레벨 테마</label><input id="f_levels" type="text" value="${esc(j(v?.levels))}" placeholder="폐허 도시 / 우주 정거장"><small>${fKind==="pc"?"예전 칸 · 비우면 사라져요":"등장 스테이지의 분위기 · / 로 구분"}</small></div>`}
-      <div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>
+      ${fKind==="pc"?"":`<div class="field"><label for="f_looks"><i style="background:var(--t-look)"></i>외형</label><input id="f_looks" type="text" value="${esc(j(v?.looks))}" placeholder="인간형 / 여성 / 건담"></div>`}
       <div class="field"><label for="f_weapons"><i style="background:var(--t-weapon)"></i>무기</label><input id="f_weapons" type="text" value="${esc(j(v?.weapons))}" placeholder="에너지 / 검"></div>
       ${fKind==="pc"?`<div class="field full"><label for="f_traits"><i style="background:var(--t-trait)"></i>특징</label><input id="f_traits" type="text" value="${esc(j(v?.traits))}" placeholder="명파 / 염 속성 / 반격"><small>게임에서 쓰는 말 그대로 · / 로 구분 · 용어집에 연결하면 마우스를 올렸을 때 표준 용어가 보여요</small></div>`:""}
       <div class="field"><label for="f_systems"><i style="background:var(--t-sys)"></i>전투 확장 시스템</label><input id="f_systems" type="text" value="${esc(j((v?.systems||[]).map(e=>e.name)))}" placeholder="제어기"><small>같은 게임의 시스템 레퍼런스와 이어져요 · 게임을 먼저 고르면 그 게임의 시스템이 추천돼요</small></div>
