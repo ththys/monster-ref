@@ -417,6 +417,39 @@ def main():
         check("PC 외형 칸 없음·예전 외형은 컨셉으로", "외형" not in heads and merged and noField and "갑옷" in saved.get("theme", []) and not saved.get("looks"), f"{merged},{noField},{saved.get('theme')}")
         check("불러오기: 겹치는 항목 건너뜀", n1 == 2 and n2 == 2 and not has_alt, f"{n1},{n2},{has_alt}")
 
+        # 7-10) 편집 창 안에서 누르고 바깥에서 놓아도 안 닫힘
+        pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
+        pg.click("#addBtn"); pg.wait_for_timeout(200)
+        bx = pg.locator("#f_name").bounding_box()
+        pg.mouse.move(bx["x"] + 5, bx["y"] + 5); pg.mouse.down(); pg.mouse.move(3, 3, steps=4); pg.mouse.up(); pg.wait_for_timeout(200)
+        still = pg.is_visible("#f_name")
+        pg.mouse.click(3, 3); pg.wait_for_timeout(200)
+        closed_or_asked = not pg.is_visible("#f_name") or pg.locator("#scrim").is_visible()
+        check("바깥에서 마우스를 놓아도 편집 창 유지", still, str(still))
+        if pg.is_visible("#f_name"): pg.keyboard.press("Escape"); pg.wait_for_timeout(200)
+        if pg.is_visible("#f_name"): pg.evaluate("document.querySelector('#scrim').hidden=true")
+
+        # 7-11) 휴지통: 지우면 보관, 되살리기, 완전히 삭제
+        pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
+        pg.click("#addBtn"); pick_or_type(pg, "f_game", "휴지통 게임"); pg.fill("#f_name", "지울 보스"); pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(300)
+        pg.locator("#rows tr", has_text="지울 보스").locator("[data-del]").click(); pg.wait_for_timeout(200); pg.click("#dYes"); pg.wait_for_timeout(300)
+        gone = pg.locator("#rows tr", has_text="지울 보스").count() == 0
+        kept = pg.evaluate("JSON.parse(localStorage.getItem('monster-ref-v1')).some(m=>m.name==='지울 보스'&&m.deletedAt)")
+        pg.goto(url + "#trash"); pg.wait_for_timeout(300)
+        inbin = pg.locator(".binitem", has_text="지울 보스").count() == 1 and "28일 남음" in pg.inner_text(".binitem")
+        pg.locator(".binitem", has_text="지울 보스").locator("[data-trback]").click(); pg.wait_for_timeout(300)
+        pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
+        back = pg.locator("#rows tr", has_text="지울 보스").count() == 1
+        pg.locator("#rows tr", has_text="지울 보스").locator("[data-del]").click(); pg.wait_for_timeout(200); pg.click("#dYes"); pg.wait_for_timeout(300)
+        pg.goto(url + "#trash"); pg.wait_for_timeout(300)
+        pg.once("dialog", lambda d: d.accept())
+        pg.locator(".binitem", has_text="지울 보스").locator("[data-trkill]").click(); pg.wait_for_timeout(300)
+        purged = not pg.evaluate("JSON.parse(localStorage.getItem('monster-ref-v1')).some(m=>m.name==='지울 보스')")
+        old = pg.evaluate("""()=>{ const a=JSON.parse(localStorage.getItem('monster-ref-v1')); a.push({id:'old1',name:'오래된 것',game:'x',deletedAt:Date.now()-29*864e5}); localStorage.setItem('monster-ref-v1',JSON.stringify(a)); }""")
+        pg.reload(); pg.wait_for_timeout(500)
+        autodel = not pg.evaluate("JSON.parse(localStorage.getItem('monster-ref-v1')).some(m=>m.id==='old1')")
+        check("휴지통: 보관·되살리기·완전 삭제·4주 지나면 자동 삭제", gone and kept and inbin and back and purged and autodel, f"{gone},{kept},{inbin},{back},{purged},{autodel}")
+
         # 8) 새로고침 후 유지
         pg.reload(); pg.wait_for_timeout(500); pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         check("새로고침 후 데이터 유지", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)
