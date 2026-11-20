@@ -208,7 +208,8 @@ def main():
         # 7) 패치 타임라인
         pg.goto(url + "#timeline"); pg.wait_for_timeout(300)
         if pg.locator("#tlGameSel").count(): pg.select_option("#tlGameSel", "테스트 게임"); pg.wait_for_timeout(200)
-        check("패치 타임라인", pg.locator(".tlbar").count() >= 1)
+        moved = pg.evaluate("location.hash") == "#patches"
+        check("패치 타임라인 (예전 주소는 게임 쪽으로)", moved and pg.locator(".tlbar.mon").count() >= 1, pg.evaluate("location.hash"))
 
         # 7-1) 아이디어 보드: 추가(개별 패턴) → 분류별 보기 → 끌어 놓기로 바로 추가 → 크게 보기·넘기기
         pg.goto(url + "#ideas"); pg.wait_for_timeout(300)
@@ -357,6 +358,20 @@ def main():
         pg.click("#fSave"); pg.wait_for_timeout(250)
         kept = pg.evaluate("()=>JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.name==='역할 PC').levels")
         check("PC 칸: 예전 레벨 테마는 남아 있음", "레벨 테마" in heads2 and lv == "예전 레벨" and kept == ["예전 레벨"], f"{heads2} {lv} {kept}")
+
+        # 7-6) 패치 타임라인: 같은 게임의 몬스터·PC를 함께, 끄고 켜기
+        pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
+        pg.click("#addBtn"); pick_or_type(pg, "f_game", "타임 게임"); pg.fill("#f_version", "1.0"); pg.fill("#f_name", "보스 하나"); pg.fill("#f_systems", "패링")
+        pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(250)
+        pg.goto(url + "#pc"); pg.wait_for_timeout(300)
+        pg.click("#addBtn"); pick_or_type(pg, "f_game", "타임 게임"); pg.fill("#f_version", "1.2"); pg.fill("#f_name", "PC 하나"); pg.fill("#f_systems", "패링")
+        pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(1200)
+        if pg.is_visible("#toast"): pg.mouse.move(5,5)
+        pg.goto(url + "#patches"); pg.wait_for_timeout(300); pg.select_option("#tlGameSel", "타임 게임"); pg.wait_for_timeout(200)
+        both = pg.locator(".tlbar.mon").count() == 1 and pg.locator(".tlbar.pcm").count() == 1 and "1.0 → 1.2" in pg.inner_text(".tlbar.c-sys")
+        pg.uncheck('[data-tlshow="pc"]'); pg.wait_for_timeout(200)
+        check("패치 타임라인: 몬스터·PC 함께, 끄고 켜기", both and pg.locator(".tlbar.pcm").count() == 0 and pg.locator(".tlbar.mon").count() == 1)
+        pg.check('[data-tlshow="pc"]'); pg.wait_for_timeout(100)
 
         # 8) 새로고침 후 유지
         pg.reload(); pg.wait_for_timeout(500); pg.goto(url + "#monsters"); pg.wait_for_timeout(300)

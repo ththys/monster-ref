@@ -201,6 +201,12 @@ tr.sub td.name .nm::before{content:"└ ";color:var(--muted);font-weight:400}
 .tlbar:hover{filter:brightness(.97);box-shadow:0 0 0 2px var(--c-bg)}
 .tlbar .dots{display:flex;gap:3px;margin-left:auto}
 .tlbar.mon{--c:var(--accent);--c-bg:var(--hover);color:var(--ink);font-weight:600}
+.tlbar.pcm{--c:var(--t-pc);--c-bg:var(--t-pc-bg);color:var(--ink);font-weight:600}
+.tlbar.pcm img,.tlbar.pcm video{width:22px;height:22px;border-radius:4px;object-fit:cover;flex:none}
+.tltog{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px}
+.tltog input{accent-color:var(--accent)}
+.tltog i{width:12px;height:12px;border-radius:3px;background:var(--c-bg);border:2px solid var(--c)}
+.tltog.tl-mon{--c:var(--accent);--c-bg:var(--hover)} .tltog.tl-pc{--c:var(--t-pc);--c-bg:var(--t-pc-bg)}
 .tlbar.mon img,.tlbar.mon video{width:22px;height:22px;border-radius:4px;object-fit:cover;flex:none}
 .tlhead .tln{font-size:12px;color:var(--muted);font-weight:600}
 .tlhead .tlt{grid-template-rows:auto}
@@ -880,14 +886,12 @@ span.mention{color:var(--t-sys);font-weight:600}
         <a href="#monsters" data-view="monsters"><span>몬스터</span><span class="n" id="nMon"></span></a>
         <a href="#systems" data-view="systems" class="sub"><span>전투 확장 시스템</span><span class="n" id="nSys"></span></a>
         <a href="#pcs" data-view="pcs" class="sub"><span>대응 PC 도구</span><span class="n" id="nPc"></span></a>
-        <a href="#timeline" data-view="timeline" class="sub"><span>패치 타임라인</span></a>
         </div>
         <button type="button" class="navh navtog" data-grp="pc" aria-expanded="false" aria-controls="navg-pc"><span>PC 레퍼런스</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navg-pc" class="navgrp" hidden>
         <a href="#pc" data-view="pc"><span>PC</span><span class="n" id="nPC"></span></a>
         <a href="#pc-systems" data-view="pc-systems" class="sub"><span>전투 확장 시스템</span><span class="n" id="nPCSys"></span></a>
         <a href="#pc-counters" data-view="pc-counters" class="sub"><span>대응 몬스터</span><span class="n" id="nPCCnt"></span></a>
-        <a href="#pc-timeline" data-view="pc-timeline" class="sub"><span>패치 타임라인</span></a>
         </div>
         <button type="button" class="navh navtog" data-grp="sys" aria-expanded="false" aria-controls="navg-sys"><span>시스템 레퍼런스</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navg-sys" class="navgrp" hidden>
@@ -901,6 +905,7 @@ span.mention{color:var(--t-sys);font-weight:600}
         <button type="button" class="navh navtog" data-grp="game" aria-expanded="false" aria-controls="navg-game"><span>게임</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navg-game" class="navgrp" hidden>
         <a href="#games" data-view="games"><span>게임 정리</span><span class="n" id="nGame"></span></a>
+        <a href="#patches" data-view="patches" class="sub"><span>패치 타임라인</span></a>
         </div>
         <button type="button" class="navh navtog" data-grp="idea" aria-expanded="false" aria-controls="navg-idea"><span>아이디어</span><span class="caret" aria-hidden="true">▸</span></button>
         <div id="navg-idea" class="navgrp" hidden>
@@ -1341,10 +1346,11 @@ function render(){
   const pa=$("#portAdmin"), isDoc = sub==="portfolio"||sub==="works"; document.body.classList.toggle("v-port", isDoc);
   if (isDoc){ tb.hidden=true; pa.hidden=false; renderPortAdmin(sub==="works"?"port":"about"); return; }
   pa.hidden=true;
-  document.body.classList.toggle("v-home", sub==="home" || sub==="terms");
+  document.body.classList.toggle("v-home", sub==="home" || sub==="terms" || sub==="gtl");
   if (!loaded) return;
   if (sub==="home"){ if(io) io.disconnect(); renderHome(); return; }
   if (sub==="terms"){ if(io) io.disconnect(); renderTerms(); return; }
+  if (sub==="gtl"){ if(io) io.disconnect(); renderTimeline(); return; }
   if (sub==="board"){ if(io) io.disconnect(); renderIdeas(list); return; }
   if (sub==="games"){ if(io) io.disconnect(); renderGames(list); return; }
   if (sub==="solo"){ if(io) io.disconnect(); renderSolo(list); return; }
@@ -1404,8 +1410,7 @@ const VIEWMAP={
   "pc":         {kind:"pc",      sub:"list"},
   "pc-systems": {kind:"pc",      sub:"systems"},
   "pc-counters":{kind:"pc",      sub:"pcs"},
-  "timeline":   {kind:"monster", sub:"timeline"},
-  "pc-timeline":{kind:"pc",      sub:"timeline"},
+  "patches":    {kind:null,      sub:"gtl"},
   "sysref":       {kind:"system", sub:"list"},
   "sysref-cats":  {kind:"system", sub:"bycat"},
   "sysref-games": {kind:"system", sub:"bygame"},
@@ -1422,6 +1427,7 @@ const VIEWMAP={
   "works":      {kind:null,      sub:"works"},
 };
 const VIEWS=Object.keys(VIEWMAP);
+if(/^#(pc-)?timeline$/.test(location.hash)) history.replaceState(null,"","#patches");
 let view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home";
 let sub = VIEWMAP[view].sub;
 function setView(v){
@@ -1449,6 +1455,7 @@ function renderTabs(){
   $("#nIdeaP").textContent=ID.filter(m=>ideaTypeOf(m)==="pattern").length; $("#nIdeaI").textContent=ID.filter(m=>ideaTypeOf(m)==="image").length;
 }
 addEventListener("hashchange", ()=>{
+  if(/^#(pc-)?timeline$/.test(location.hash)){ location.replace("#patches"); return; }
   const v=location.hash.slice(1); if(!VIEWS.includes(v)) return;
   setView(v); groupEdit=null; hidePop(true); render(); scrollTo({top:0});
 });
@@ -1779,51 +1786,52 @@ $("#groupbox").addEventListener("click", e=>{
 });
 /* ---------- 패치 타임라인: 게임 하나를 골라 패치(버전) 순서로 ---------- */
 let tlGame="";
-function renderTimeline(list){
-  const gb=$("#groupbox"), tb=$("#tablebox"), KL=KINDS[kind].label;
-  tb.hidden=true; gb.hidden=false;
-  const games=new Map(); list.forEach(m=>{ if(m.game) games.set(m.game,(games.get(m.game)||0)+1); });
+let tlShow=(()=>{ try{ return JSON.parse(localStorage.getItem("monster-ref-tlshow")||"null")||{monster:true,pc:true,sys:true}; }catch{ return {monster:true,pc:true,sys:true}; } })();
+/* 패치 타임라인: 게임 하나를 골라 몬스터·PC·전투 확장 시스템을 패치 순서대로 함께 */
+function renderTimeline(){
+  const gb=$("#groupbox"), tb=$("#tablebox"); tb.hidden=true; gb.hidden=false;
+  const src=allRefs.filter(m=>["monster","pc"].includes(kindOf(m)));
+  const games=new Map(); src.forEach(m=>{ if(m.game) games.set(m.game,(games.get(m.game)||0)+1); });
   const gameList=[...games].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"ko"));
-  const fg=[...filters].find(f=>f.startsWith("game|"));
-  const g = fg ? fg.slice(5) : (games.has(tlGame) ? tlGame : (gameList[0]||[""])[0]);
-  if(!g){ gb.innerHTML=`<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>게임 이름이 들어간 ${KL}가 없어요</strong><span>추가·편집에서 게임 이름과 버전을 적으면 패치별로 볼 수 있어요.</span></div>`; $("#count").textContent=""; return; }
+  const g = games.has(tlGame) ? tlGame : (gameList[0]||[""])[0];
+  const box=(t,u)=>`<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>${t}</strong><span>${u}</span></div>`;
+  if(!g){ gb.innerHTML=box("게임 이름이 들어간 몬스터·PC가 없어요","추가·편집에서 게임 이름과 버전을 적으면 패치별로 볼 수 있어요."); $("#count").textContent=""; return; }
   tlGame=g;
-  const rows=list.filter(m=>m.game===g), withV=rows.filter(m=>(m.version||"").trim()), noV=rows.length-withV.length;
+  const rows=src.filter(m=>m.game===g), withV=rows.filter(m=>(m.version||"").trim()), noV=rows.length-withV.length;
   const vers=[...new Set(withV.map(m=>m.version.trim()))].sort(cmpVersion), N=vers.length, col=v=>vers.indexOf((v||"").trim());
-  $("#count").textContent=`${g} · 패치 ${N}개 · ${KL} ${withV.length}건`;
-  const top=`<div class="tlbar-top"><label class="sortbox" for="tlGameSel" style="font-weight:600;color:var(--ink)">게임
-      <select id="tlGameSel" ${fg?"disabled title=\"왼쪽 게임 필터를 해제하면 바꿀 수 있어요\"":""}>${gameList.map(([n,c])=>`<option value="${esc(n)}" ${n===g?"selected":""}>${esc(n)} (${c})</option>`).join("")}</select></label>
-      ${noV?`<span class="note">버전이 비어 있는 ${KL} ${noV}개는 빠져 있어요</span>`:""}
-      <span class="lg"><span style="--c:var(--accent);--c-bg:var(--hover)"><i></i>${KL}</span><span class="c-pc"><i></i>${esc(CAT.pcs.label)}</span><span class="c-sys"><i></i>${esc(CAT.systems.label)}</span></span></div>`;
-  if(!N){ gb.innerHTML=top+`<div class="state" style="background:var(--panel);border:1px solid var(--line);border-radius:10px"><strong>${esc(g)}에 버전이 적힌 ${KL}가 없어요</strong><span>편집에서 버전(예: 1.4)을 적어 주세요.</span></div>`; wireTl(); return; }
+  const mons=withV.filter(m=>kindOf(m)==="monster"), pcs=withV.filter(m=>kindOf(m)==="pc");
+  $("#count").textContent="";
+  const tog=(k,l,cls,n)=>`<label class="tltog ${cls}"><input type="checkbox" data-tlshow="${k}" ${tlShow[k]?"checked":""}><i></i>${l} ${n}</label>`;
+  const top=`<div class="hhead"><h2>패치 타임라인</h2><p>게임 하나를 골라 몬스터·PC·전투 확장 시스템이 어느 패치에 나왔는지 함께 봐요.</p></div>
+    <div class="tlbar-top"><label class="sortbox" for="tlGameSel" style="font-weight:600;color:var(--ink)">게임
+      <select id="tlGameSel">${gameList.map(([n,c])=>`<option value="${esc(n)}" ${n===g?"selected":""}>${esc(n)} (${c})</option>`).join("")}</select></label>
+      <span class="lg">${tog("monster","몬스터","tl-mon",mons.length)}${tog("pc","PC","tl-pc",pcs.length)}${tog("sys","전투 확장 시스템","c-sys","")}</span>
+      ${noV?`<span class="note">버전이 비어 있는 ${noV}개는 빠져 있어요</span>`:""}</div>`;
+  if(!N){ gb.innerHTML=`<div class="home">${top}${box(`${esc(g)}에 버전이 적힌 몬스터·PC가 없어요`,"편집에서 버전(예: 1.4)을 적어 주세요.")}</div>`; wireTl(); return; }
   const cells=(on)=>vers.map((_,k)=>`<div class="tlc ${on&&on.has(k)?"cur":""}" style="grid-column:${k+1}"></div>`).join("");
-  const perVer=vers.map(v=>withV.filter(m=>m.version.trim()===v).length);
-  const head=`<div class="tlrow tlhead"><div class="tln">패치</div><div class="tlt">${vers.map((v,k)=>`<div class="tlv" style="grid-column:${k+1}"><b>${esc(v)}</b><span>${perVer[k]}개</span></div>`).join("")}</div></div>`;
-  const spans=(cat)=>{
-    const map=new Map();
-    withV.forEach(m=>(m[cat]||[]).forEach(e=>{ const x=map.get(e.name)||{name:e.name,cols:new Set(),users:[]}; x.cols.add(col(m.version)); x.users.push(m); map.set(e.name,x); }));
-    return [...map.values()].map(x=>({...x,cat,s:Math.min(...x.cols),e:Math.max(...x.cols)}));
-  };
-  const spanRow=(x,typeLabel)=>{ const d=getDef(kind,x.cat,x.name);
-    return `<div class="tlrow"><div class="tln"><b>${esc(x.name)}</b>${typeLabel||d.nameEn?`<small>${typeLabel?esc(typeLabel):""}${typeLabel&&d.nameEn?" · ":""}${d.nameEn?`<span lang="en">${esc(d.nameEn)}</span>`:""}</small>`:""}</div>
-      <div class="tlt">${cells(x.cols)}<button type="button" class="tlbar ${CAT[x.cat].cls}" style="grid-column:${x.s+1}/${x.e+2}" data-tldef="${esc(x.cat)}|${esc(x.name)}" title="${esc(x.name)} · ${esc(vers[x.s])}${x.s!==x.e?" → "+esc(vers[x.e]):""} · ${x.users.map(u=>u.name).join(", ")}">
+  const perVer=vers.map(v=>withV.filter(m=>m.version.trim()===v));
+  const head=`<div class="tlrow tlhead"><div class="tln">패치</div><div class="tlt">${vers.map((v,k)=>{ const a=perVer[k], nm=a.filter(m=>kindOf(m)==="monster").length, np=a.length-nm;
+    return `<div class="tlv" style="grid-column:${k+1}"><b>${esc(v)}</b><span>${[nm?`몬 ${nm}`:"",np?`PC ${np}`:""].filter(Boolean).join(" · ")}</span></div>`; }).join("")}</div></div>`;
+  const entRow=m=>{ const c=col(m.version), th=(m.media||m.image)?mediaHTML(m,96):"", pc=kindOf(m)==="pc";
+    return `<div class="tlrow"><div class="tln"><b>${esc(m.name)}</b><small>${pc?"PC":"몬스터"}${m.nameEn?` · <span lang="en">${esc(m.nameEn)}</span>`:""}</small></div>
+      <div class="tlt">${cells(new Set([c]))}<button type="button" class="tlbar ${pc?"pcm":"mon"}" style="grid-column:${c+1}/${c+2}" data-tlmon="${esc(m.id)}" title="${esc(m.name)} · ${pc?"PC":"몬스터"} · ${esc(m.version)}">${th}${esc(m.name)}</button></div></div>`; };
+  const ents=withV.filter(m=>tlShow[kindOf(m)]).sort((a,b)=>col(a.version)-col(b.version)||(kindOf(a)==="pc")-(kindOf(b)==="pc")||a.name.localeCompare(b.name,"ko"));
+  const contentLane = ents.length ? `<div class="tlsec">컨텐츠 · ${[tlShow.monster?`몬스터 ${mons.length}`:"",tlShow.pc?`PC ${pcs.length}`:""].filter(Boolean).join(" · ")}</div>`+ents.map(entRow).join("") : "";
+  /* 전투 확장 시스템: 몬스터·PC 어느 쪽에서 쓰였든 처음~마지막 패치 */
+  const map=new Map();
+  withV.forEach(m=>(m.systems||[]).forEach(e=>{ const x=map.get(e.name)||{name:e.name,cols:new Set(),users:[]}; x.cols.add(col(m.version)); x.users.push(m); map.set(e.name,x); }));
+  const sys=[...map.values()].map(x=>({...x,s:Math.min(...x.cols),e:Math.max(...x.cols)})).sort((a,b)=>a.s-b.s||b.users.length-a.users.length||a.name.localeCompare(b.name,"ko"));
+  const sysRow=x=>{ const sr=sysRefFor(g,x.name), nm=x.users.filter(u=>kindOf(u)==="monster").length, np=x.users.length-nm;
+    return `<div class="tlrow"><div class="tln"><b>${esc(x.name)}</b><small>${[nm?`몬스터 ${nm}`:"",np?`PC ${np}`:""].filter(Boolean).join(" · ")}${sr&&sr.nameEn?` · <span lang="en">${esc(sr.nameEn)}</span>`:""}</small></div>
+      <div class="tlt">${cells(x.cols)}<button type="button" class="tlbar c-sys" style="grid-column:${x.s+1}/${x.e+2}" data-tldef="systems|${esc(x.name)}" title="${esc(x.name)} · ${esc(vers[x.s])}${x.s!==x.e?" → "+esc(vers[x.e]):""} · ${x.users.map(u=>u.name).join(", ")}">
         ${x.s!==x.e?`${esc(vers[x.s])} → ${esc(vers[x.e])}`:esc(vers[x.s])} · ${x.users.length}</button></div></div>`; };
-  const monRow=m=>{ const c=col(m.version), th=(m.media||m.image)?mediaHTML(m,96):"";
-    return `<div class="tlrow"><div class="tln"><b>${esc(m.name)}</b>${m.nameEn?`<small lang="en">${esc(m.nameEn)}</small>`:""}</div>
-      <div class="tlt">${cells(new Set([c]))}<button type="button" class="tlbar mon" style="grid-column:${c+1}/${c+2}" data-tlmon="${esc(m.id)}" title="${esc(m.name)} · ${esc(m.version)}${(m.guide||"").trim()?" · 공략 있음":""}">${th}${esc(m.name)}</button></div></div>`; };
-  /* 컨텐츠: ${KL}와 대응 항목을 패치 순서대로 함께 */
-  const counters=spans("pcs");
-  const content=[...withV.map(m=>({t:0,s:col(m.version),name:m.name,m})), ...counters.map(x=>({t:1,s:x.s,name:x.name,x}))]
-    .sort((a,b)=>a.s-b.s||a.t-b.t||a.name.localeCompare(b.name,"ko"));
-  const contentLane = content.length ? `<div class="tlsec">컨텐츠 · ${KL} ${withV.length}${counters.length?` · ${esc(CAT.pcs.label)} ${counters.length}`:""}</div>`
-    + content.map(c=>c.t===0?monRow(c.m):spanRow(c.x, CAT.pcs.label)).join("") : "";
-  const sys=spans("systems").sort((a,b)=>a.s-b.s||b.users.length-a.users.length||a.name.localeCompare(b.name,"ko"));
-  const sysLane = sys.length ? `<div class="tlsec">${esc(CAT.systems.label)} · ${sys.length}개</div>`+sys.map(x=>spanRow(x,"")).join("") : "";
-  gb.innerHTML = top + `<div class="tlwrap"><div class="tl" style="--n:${N}">${head}${contentLane}${sysLane}</div></div>`;
+  const sysLane = tlShow.sys && sys.length ? `<div class="tlsec">전투 확장 시스템 · ${sys.length}개</div>`+sys.map(sysRow).join("") : "";
+  gb.innerHTML = `<div class="home">${top}<div class="tlwrap"><div class="tl" style="--n:${N}">${head}${contentLane}${sysLane}</div></div></div>`;
   wireVideos(gb); wireTl();
 }
 function wireTl(){
   const sel=$("#tlGameSel"); if(sel) sel.onchange=e=>{ tlGame=e.target.value; render(); };
+  document.querySelectorAll("[data-tlshow]").forEach(c=>c.onchange=()=>{ tlShow[c.dataset.tlshow]=c.checked; try{ localStorage.setItem("monster-ref-tlshow",JSON.stringify(tlShow)); }catch{} render(); });
 }
 $("#groupbox").addEventListener("click", e=>{
   const t=e.target.closest("[data-tldef],[data-tlmon]"); if(!t) return;
