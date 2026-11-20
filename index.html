@@ -243,6 +243,17 @@ tr.sub td.name .nm::before{content:"└ ";color:var(--muted);font-weight:400}
 .tvchip img,.tvchip video{width:24px;height:24px;border-radius:5px;object-fit:cover;flex:none}
 .tvchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tvchip small{font-weight:500;color:var(--muted)}
+.tl.packed{min-width:calc(150px + var(--n) * var(--cw))}
+.tl.packed .tlrow{grid-template-columns:150px minmax(0,1fr)}
+.tlpk{grid-row:1;border-left:1px dashed var(--line);padding:6px 5px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px;min-width:0}
+.tlpk .tvchip{max-width:100%;height:auto;min-height:26px;padding:3px 7px 3px 3px;font-size:12px}
+.tlpk .tvchip.noth{padding-left:6px}
+.tlpk .tvchip span{white-space:normal;word-break:keep-all;line-height:1.25;text-align:left}
+.tlpk .tvchip img,.tlpk .tvchip video{width:20px;height:20px}
+.tlpack.k-mon .tln b{color:var(--t-mon)} .tlpack.k-pc .tln b{color:var(--t-pc)}
+.tlpack.k-mon .tlt{background:color-mix(in srgb,var(--t-mon-bg) 35%,transparent)}
+.tlpack.k-pc .tlt{background:color-mix(in srgb,var(--t-pc-bg) 35%,transparent)}
+.tlpack .tln{justify-content:flex-start;padding-top:10px}
 .tlsec{position:sticky;left:0;padding:8px 12px;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
 .search{flex:1 1 320px;min-width:0;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 12px}
 .search svg{flex:none;color:var(--muted)}
@@ -1825,7 +1836,7 @@ $("#groupbox").addEventListener("click", e=>{
 });
 /* ---------- 패치 타임라인: 게임 하나를 골라 패치(버전) 순서로 ---------- */
 let tlGame="";
-let tlView=(()=>{ try{ return localStorage.getItem("monster-ref-tlview")||"table"; }catch{ return "table"; } })();
+let tlView=(()=>{ try{ return localStorage.getItem("monster-ref-tlview")||"bars"; }catch{ return "bars"; } })();
 let tlShow=(()=>{ try{ return JSON.parse(localStorage.getItem("monster-ref-tlshow")||"null")||{monster:true,pc:true,sys:true}; }catch{ return {monster:true,pc:true,sys:true}; } })();
 /* 패치 타임라인: 게임 하나를 골라 몬스터·PC·전투 확장 시스템을 패치 순서대로 함께 */
 function renderTimeline(){
@@ -1846,7 +1857,7 @@ function renderTimeline(){
     <div class="tlbar-top"><label class="sortbox" for="tlGameSel" style="font-weight:600;color:var(--ink)">게임
       <select id="tlGameSel">${gameList.map(([n,c])=>`<option value="${esc(n)}" ${n===g?"selected":""}>${esc(n)} (${c})</option>`).join("")}</select></label>
       <span class="lg">${tog("monster","몬스터","tl-mon",mons.length)}${tog("pc","PC","tl-pc",pcs.length)}${tog("sys","전투 확장 시스템","c-sys","")}</span>
-      <span class="tvseg"><button type="button" data-tlview="table" class="${tlView==="table"?"on":""}">버전별 표</button><button type="button" data-tlview="bars" class="${tlView==="bars"?"on":""}">가로 타임라인</button></span>
+      <span class="tvseg"><button type="button" data-tlview="bars" class="${tlView!=="table"?"on":""}">가로(간트)</button><button type="button" data-tlview="table" class="${tlView==="table"?"on":""}">세로 표</button></span>
       ${noV?`<span class="note">버전이 비어 있는 ${noV}개는 빠져 있어요</span>`:""}</div>`;
   if(!N){ gb.innerHTML=`<div class="home">${top}${box(`${esc(g)}에 버전이 적힌 몬스터·PC가 없어요`,"편집에서 버전(예: 1.4)을 적어 주세요.")}</div>`; wireTl(); return; }
   const perVer=vers.map(v=>withV.filter(m=>m.version.trim()===v));
@@ -1871,8 +1882,12 @@ function renderTimeline(){
   const entRow=m=>{ const c=col(m.version), th=(m.media||m.image)?mediaHTML(m,96):"", pc=kindOf(m)==="pc";
     return `<div class="tlrow"><div class="tln"><b>${esc(m.name)}</b><small>${pc?"PC":"몬스터"}${m.nameEn?` · <span lang="en">${esc(m.nameEn)}</span>`:""}</small></div>
       <div class="tlt">${cells(new Set([c]))}<button type="button" class="tlbar ${pc?"pcm":"mon"}" style="grid-column:${c+1}/${c+2}" data-tlmon="${esc(m.id)}" title="${esc(m.name)} · ${pc?"PC":"몬스터"} · ${esc(m.version)}">${th}${esc(m.name)}</button></div></div>`; };
-  const ents=withV.filter(m=>tlShow[kindOf(m)]).sort((a,b)=>col(a.version)-col(b.version)||(kindOf(a)==="pc")-(kindOf(b)==="pc")||a.name.localeCompare(b.name,"ko"));
-  const contentLane = ents.length ? `<div class="tlsec">컨텐츠 · ${[tlShow.monster?`몬스터 ${mons.length}`:"",tlShow.pc?`PC ${pcs.length}`:""].filter(Boolean).join(" · ")}</div>`+ents.map(entRow).join("") : "";
+  const byNm=(a,b)=>a.name.localeCompare(b.name,"ko");
+  const pchip=m=>{ const pc=kindOf(m)==="pc", th=(m.media||m.image)?mediaHTML(m,96):"";
+    return `<button type="button" class="tvchip ${pc?"pcm":"mon"} ${th?"":"noth"}" data-tlmon="${esc(m.id)}" title="${esc(m.name)}${m.nameEn?` · ${esc(m.nameEn)}`:""} · ${esc(m.version)}">${th}<span>${esc(m.name)}</span></button>`; };
+  const lane=(k,label,arr)=>`<div class="tlrow tlpack ${k==="pc"?"k-pc":"k-mon"}"><div class="tln"><b>${label}</b><small>${arr.length}개</small></div><div class="tlt">${vers.map((v,i)=>{ const xs=arr.filter(m=>m.version.trim()===v).sort(byNm);
+      return `<div class="tlpk" style="grid-column:${i+1}">${xs.map(pchip).join("")}</div>`; }).join("")}</div></div>`;
+  const contentLane=(tlShow.monster&&mons.length?lane("monster","몬스터",mons):"")+(tlShow.pc&&pcs.length?lane("pc","PC",pcs):"");
   /* 전투 확장 시스템: 몬스터·PC 어느 쪽에서 쓰였든 처음~마지막 패치 */
   const map=new Map();
   withV.forEach(m=>(m.systems||[]).forEach(e=>{ const x=map.get(e.name)||{name:e.name,cols:new Set(),users:[]}; x.cols.add(col(m.version)); x.users.push(m); map.set(e.name,x); }));
@@ -1882,7 +1897,7 @@ function renderTimeline(){
       <div class="tlt">${cells(x.cols)}<button type="button" class="tlbar c-sys" style="grid-column:${x.s+1}/${x.e+2}" data-tldef="systems|${esc(x.name)}" title="${esc(x.name)} · ${esc(vers[x.s])}${x.s!==x.e?" → "+esc(vers[x.e]):""} · ${x.users.map(u=>u.name).join(", ")}">
         ${x.s!==x.e?`${esc(vers[x.s])} → ${esc(vers[x.e])}`:esc(vers[x.s])} · ${x.users.length}</button></div></div>`; };
   const sysLane = tlShow.sys && sys.length ? `<div class="tlsec">전투 확장 시스템 · ${sys.length}개</div>`+sys.map(sysRow).join("") : "";
-  gb.innerHTML = `<div class="home">${top}<div class="tlwrap"><div class="tl" style="--n:${N}">${head}${contentLane}${sysLane}</div></div></div>`;
+  gb.innerHTML = `<div class="home">${top}<div class="tlwrap"><div class="tl packed" style="--n:${N};--cw:128px">${head}${contentLane}${sysLane}</div></div></div>`;
   wireVideos(gb); wireTl();
 }
 function wireTl(){

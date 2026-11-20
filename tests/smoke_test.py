@@ -368,6 +368,7 @@ def main():
         pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(1200)
         if pg.is_visible("#toast"): pg.mouse.move(5,5)
         pg.goto(url + "#patches"); pg.wait_for_timeout(300); pg.select_option("#tlGameSel", "타임 게임"); pg.wait_for_timeout(200)
+        pg.click('[data-tlview="table"]'); pg.wait_for_timeout(200)
         rows = pg.locator(".tvt tbody tr").count()
         tv = rows == 2 and pg.locator(".tvt td.k-mon .tvchip.mon").count() == 1 and pg.locator(".tvt td.k-pc .tvchip.pcm").count() == 1 and pg.locator(".tvchip.sys").count() == 1
         pg.uncheck('[data-tlshow="pc"]'); pg.wait_for_timeout(200)
@@ -375,11 +376,10 @@ def main():
         pg.check('[data-tlshow="pc"]'); pg.wait_for_timeout(200)
         check("패치 버전별 표: 몬스터·PC·시스템 칸 나눔, 끄고 켜기", tv, str(rows))
         pg.click('[data-tlview="bars"]'); pg.wait_for_timeout(200)
-        both = pg.locator(".tlbar.mon").count() == 1 and pg.locator(".tlbar.pcm").count() == 1 and "1.0 → 1.2" in pg.inner_text(".tlbar.c-sys")
+        both = pg.locator(".tlpk .tvchip.mon").count() == 1 and pg.locator(".tlpk .tvchip.pcm").count() == 1 and pg.locator(".tlpack").count() == 2 and "1.0 → 1.2" in pg.inner_text(".tlbar.c-sys")
         pg.uncheck('[data-tlshow="pc"]'); pg.wait_for_timeout(200)
-        check("패치 타임라인: 몬스터·PC 함께, 끄고 켜기", both and pg.locator(".tlbar.pcm").count() == 0 and pg.locator(".tlbar.mon").count() == 1)
+        check("패치 타임라인(가로): 몬스터·PC 한 줄씩, 끄고 켜기", both and pg.locator(".tlpk .tvchip.pcm").count() == 0 and pg.locator(".tlpk .tvchip.mon").count() == 1)
         pg.check('[data-tlshow="pc"]'); pg.wait_for_timeout(100)
-        pg.click('[data-tlview="table"]'); pg.wait_for_timeout(100)
 
         # 7-7) 영상 링크: 새 탭 대신 화면 위 재생
         pg.route("**/youtube-nocookie.com/**", lambda r: r.fulfill(body="<html></html>", content_type="text/html"))
