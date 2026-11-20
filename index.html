@@ -4415,9 +4415,17 @@ $("#importFile").addEventListener("change", async e=>{
     const arr=Array.isArray(j)?j:(j.monsters||[]);
     if(!Array.isArray(arr)) throw 0;
     const defList=(Array.isArray(j.defs)?j.defs:[]).filter(d=>d&&d.name&&d.cat&&d.refKind);
-    const list=arr.filter(m=>m&&m.name&&m.kind!=="def").map(m=>{ const o={...m,id:m.id||uid()}; delete o.originalUrl; return o; });
+    /* 이미 있는 것(같은 종류·게임에 이름·영문 이름·_alt가 겹침)은 건너뜀 — 같은 id(백업 복원)는 그대로 덮어씀 */
+    const ids=new Set(allRefs.map(m=>m.id)), nk=x=>String(x||"").trim().toLowerCase().replace(/\s+/g," ");
+    const seen=new Set(); allRefs.forEach(m=>[m.name,m.nameEn].forEach(x=>{ if(nk(x)) seen.add(`${m.kind||""}|${m.game||""}|${nk(x)}`); }));
+    let dup=0;
+    const list=arr.filter(m=>m&&m.name&&m.kind!=="def").filter(m=>{
+      if(m.id&&ids.has(m.id)) return true;
+      const ks=[m.name,m.nameEn,...(Array.isArray(m._alt)?m._alt:[])].map(nk).filter(Boolean).map(x=>`${m.kind||""}|${m.game||""}|${x}`);
+      if(ks.some(k=>seen.has(k))){ dup++; return false; } ks.forEach(k=>seen.add(k)); return true;
+    }).map(m=>{ const o={...m,id:m.id||uid()}; delete o.originalUrl; delete o._alt; return o; });
     const wl=(Array.isArray(j.works)?j.works:[]).filter(w=>w&&w.title).map(w=>{ const o={...w,id:w.id||uid()}; delete o.originalUrl; return o; });
-    if(!list.length && !wl.length && !defList.length) throw 0;
+    if(!list.length && !wl.length && !defList.length){ if(dup){ toast(`모두 이미 있는 항목이라 건너뛰었어요 (${dup}건)`); return; } throw 0; }
     /* ZIP 복원: 원본 파일을 지금 연결된 Cloudinary 계정에 다시 올림 */
     const target=upTarget(); let re=0, reFail=0;
     if(zip && target){
@@ -4445,7 +4453,7 @@ $("#importFile").addEventListener("change", async e=>{
       for(const d of defList) await putDef({kind:"def", refKind:d.refKind, cat:d.cat, name:d.name, nameEn:d.nameEn||"", label:d.label||"공략", note:d.note||"", updatedAt:d.updatedAt||Date.now()});
       for(const w of wl) await wstore.set(w.id, clean(w));
       if(j.profile && typeof j.profile==="object" && Object.keys(j.profile).length){ const pf={...j.profile}; for(const bk of ["aboutBlocks","portBlocks"]) if(Array.isArray(pf[bk])) pf[bk]=pf[bk].map(b=>{ const o={...b}; delete o.id; return o; }); await wstore.saveProfile(pf); }
-      toast(`레퍼런스 ${list.length}건 · 작업물 ${wl.length}건을 불러왔어요${re?` · 파일 ${re}개 다시 올림`:""}${reFail?` · ${reFail}개 실패`:""}`);
+      toast(`레퍼런스 ${list.length}건 · 작업물 ${wl.length}건을 불러왔어요${dup?` · 이미 있는 ${dup}건은 건너뜀`:""}${re?` · 파일 ${re}개 다시 올림`:""}${reFail?` · ${reFail}개 실패`:""}`);
     }catch(ex){ toast(errMsg(ex)); }
   }catch{ toast("불러올 수 없는 파일이에요. 백업으로 받은 ZIP이나 JSON인지 확인해 주세요"); }
   finally{ busy=false; }

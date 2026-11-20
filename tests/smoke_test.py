@@ -385,6 +385,19 @@ def main():
         check("영상 링크: 화면 위에서 재생", pg.is_visible("#lightbox .vplay") and "dQw4w9WgXcQ" in src and "start=65" in src and len(pg.context.pages) == pages_before, src)
         pg.keyboard.press("Escape"); pg.wait_for_timeout(100)
 
+        # 7-9) 불러오기: 이미 있는 항목(이름·영문·_alt)은 건너뜀
+        import json as _j, tempfile as _t, os as _o
+        jf = _o.path.join(_t.mkdtemp(), "imp.json")
+        open(jf, "w", encoding="utf8").write(_j.dumps({"monsters": [
+            {"kind": "pc", "game": "가져온게임", "version": "1.0", "name": "가져온 PC", "nameEn": "Imported PC"},
+            {"kind": "pc", "game": "가져온게임", "version": "1.1", "name": "다른 이름", "nameEn": "Other", "_alt": ["가져온 PC"]},
+            {"game": "가져온게임", "version": "1.0", "name": "Imported Mon", "nameEn": "Imported Mon"}]}, ensure_ascii=False))
+        cnt = lambda: pg.evaluate("JSON.parse(localStorage.getItem('monster-ref-v1')||'[]').filter(m=>m.game==='가져온게임').length")
+        pg.set_input_files("#importFile", jf); pg.wait_for_timeout(500); n1 = cnt()
+        pg.set_input_files("#importFile", jf); pg.wait_for_timeout(500); n2 = cnt()
+        has_alt = pg.evaluate("JSON.parse(localStorage.getItem('monster-ref-v1')||'[]').some(m=>'_alt' in m)")
+        check("불러오기: 겹치는 항목 건너뜀", n1 == 2 and n2 == 2 and not has_alt, f"{n1},{n2},{has_alt}")
+
         # 8) 새로고침 후 유지
         pg.reload(); pg.wait_for_timeout(500); pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         check("새로고침 후 데이터 유지", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)
