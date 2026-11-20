@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>레퍼런스 아카이브</title>
+<script>try{var t=localStorage.getItem("monster-ref-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -902,6 +903,7 @@ span.mention{color:var(--t-sys);font-weight:600}
 .toast button{margin-left:10px;border:1px solid currentColor;background:none;color:inherit;border-radius:4px;padding:1px 8px;font-size:12.5px;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;font-size:13px;z-index:80}
 @media (prefers-reduced-motion:no-preference){.pop,.modal{animation:in .14s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}}}
+.themebtn{min-width:38px;padding-left:10px;padding-right:10px;font-size:15px;line-height:1}
 </style>
 </head>
 <body>
@@ -911,7 +913,7 @@ span.mention{color:var(--t-sys);font-weight:600}
   <div class="pvbar" id="pvBar" hidden><span>방문자 화면 미리보기 · 로그인하지 않은 사람에게 이렇게 보여요</span><button class="btn sm" id="pvBack" type="button">관리 화면으로</button></div>
   <header class="phead">
     <div><div class="eyebrow">자기소개서</div><h1 id="pName">자기소개서</h1><p class="headline" id="pHeadline" hidden></p></div>
-    <button class="btn sm" id="pubLogin" type="button">관리자 로그인</button>
+    <div style="display:flex;gap:6px;align-items:center"><button class="btn sm themebtn" type="button" data-themebtn aria-label="화면 밝기 바꾸기"></button><button class="btn sm" id="pubLogin" type="button">관리자 로그인</button></div>
   </header>
   <p class="intro" id="pIntro" hidden></p>
   <div class="contacts" id="pContacts" hidden></div>
@@ -934,6 +936,7 @@ span.mention{color:var(--t-sys);font-weight:600}
     </div>
     <div class="actions">
       <span class="mode" id="mode"><i></i><span>불러오는 중</span></span>
+      <button class="btn themebtn" type="button" data-themebtn aria-label="화면 밝기 바꾸기"></button>
       <button class="btn" id="authBtn" type="button" hidden>로그인</button>
       <button class="btn edit-only" id="importBtn" type="button">불러오기</button>
       <input id="importFile" type="file" accept="application/json,.json,application/zip,.zip" hidden>
@@ -1083,6 +1086,13 @@ let trash=[];
 function splitTrash(arr){ const now=Date.now(), live=[], tr=[], old=[];
   arr.forEach(d=>{ if(!d||!d.deletedAt) live.push(d); else if(now-d.deletedAt>TRASH_MS) old.push(d); else tr.push(d); });
   return {live, tr, old}; }
+/* 다크·라이트 전환: 처음엔 기기 설정을 따르고, 누르면 반대로 고정 */
+const isDark=()=>{ const t=document.documentElement.dataset.theme; return t? t==="dark" : matchMedia("(prefers-color-scheme: dark)").matches; };
+function paintThemeBtns(){ const d=isDark(); document.querySelectorAll("[data-themebtn]").forEach(b=>{ b.textContent=d?"☀":"☾"; b.title=d?"라이트 모드로":"다크 모드로"; }); }
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-themebtn]"); if(!b) return;
+  const next=isDark()?"light":"dark"; document.documentElement.dataset.theme=next; try{ localStorage.setItem("monster-ref-theme",next); }catch{} paintThemeBtns(); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",paintThemeBtns);
+paintThemeBtns();
 function persist(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(allRefs.concat(trash))); return true; }
   catch(e){ toast("브라우저 저장 공간이 가득 찼어요. 내보내기로 백업한 뒤 이미지를 줄여 주세요"); return false; }

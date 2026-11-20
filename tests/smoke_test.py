@@ -409,6 +409,16 @@ def main():
         order2 = pg.eval_on_selector_all(".tlhead .tlv", "e=>e.map(x=>x.dataset.ver)")
         check("대응 PC 도구 줄·빈 PC 줄 숨김·패치 순서 끌기", order == ["첫 보스", "두번째", "마지막"] and tool and nopc and order2 == ["마지막", "첫 보스", "두번째"], f"{order},{tool},{nopc},{order2}")
 
+        # 7-6d) 다크·라이트 전환 (새로고침 후 유지)
+        before = pg.evaluate("(document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'))==='dark'")
+        pg.click("#archive [data-themebtn]"); pg.wait_for_timeout(100)
+        after = pg.evaluate("document.documentElement.dataset.theme")
+        pg.reload(); pg.wait_for_timeout(400)
+        kept = pg.evaluate("document.documentElement.dataset.theme") == after
+        pg.click("#archive [data-themebtn]"); pg.wait_for_timeout(100)
+        back = (pg.evaluate("document.documentElement.dataset.theme") == "dark") == before
+        check("다크·라이트 전환", after == ("light" if before else "dark") and kept and back, f"{before},{after},{kept},{back}")
+
         # 7-7) 영상 링크: 새 탭 대신 화면 위 재생
         pg.route("**/youtube-nocookie.com/**", lambda r: r.fulfill(body="<html></html>", content_type="text/html"))
         pg.route("**/i.ytimg.com/**", lambda r: r.abort())
