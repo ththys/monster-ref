@@ -201,6 +201,9 @@ tr.sub td.name .nm::before{content:"└ ";color:var(--muted);font-weight:400}
 .tlbar:hover{filter:brightness(.97);box-shadow:0 0 0 2px var(--c-bg)}
 .tlbar .dots{display:flex;gap:3px;margin-left:auto}
 .tlbar.mon{--c:var(--accent);--c-bg:var(--hover);color:var(--ink);font-weight:600}
+.vplay{width:min(1100px,92vw);aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
+.vplay.tall{width:min(420px,92vw);aspect-ratio:9/16;max-height:calc(100vh - 120px)}
+.vplay iframe{width:100%;height:100%;border:0;display:block}
 .tlbar.pcm{--c:var(--t-pc);--c-bg:var(--t-pc-bg);color:var(--ink);font-weight:600}
 .tlbar.pcm img,.tlbar.pcm video{width:22px;height:22px;border-radius:4px;object-fit:cover;flex:none}
 .tltog{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px}
@@ -2408,6 +2411,26 @@ document.addEventListener("click", e=>{
   }
 });
 $("#lightbox").addEventListener("click",e=>{ if(e.target.id==="lightbox"||e.target.id==="lbClose"){ $("#lightbox").hidden=true; $("#lightbox").innerHTML=""; } });
+/* 영상 링크(유튜브·mp4)는 새 탭 대신 화면 위에서 바로 재생. Ctrl·가운데 클릭은 원래대로 새 탭 */
+function ytStart(u){ try{ const x=new URL(u), t=x.searchParams.get("t")||x.searchParams.get("start")||""; const mm=String(t).match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/); return mm?((+mm[1]||0)*3600+(+mm[2]||0)*60+(+mm[3]||0)):0; }catch{ return 0; } }
+function openVideo(u, title){
+  const lb=$("#lightbox"), yid=ytId(u), shorts=/\/shorts\//.test(u);
+  const player = yid
+    ? `<div class="vplay ${shorts?"tall":""}"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(yid)}?autoplay=1&rel=0${ytStart(u)?`&start=${ytStart(u)}`:""}" title="${esc(title||"영상")}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
+    : `<video src="${esc(u)}" controls autoplay playsinline></video>`;
+  lb.innerHTML=`<div class="lb">${player}<div class="lbbar">${title?`<span>${esc(title)}</span>`:""}<a href="${esc(u)}" target="_blank" rel="noopener">${yid?"유튜브에서 열기":"새 탭에서 열기"}</a><button type="button" id="lbClose">닫기</button></div></div>`;
+  lb.hidden=false; delete lb.dataset.idea; delete lb.dataset.gal;
+}
+document.addEventListener("click",e=>{
+  if(e.defaultPrevented || e.button!==0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+  const a=e.target.closest("a[href]"); if(!a || a.closest("#lightbox .lbbar")) return;
+  const u=a.getAttribute("href")||""; if(!/^https?:/i.test(u)) return;
+  const isVid = ytId(u) || /\.(mp4|webm|mov)(\?|#|$)/i.test(u);
+  if(!isVid) return;
+  e.preventDefault(); e.stopPropagation();
+  const row=a.closest("[data-id]"), m=row&&allRefs.find(x=>x.id===row.dataset.id);
+  openVideo(u, m ? [m.game,m.name].filter(Boolean).join(" · ") : (a.getAttribute("title")||""));
+}, true);
 $("#q").addEventListener("input", e=>{ query=e.target.value; render(); });
 $("#addBtn").addEventListener("click", ()=> kind==="idea" ? openIdeaForm(null) : kind==="game" ? openGameForm(null) : openForm(null));
 $("#deadBtn").addEventListener("click", ()=>{ filters.has(DEAD)?filters.delete(DEAD):filters.add(DEAD); render(); });

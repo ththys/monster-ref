@@ -373,6 +373,18 @@ def main():
         check("패치 타임라인: 몬스터·PC 함께, 끄고 켜기", both and pg.locator(".tlbar.pcm").count() == 0 and pg.locator(".tlbar.mon").count() == 1)
         pg.check('[data-tlshow="pc"]'); pg.wait_for_timeout(100)
 
+        # 7-7) 영상 링크: 새 탭 대신 화면 위 재생
+        pg.route("**/youtube-nocookie.com/**", lambda r: r.fulfill(body="<html></html>", content_type="text/html"))
+        pg.route("**/i.ytimg.com/**", lambda r: r.abort())
+        pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
+        pg.click("#addBtn"); pick_or_type(pg, "f_game", "영상 게임"); pg.fill("#f_name", "영상 보스"); pg.fill("#f_link", "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=1m5s")
+        pg.click("#fTitle"); pg.click("#fSave"); pg.wait_for_timeout(250)
+        pages_before = len(pg.context.pages)
+        pg.locator("#rows tr", has_text="영상 보스").locator("a.link").click(); pg.wait_for_timeout(300)
+        src = pg.get_attribute("#lightbox iframe", "src") or ""
+        check("영상 링크: 화면 위에서 재생", pg.is_visible("#lightbox .vplay") and "dQw4w9WgXcQ" in src and "start=65" in src and len(pg.context.pages) == pages_before, src)
+        pg.keyboard.press("Escape"); pg.wait_for_timeout(100)
+
         # 8) 새로고침 후 유지
         pg.reload(); pg.wait_for_timeout(500); pg.goto(url + "#monsters"); pg.wait_for_timeout(300)
         check("새로고침 후 데이터 유지", pg.locator("#rows td.name", has_text="테스트 보스").count() == 1)
