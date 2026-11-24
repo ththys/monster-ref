@@ -449,6 +449,17 @@ def main():
         side = bb[0] and bb[1] and abs(bb[0]["y"] - bb[1]["y"]) < 3 and bb[1]["x"] > bb[0]["x"] + 50
         pg.click("#gClose"); pg.wait_for_timeout(150)
         check("글 속 사진 1/2 크기로 옆으로 나란히", side, str(bb))
+        # 사진 크기 끌어서 바꾸기
+        pg.locator('.icard[data-idea="idm"]').click(); pg.wait_for_timeout(300); pg.click("#gEdit"); pg.wait_for_timeout(300)
+        pg.locator("#gwEd figure.gimg .gim").nth(0).click(); pg.wait_for_timeout(150)
+        hb = pg.locator("#gwRs").bounding_box(); eb = pg.locator("#gwEd").bounding_box()
+        pg.mouse.move(hb["x"] + 8, hb["y"] + 8); pg.mouse.down()
+        target = eb["x"] + 24 + (eb["width"] - 48) * 0.30
+        pg.mouse.move(target, hb["y"] + 8, steps=6); pg.mouse.up(); pg.wait_for_timeout(150)
+        w = pg.evaluate("document.querySelector('#gwEd figure.gimg').getAttribute('data-w')")
+        pg.click("#fSave"); pg.wait_for_timeout(400)
+        hv = pg.evaluate("(JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.id==='idm')||{}).html||''")
+        check("사진 크기 끌어서 바꾸기", w is not None and 20 <= int(w) <= 40 and f'data-w="{w}"' in hv, f"{w}")
         # 새 아이디어 글쓰기: 글 + 사진 섞어 쓰기
         pg.click("#addBtn"); pg.wait_for_timeout(300)
         nw = pg.locator("#gwEd").count() == 1 and pg.locator('input[name="i_type"]').count() == 2
