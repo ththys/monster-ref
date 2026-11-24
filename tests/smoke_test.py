@@ -234,8 +234,9 @@ def main():
         pg.locator(".icard").first.click(); pg.wait_for_timeout(150)
         first = pg.inner_text(".ilb .icnt") if pg.locator(".ilb .icnt").count() else ""
         pg.keyboard.press("ArrowRight"); pg.wait_for_timeout(150)
-        second = pg.inner_text(".ilb .icnt") if pg.locator(".ilb .icnt").count() else ""
-        check("아이디어: 크게 보기·넘기기", pg.is_visible(".ilb") and first == "1 / 2" and second == "2 / 2", f"{first}->{second}")
+        second = pg.inner_text(".ilb .icnt") if pg.locator(".ilb .icnt").count() else (pg.inner_text(".gpost .icnt") if pg.locator(".gpost .icnt").count() else "")
+        if pg.locator(".gpost").count(): pg.click("#gClose"); pg.wait_for_timeout(100)
+        check("아이디어: 크게 보기·넘기기", first == "1 / 2" and second == "2 / 2", f"{first}->{second}")
         pg.keyboard.press("Escape"); pg.wait_for_timeout(100)
 
         # 7-2) 게임 정리: 한 장에 이어 쓰는 글쓰기 (@시스템, ## 제목, 사진 커서 자리·크기, 한 번에 연결, 임시 저장)
@@ -431,10 +432,21 @@ def main():
         pg.keyboard.press("ArrowRight"); pg.wait_for_timeout(200)
         step = pg.evaluate("document.querySelector('#lightbox').dataset.pic") == "1" and pg.evaluate("document.querySelector('#lightbox').dataset.idea") == "idm"
         pg.click("#ibEdit"); pg.wait_for_timeout(300)
-        form = pg.locator("#galEdit .gi").count() == 2 and pg.locator("#f_guide.igrow").count() == 1
-        pg.click("#fSave"); pg.wait_for_timeout(300)
-        kept = pg.evaluate("(JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.id==='idm')||{}).gallery.length") == 2
-        check("아이디어: 여러 장·글 보기·넘기기·편집 유지", badge and wide and step and form and kept, f"{badge},{wide},{step},{form},{kept}")
+        form = pg.locator("#gwEd figure.gimg").count() == 2 and pg.locator("#gwEd h3").count() == 1 and pg.input_value("#f_name") == "여러 장 아이디어"
+        pg.click("#fSave"); pg.wait_for_timeout(400)
+        sv = pg.evaluate("JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.id==='idm')||{}")
+        kept = sv.get("html", "").count("<figure") == 2 and sv.get("gallery") == [] and sv.get("kind") == "idea"
+        pg.locator('.icard[data-idea="idm"]').click(); pg.wait_for_timeout(300)
+        post = pg.locator(".gpost #gpDoc figure.gimg").count() == 2 and "여러 장 아이디어" in pg.inner_text(".gpost h1")
+        pg.click("#gClose"); pg.wait_for_timeout(150)
+        check("아이디어: 예전 여러 장 보기 → 블로그 글로 옮겨 쓰기·글 보기", badge and wide and step and form and kept and post, f"{badge},{wide},{step},{form},{kept},{post}")
+        # 새 아이디어 글쓰기: 글 + 사진 섞어 쓰기
+        pg.click("#addBtn"); pg.wait_for_timeout(300)
+        nw = pg.locator("#gwEd").count() == 1 and pg.locator('input[name="i_type"]').count() == 2
+        pg.fill("#f_name", "블로그 아이디어"); pg.click("#gwEd"); pg.keyboard.type("hello idea")
+        pg.click("#fSave"); pg.wait_for_timeout(400)
+        nv = pg.evaluate("JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.name==='블로그 아이디어')||{}")
+        check("아이디어: 글쓰기 화면으로 새로 쓰기", nw and nv.get("kind") == "idea" and "hello idea" in nv.get("html", ""), f"{nw},{nv.get('html')}")
 
         # 7-7) 영상 링크: 새 탭 대신 화면 위 재생
         pg.route("**/youtube-nocookie.com/**", lambda r: r.fulfill(body="<html></html>", content_type="text/html"))

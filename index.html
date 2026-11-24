@@ -3405,27 +3405,36 @@ function wireMention(el){
 }
 /* 글쓰기 화면 (네이버 블로그·옵시디언처럼 한 장에 이어 쓰기) */
 const DRAFT_KEY = id => "monster-ref-draft:"+(id||"new");
-function openGameForm(m, presetGame){
+function openGameForm(m, presetGame, opt){
   if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
   hidePop(true);
-  const v=m||{};
+  const v=m||{}, IDEA=!!(opt&&opt.idea) || (m&&kindOf(m)==="idea"), itype=m?ideaTypeOf(m):(ideaType()||"image");
   formImage = v.image||null; formMedia = v.media||null; uploading=false;
   const sc=$("#scrim");
   const tb=[["p","본문"],["h2","제목"],["h3","소제목"],"|",["bold","<b>B</b>"],["italic","<i>I</i>"],["underline","<u>U</u>"],["strike","<s>S</s>"],"|",
     ["ul","• 목록"],["ol","1. 목록"],["quote","❝ 인용"],["hr","― 구분선"],["link","링크"],"|",["img","사진·움짤 넣기"],["mention","@ 시스템"]];
   sc.innerHTML=`<div class="modal gwrite" role="dialog" aria-modal="true" aria-labelledby="fTitle">
-    <header><h2 id="fTitle">게임 정리 ${m?"편집":"쓰기"}</h2>
+    <header><h2 id="fTitle">${IDEA?"아이디어":"게임 정리"} ${m?"편집":"쓰기"}</h2>
       <div class="gwhb"><span class="gwsave" id="gwState"></span><button type="button" class="btn" id="fCancel">닫기</button><button type="button" class="btn primary" id="fSave">${m?"저장":"올리기"}</button></div></header>
     <form id="form" novalidate class="gwform">
       <div class="gwdraft" id="gwDraft" hidden></div>
-      <div class="gwmeta">
+${IDEA?`      <div class="gwmeta">
+        <div class="field full"><div class="iradio" role="radiogroup" aria-label="분류">${Object.entries(ITYPES).map(([k,l])=>`<label><input type="radio" name="i_type" value="${k}" ${k===itype?"checked":""}><span>${l}</span></label>`).join("")}</div></div>
+        <div class="field full"><input id="f_name" type="text" class="gwone" value="${esc(v.name)}" placeholder="제목 — 예) 붉은 하늘 아래 보스 등장" autocomplete="off" aria-label="제목"></div>
+        <div class="field"><label for="f_gameSel">게임 <small style="font-weight:400">· 없어도 돼요</small></label>${gameSelectHTML(v.game||"")}<small id="f_gDup" class="dupwarn" hidden></small></div>
+        <div class="field"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc((v.keywords||[]).join(" / "))}" placeholder="웅장함 / 붉은 하늘 / 슬로우" autocomplete="off"></div>
+        <input id="f_oneLine" type="hidden" value="">
+        <details class="gwmore full"><summary>대표 이미지 · 링크</summary><div class="gwmorein">${mediaFieldHTML("대표 이미지 (보드 카드·글 맨 위 큰 사진)")}
+          <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v.link)}" placeholder="https://"></div></div></details>
+      </div>
+`:`      <div class="gwmeta">
         <div class="field"><label for="f_gameSel">게임 이름</label>${gameSelectHTML(v.game||presetGame||"")}<small id="f_gDup" class="dupwarn" hidden></small></div>
         <div class="field"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc((v.keywords||[]).join(" / "))}" placeholder="소울라이크 / 패링 / 보스 러시"></div>
         <div class="field full"><input id="f_oneLine" type="text" class="gwone" value="${esc(v.oneLine)}" placeholder="한 줄 소감 — 예) 패링 하나로 끝까지 끌고 가는 손맛" autocomplete="off" aria-label="한 줄 소감"></div>
         <details class="gwmore full"><summary>대표 이미지 · 링크</summary><div class="gwmorein">${mediaFieldHTML("대표 이미지 (글 맨 위 큰 사진)")}
           <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v.link)}" placeholder="https://"></div></div></details>
       </div>
-      <div class="gwtool" role="toolbar" aria-label="글 꾸미기">${tb.map(x=>x==="|"?`<span class="gwsep"></span>`:`<button type="button" data-gw="${x[0]}" title="${x[1].replace(/<[^>]+>/g,"")}">${x[1]}</button>`).join("")}
+`}      <div class="gwtool" role="toolbar" aria-label="글 꾸미기">${tb.map(x=>x==="|"?`<span class="gwsep"></span>`:`<button type="button" data-gw="${x[0]}" title="${x[1].replace(/<[^>]+>/g,"")}">${x[1]}</button>`).join("")}
         <button type="button" class="gwlink" id="fLinkAll" title="글 속 시스템 이름을 찾아 한 번에 연결">시스템 한 번에 연결</button></div>
       <div class="gwwrap" id="gwWrap">
         <div class="gwed gpdoc" id="gwEd" contenteditable="true" spellcheck="false" data-ph="여기에 이어서 쓰세요. 사진·움짤(jpg·png·gif·webp·mp4)은 붙여 넣기(Ctrl+V)·끌어 놓기·‘사진·움짤 넣기’로 커서 자리에 들어가요. ## 를 치고 띄우면 제목, - 는 목록, > 는 인용."></div>
@@ -3438,7 +3447,7 @@ function openGameForm(m, presetGame){
   wireMention($("#f_oneLine"));
   const ed=$("#gwEd"), wrap=$("#gwWrap"), figBar=$("#gwFig");
   const setBody=html=>{ ed.innerHTML=gwSanitize(html)||"<p><br></p>"; gwFill(ed,640,true); ed.querySelectorAll("video").forEach(x=>{ x.muted=true; x.play().catch(()=>{}); }); };
-  setBody(m?gameHTML(m):"");
+  setBody(m?(IDEA?ideaBodyHTML(m):gameHTML(m)):"");
   try{ document.execCommand("defaultParagraphSeparator", false, "p"); }catch{}
   /* 저장 형태: 사진 칸은 비우고 data 속성만 */
   const serialize=()=>{ const c=ed.cloneNode(true); c.querySelectorAll("figure[data-up]").forEach(f=>f.remove()); c.querySelectorAll(".gim").forEach(g=>g.innerHTML=""); c.querySelectorAll(".sel").forEach(e=>e.classList.remove("sel")); return gwSanitize(c.innerHTML); };
@@ -3447,17 +3456,17 @@ function openGameForm(m, presetGame){
   const markDirty=()=>{ dirty=true; state("작성 중"); };
   closeGuard=()=> !dirty || confirm("저장하지 않은 글이 있어요. 닫을까요? (임시 저장본은 남아 있어요)");
   /* 임시 저장 */
-  const dk=DRAFT_KEY(m&&m.id);
-  const saveDraft=()=>{ if(!dirty) return; try{ localStorage.setItem(dk, JSON.stringify({t:Date.now(), html:serialize(), oneLine:$("#f_oneLine").value, game:fv("f_game"), keywords:$("#f_keywords").value})); state("임시 저장됨 "+new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})); }catch{} };
+  const dk=IDEA?DRAFT_KEY("idea-"+(m?m.id:"new")):DRAFT_KEY(m&&m.id);
+  const saveDraft=()=>{ if(!dirty) return; try{ localStorage.setItem(dk, JSON.stringify({t:Date.now(), html:serialize(), oneLine:IDEA?fv("f_name"):$("#f_oneLine").value, game:fv("f_game"), keywords:$("#f_keywords").value})); state("임시 저장됨 "+new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})); }catch{} };
   const dTimer=setInterval(()=>{ if(!document.body.contains(ed)){ clearInterval(dTimer); return; } saveDraft(); }, 4000);
   try{ const d=JSON.parse(localStorage.getItem(dk)||"null");
     if(d && d.t > (m&&m.updatedAt||0) && (d.html||"").replace(/<[^>]+>/g,"").trim()){
       const bx=$("#gwDraft"); bx.hidden=false;
       bx.innerHTML=`<span>${new Date(d.t).toLocaleString("ko-KR")}에 임시 저장된 글이 있어요</span><button type="button" class="btn sm" id="gwDl">불러오기</button><button type="button" class="btn sm" id="gwDx">버리기</button>`;
-      $("#gwDl").onclick=()=>{ setBody(d.html); $("#f_oneLine").value=d.oneLine||""; $("#f_keywords").value=d.keywords||""; if(d.game && !fv("f_game")) setCombo("f_game", d.game); bx.hidden=true; markDirty(); };
+      $("#gwDl").onclick=()=>{ setBody(d.html); $(IDEA?"#f_name":"#f_oneLine").value=d.oneLine||""; $("#f_keywords").value=d.keywords||""; if(d.game && !fv("f_game")) setCombo("f_game", d.game); bx.hidden=true; markDirty(); };
       $("#gwDx").onclick=()=>{ try{ localStorage.removeItem(dk); }catch{} bx.hidden=true; };
     } }catch{}
-  ["f_oneLine","f_keywords","f_link"].forEach(id=>$("#"+id).addEventListener("input",markDirty));
+  [IDEA?"f_name":"f_oneLine","f_keywords","f_link"].forEach(id=>$("#"+id).addEventListener("input",markDirty));
   /* 커서 위치 기억 (사진·@ 넣을 자리) */
   const saveSel=()=>{ const se=getSelection(); if(se.rangeCount && ed.contains(se.anchorNode)) lastRange=se.getRangeAt(0).cloneRange(); };
   document.addEventListener("selectionchange", saveSel);
@@ -3568,7 +3577,7 @@ function openGameForm(m, presetGame){
   /* @ 시스템 (글 칸) */
   wireMentionCE(ed, markDirty);
   /* 게임 중복 */
-  const dupChk=()=>{ const g=fv("f_game").trim(), d=g&&allRefs.find(x=>kindOf(x)==="game"&&x.game===g&&(!m||x.id!==m.id)), w=$("#f_gDup");
+  const dupChk=()=>{ if(IDEA) return false; const g=fv("f_game").trim(), d=g&&allRefs.find(x=>kindOf(x)==="game"&&x.game===g&&(!m||x.id!==m.id)), w=$("#f_gDup");
     w.hidden=!d; if(d) w.textContent=`${g} 정리가 이미 있어요. 게임마다 하나만 둘 수 있어요.`; return !!d; };
   $("#f_game").addEventListener("input",dupChk); const gs=$("#f_gameSel"); if(gs) gs.addEventListener("change",()=>setTimeout(dupChk)); dupChk();
   $("#fLinkAll").onclick=()=>{
@@ -3586,6 +3595,21 @@ function openGameForm(m, presetGame){
   const submit=async()=>{
     const err=$("#fErr"), g=fv("f_game").trim();
     if(uploading || busy){ err.hidden=false; err.textContent="사진 업로드가 끝나면 저장할 수 있어요."; err.scrollIntoView({block:"nearest"}); return; }
+    if(IDEA){
+      const html=serialize(), guide=gwPlain(html), name=fv("f_name").trim();
+      const data={ kind:"idea", type:(document.querySelector('input[name="i_type"]:checked')||{}).value||"image", name, game:g, keywords:splitTags(fv("f_keywords")), link:fv("f_link").trim(),
+        html, guide, gallery:[], mentions:g?mentionsIn(guide,g):[], image:formImage||"", media:formMedia||null, updatedAt:Date.now() };
+      const hasPic=data.image||data.media||/<figure/.test(html);
+      if(!hasPic && !name && !guide.trim()){ err.hidden=false; err.textContent="사진이나 제목·글 중 하나는 넣어 주세요."; return; }
+      const b=$("#fSave"); b.disabled=true; state("저장 중…");
+      try{
+        if(m) await store.set(m.id,{...data, createdAt:m.createdAt||Date.now()});
+        else await store.add({...data, createdAt:Date.now()});
+        try{ localStorage.removeItem(dk); }catch{}
+        dirty=false; done(); closeForm(true); toast(m?"저장했어요":"올렸어요");
+      }catch(ex){ b.disabled=false; state(""); err.hidden=false; err.textContent=errMsg(ex); }
+      return;
+    }
     if(!g){ err.hidden=false; err.textContent="게임 이름을 골라 주세요."; $("#gwWrap").scrollTop=0; ($("#f_gameSel")||$("#f_game")).focus(); return; }
     if(dupChk()){ err.hidden=false; err.textContent=`${g} 정리가 이미 있어요. 그 정리를 편집해 주세요.`; return; }
     const html=serialize(), oneLine=fv("f_oneLine").trim(), guide=gwPlain(html);
@@ -3602,7 +3626,7 @@ function openGameForm(m, presetGame){
   $("#fSave").onclick=submit;
   $("#form").onsubmit=e=>{ e.preventDefault(); submit(); };
   ed.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); submit(); } });
-  if(v.game||presetGame) ed.focus(); else ($("#f_gameSel")||$("#f_game")).focus();
+  if(IDEA) (m?ed:$("#f_name")).focus(); else if(v.game||presetGame) ed.focus(); else ($("#f_gameSel")||$("#f_game")).focus();
 }
 /* 글 칸(contenteditable)에서 @ → 그 게임의 시스템 */
 function wireMentionCE(ed, onChange){
@@ -3659,9 +3683,10 @@ function renderIdeas(list){
   if(!all) body=`<div class="iempty"><strong>아직 아이디어가 없어요</strong><span>전반적인 연출이나 느낌을 살릴 만한 큰 이미지를 모아 두는 곳이에요.${ed?" ‘+ 레퍼런스 추가’를 누르거나, 이미지를 여기로 끌어 놓아 주세요.":""}</span></div>`;
   else if(!shown.length) body=`<div class="iempty"><strong>조건에 맞는 아이디어가 없어요</strong>${filters.size||query?`<button class="btn sm" type="button" data-clear>필터 모두 해제</button>`:""}</div>`;
   else body=`<div class="iboard">${shown.map(m=>{
-      const md=(m.media||m.image)?mediaHTML(m,640):`<div class="inoimg">${esc((m.guide||m.name||"").slice(0,80))}</div>`;
+      const fp=(m.media||m.image)?m:(m.html?gameFirstPic(m):null);
+      const md=fp?mediaHTML(fp,640):`<div class="inoimg">${esc((m.guide||m.name||"").slice(0,80))}</div>`;
       return `<figure class="icard" data-idea="${esc(m.id)}" tabindex="0" role="button" aria-label="${esc(m.name||"아이디어")} 크게 보기">
-        <div class="imed">${md}<span class="itype ${ideaTypeOf(m)}">${ITYPES[ideaTypeOf(m)]}</span>${ideaPics(m).length>1?`<span class="ipcnt">▦ ${ideaPics(m).length}</span>`:""}${(m.guide||"").trim().length>120?`<span class="ipcnt itxt">글</span>`:""}</div>
+        <div class="imed">${md}<span class="itype ${ideaTypeOf(m)}">${ITYPES[ideaTypeOf(m)]}</span>${ideaPicN(m)>1?`<span class="ipcnt">▦ ${ideaPicN(m)}</span>`:""}${(m.guide||"").trim().length>120?`<span class="ipcnt itxt">글</span>`:""}</div>
         ${(m.name||m.game||(m.keywords||[]).length)?`<figcaption>${m.name?`<b>${esc(m.name)}</b>`:""}<span class="imeta">${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</span></figcaption>`:""}
       </figure>`; }).join("")}</div>`;
   gb.innerHTML = bar + `<div id="idrop">${body}</div>`;
@@ -3669,9 +3694,40 @@ function renderIdeas(list){
   ideaList = shown;
 }
 let ideaList=[], ideaBusy=0;
+const ideaPicN = m => ((m.media||m.image)?1:0) + (m.html ? (m.html.match(/<figure/g)||[]).length : (m.gallery||[]).length);
 const ideaPics = m => [...((m.media||m.image)?[{media:m.media,image:m.image}]:[]), ...(m.gallery||[])];
+function ideaPost(m){
+  const sc=$("#scrim"), ed=canEdit(), body=ideaBodyHTML(m), i=ideaList.findIndex(x=>x.id===m.id), n=ideaList.length;
+  const when=m.updatedAt?new Date(m.updatedAt).toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric"}):"";
+  sc.innerHTML=`<div class="modal gpost" role="dialog" aria-modal="true" aria-labelledby="gTitle">
+    <header><span class="gpkind">아이디어 · ${ITYPES[ideaTypeOf(m)]}</span>${n>1&&i>=0?`<span class="icnt" style="margin-left:8px">${i+1} / ${n}</span>`:""}<button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
+    <div class="gpscroll">
+      ${(m.media||m.image)?`<div class="gphero">${mediaHTML(m,1600,true)}</div>`:""}
+      <article class="gpbody">
+        ${m.name?`<h1 id="gTitle">${esc(m.name)}</h1>`:""}
+        <div class="gpmeta">${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${when?`<span>${esc(when)}</span>`:""}${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</div>
+        <div class="doc gpdoc" id="gpDoc">${body.trim()?body:`<p class="ph-note">아직 본문이 없어요.</p>`}</div>
+      </article>
+    </div>
+    <div class="foot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px;border-top:1px solid var(--line)">
+      ${n>1&&i>=0?`<button type="button" class="btn" data-ipost="-1">‹ 이전</button><button type="button" class="btn" data-ipost="1" style="margin-right:auto">다음 ›</button>`:""}
+      ${m.link?`<a class="btn" href="${esc(m.link)}" target="_blank" rel="noopener">링크 열기</a>`:""}
+      ${ed?`<button type="button" class="btn" id="gDel">삭제</button><button type="button" class="btn primary" id="gEdit">편집</button>`:""}<button type="button" class="btn" id="gClose">닫기</button></div></div>`;
+  const pd=$("#gpDoc"); gwFill(pd, 1600, true); if(m.game) gwMentions(pd, m.game);
+  sc.hidden=false; sc.dataset.ipost=m.id; wireVideos(sc);
+  sc.querySelectorAll(".gphero video,.doc video").forEach(v=>{ if(v.dataset.src&&!v.src) v.src=v.dataset.src; v.muted=true; v.play().catch(()=>{}); });
+  $("#fClose").onclick=$("#gClose").onclick=closeForm;
+  sc.onclick=ev=>{ if(ev.target===sc) closeForm(); };
+  sc.querySelectorAll("[data-ipost]").forEach(b=>b.onclick=()=>ideaGo(m.id,+b.dataset.ipost));
+  if(ed){ $("#gEdit").onclick=()=>{ closeForm(); openIdeaForm(m); }; $("#gDel").onclick=()=>{ closeForm(); confirmDelete(m.id); }; }
+}
+function ideaGo(id,d){ const n=ideaList.length, i=ideaList.findIndex(x=>x.id===id); if(!n) return; const nx=ideaList[((i<0?0:i)+d+n)%n]; closeForm(); ideaOpen(nx.id, d<0?-1:0); }
+function ideaOpen(id,pic){ const m=allRefs.find(x=>x.id===id); if(!m) return; if(m.html){ ideaLBClose(); ideaPost(m); } else ideaLB(id,pic); }
+document.addEventListener("keydown",e=>{ const sc=$("#scrim"); if(sc.hidden || !sc.dataset.ipost || !sc.querySelector(".gpost") || e.target.closest("input,textarea,[contenteditable]")) return;
+  if(e.key==="ArrowLeft"){ e.preventDefault(); ideaGo(sc.dataset.ipost,-1); } else if(e.key==="ArrowRight"){ e.preventDefault(); ideaGo(sc.dataset.ipost,1); } });
 function ideaLB(id, pic){
   const i=ideaList.findIndex(x=>x.id===id); const m=ideaList[i] || allRefs.find(x=>x.id===id); if(!m) return;
+  if(m.html){ ideaLBClose(); return ideaPost(m); }
   const lb=$("#lightbox"), pics=ideaPics(m), np=pics.length, n=ideaList.length, ed=canEdit();
   const k=Math.max(0,Math.min(np-1, pic==null?0:pic<0?np-1:pic)), cur=pics[k]||{}, o=np?origUrl(cur):"";
   const text=(m.guide||"").trim(), wide=np>1 || text.length>160;
@@ -3698,14 +3754,14 @@ function ideaStep(d){
   if(cur){ const np=ideaPics(cur).length; if(k+d>=0 && k+d<np) return ideaLB(cur.id,k+d); }
   if(!n) return;
   const i=ideaList.findIndex(x=>x.id===lb.dataset.idea);
-  ideaLB(ideaList[((i<0?0:i)+d+n)%n].id, d<0?-1:0);
+  ideaOpen(ideaList[((i<0?0:i)+d+n)%n].id, d<0?-1:0);
 }
 document.addEventListener("keydown",e=>{
   const lb=$("#lightbox"); if(lb.hidden || !lb.dataset.idea || !lb.querySelector(".ilb") || !$("#scrim").hidden) return;
   if(e.key==="ArrowLeft"){ e.preventDefault(); ideaStep(-1); } else if(e.key==="ArrowRight"){ e.preventDefault(); ideaStep(1); }
 });
-$("#groupbox").addEventListener("click",e=>{ const c=e.target.closest("[data-idea]"); if(c) ideaLB(c.dataset.idea); });
-$("#groupbox").addEventListener("keydown",e=>{ const c=e.target.closest("[data-idea]"); if(c && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); ideaLB(c.dataset.idea); } });
+$("#groupbox").addEventListener("click",e=>{ const c=e.target.closest("[data-idea]"); if(c) ideaOpen(c.dataset.idea); });
+$("#groupbox").addEventListener("keydown",e=>{ const c=e.target.closest("[data-idea]"); if(c && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); ideaOpen(c.dataset.idea); } });
 /* 화면 위로 파일을 끌어 놓으면 바로 아이디어 카드로 */
 const hasFiles = e => [...((e.dataTransfer&&e.dataTransfer.types)||[])].includes("Files");
 $("#groupbox").addEventListener("dragover",e=>{ if(sub!=="board"||!canEdit()||!hasFiles(e)) return; e.preventDefault(); const z=$("#idrop"); if(z) z.classList.add("over"); });
@@ -3726,54 +3782,15 @@ async function quickAddIdeas(files){
   }
   if(ok) toast(`${ITYPES[type]} ${ok}개 추가했어요 · 카드를 눌러 제목·메모를 적을 수 있어요`);
 }
-function openIdeaForm(m){
-  if(!canEdit()){ toast("편집하려면 로그인해 주세요"); return; }
-  hidePop(true);
-  const v=m||{}, type=m?ideaTypeOf(m):(ideaType()||"image");
-  formImage = v.image||null; formMedia = v.media||null; uploading=false;
-  formGallery=(v.gallery||[]).map(g=>({...g})); galBusy=0;
-  const sc=$("#scrim");
-  sc.innerHTML=`<div class="modal imodal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
-    <header><h2 id="fTitle">아이디어 ${m?"편집":"추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
-    <form id="form" novalidate>
-      <div class="field full"><label>분류</label><div class="iradio" role="radiogroup" aria-label="분류">
-        ${Object.entries(ITYPES).map(([k,l])=>`<label><input type="radio" name="i_type" value="${k}" ${k===type?"checked":""}><span>${l}</span></label>`).join("")}</div>
-        <small>개별 패턴: 하나의 공격·연출 패턴 · 이미지: 전반적인 분위기·느낌</small></div>
-      ${mediaFieldHTML("대표 이미지")}
-      ${galleryFieldHTML("이미지 여러 장","대표 이미지 다음에 차례로 넘겨 봐요 · 끌어 놓기·붙여 넣기(Ctrl+V)도 돼요",true)}
-      <div class="field"><label for="f_name">제목 <small style="font-weight:400">· 없어도 돼요</small></label><input id="f_name" type="text" value="${esc(v.name)}" placeholder="${KINDS.idea.namePh}" autocomplete="off"></div>
-      <div class="field"><label for="f_gameSel">게임 <small style="font-weight:400">· 없어도 돼요</small></label>${gameSelectHTML(v.game||"")}</div>
-      <div class="field full"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc((v.keywords||[]).join(" / "))}" placeholder="웅장함 / 붉은 하늘 / 슬로우"><small>/ 로 구분</small></div>
-      <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v.link)}" placeholder="https://"></div>
-      <div class="field full"><label for="f_guide">글 <small style="font-weight:400">· 빈 줄로 문단 나누기 · ## 로 시작하면 소제목</small></label><textarea id="f_guide" class="igrow" placeholder="어떤 느낌을 살리고 싶은지, 어디에 쓸 수 있을지, 무엇을 참고했는지">${esc(v.guide||"")}</textarea></div>
-      <div class="err" id="fErr" hidden></div>
-      <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
-    </form></div>`;
-  sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireMediaField(); wireGallery();
-  const ta=$("#f_guide"), grow=()=>{ ta.style.height="auto"; ta.style.height=Math.min(Math.max(ta.scrollHeight+2,200),window.innerHeight*0.6)+"px"; };
-  ta.addEventListener("input",grow); grow();
-  $("#form").addEventListener("paste",e=>{ const fs=[...((e.clipboardData&&e.clipboardData.files)||[])].filter(f=>/^(image|video)\//.test(f.type)); if(!fs.length) return;
-    e.preventDefault(); addGalleryFiles(fs); toast(`이미지 ${fs.length}장을 붙여 넣었어요`); });
-  $("#fClose").onclick=$("#fCancel").onclick=closeForm;
-  sc.onclick=e=>{ if(e.target===sc) closeForm(); };
-  $("#form").onsubmit=async e=>{
-    e.preventDefault();
-    const err=$("#fErr");
-    if(galBusy>0){ err.hidden=false; err.textContent="이미지 올리기가 끝나면 저장할 수 있어요."; return; }
-    if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
-    const data={ kind:"idea", type:(document.querySelector('input[name="i_type"]:checked')||{}).value||"image",
-      name:fv("f_name").trim(), game:fv("f_game").trim(), keywords:splitTags(fv("f_keywords")), link:fv("f_link").trim(), guide:fv("f_guide"),
-      image:formImage||"", media:formMedia||null, gallery:formGallery.filter(g=>!g.busy).map(g=>({media:g.media||null,image:g.image||""})), updatedAt:Date.now() };
-    if(!data.image && !data.media && data.gallery.length){ const f=data.gallery.shift(); data.image=f.image; data.media=f.media; }
-    if(!data.image && !data.media && !data.name && !data.guide.trim()){ err.hidden=false; err.textContent="이미지나 제목·메모 중 하나는 넣어 주세요."; return; }
-    const b=$("#fSave"); b.disabled=true;
-    try{
-      if(m) await store.set(m.id,{...data, createdAt:m.createdAt||Date.now()});
-      else await store.add({...data, createdAt:Date.now()});
-      closeForm(); toast(m?"저장했어요":"추가했어요");
-    }catch(ex){ b.disabled=false; err.hidden=false; err.textContent=errMsg(ex); }
-  };
-  $("#f_name").focus();
+function openIdeaForm(m){ return openGameForm(m, null, {idea:true}); }
+/* 예전 아이디어(메모 글 + 여러 장)를 글쓰기 본문으로 */
+function ideaBodyHTML(m){
+  if(m.html) return gwSanitize(m.html);
+  const d=document.createElement("div"); d.innerHTML=aboutHTML(m.guide||"");
+  (m.gallery||[]).forEach(g=>{ const f=document.createElement("figure"); f.className="gimg sz-l";
+    if(g.media) f.setAttribute("data-media",JSON.stringify(g.media)); else if(g.image) f.setAttribute("data-image",g.image); else return;
+    f.innerHTML='<div class="gim"></div><figcaption></figcaption>'; d.appendChild(f); });
+  return gwSanitize(d.innerHTML);
 }
 /* ---------- 연출 변형: 같은 시스템(규칙 그대로), 보여 주는 것만 다른 사례 ---------- */
 let formVars=[], varBusy=0;
@@ -3867,7 +3884,7 @@ function formSnapshot(m){
     solo: $("#f_solo") ? $("#f_solo").checked : !!m?.solo };
 }
 let closeGuard=null;
-function closeForm(force){ if(force!==true && closeGuard && !closeGuard()) return; closeGuard=null; acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; }
+function closeForm(force){ if(force!==true && closeGuard && !closeGuard()) return; closeGuard=null; acClose(); $("#scrim").hidden=true; $("#scrim").innerHTML=""; delete $("#scrim").dataset.ipost; }
 document.addEventListener("paste", e=>{
   if ($("#scrim").hidden || !$("#fThumb")) return;
   const f=[...(e.clipboardData?.files||[])].find(f=>/^(image|video)\//.test(f.type));
