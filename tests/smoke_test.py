@@ -468,6 +468,33 @@ def main():
         nv = pg.evaluate("JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.name==='블로그 아이디어')||{}")
         check("아이디어: 글쓰기 화면으로 새로 쓰기", nw and nv.get("kind") == "idea" and "hello idea" in nv.get("html", ""), f"{nw},{nv.get('html')}")
 
+        # 7-6f) 크게 볼 때는 원본 화질(움짤·영상)
+        pg.evaluate("""()=>{ const a=JSON.parse(localStorage.getItem('monster-ref-v1'))||[];
+          a.push({id:'vid1',kind:'idea',type:'pattern',name:'',media:{cloud:'demo',rt:'video',id:'pat1',fmt:'mp4',anim:true},createdAt:Date.now()+9e9});
+          a.push({id:'gif1',kind:'idea',type:'pattern',name:'',media:{cloud:'demo',rt:'image',id:'pat2',fmt:'gif',anim:true},createdAt:Date.now()+9e9-1});
+          localStorage.setItem('monster-ref-v1',JSON.stringify(a)); }""")
+        pg.route("https://res.cloudinary.com/**", lambda r: r.abort())
+        pg.reload(); pg.wait_for_timeout(400); pg.goto(url + "#ideas-pattern"); pg.wait_for_timeout(400)
+        card_src = pg.evaluate("(document.querySelector('.icard[data-idea=\"vid1\"] video')||{}).dataset?.src||''")
+        pg.locator('.icard[data-idea="vid1"]').click(); pg.wait_for_timeout(300)
+        big_v = pg.evaluate("document.querySelector('#lightbox video')?.getAttribute('src')||''")
+        pg.keyboard.press("Escape"); pg.wait_for_timeout(150)
+        pg.locator('.icard[data-idea="gif1"]').click(); pg.wait_for_timeout(300)
+        big_g = pg.evaluate("document.querySelector('#lightbox img')?.getAttribute('src')||''")
+        pg.keyboard.press("Escape"); pg.wait_for_timeout(150)
+        pg.unroute("https://res.cloudinary.com/**")
+        pg.evaluate("""()=>{ const a=JSON.parse(localStorage.getItem('monster-ref-v1'))||[];
+          a.push({id:'still1',kind:'idea',type:'image',name:'',media:{cloud:'demo',rt:'image',id:'img3',fmt:'png'},createdAt:Date.now()+9e9});
+          localStorage.setItem('monster-ref-v1',JSON.stringify(a)); }""")
+        pg.route("https://res.cloudinary.com/**", lambda r: r.abort())
+        pg.reload(); pg.wait_for_timeout(400); pg.goto(url + "#ideas-image"); pg.wait_for_timeout(400)
+        pg.locator('.icard[data-idea="still1"]').click(); pg.wait_for_timeout(300)
+        big_i = pg.evaluate("document.querySelector('#lightbox img')?.getAttribute('src')||''")
+        pg.keyboard.press("Escape"); pg.wait_for_timeout(150); pg.unroute("https://res.cloudinary.com/**")
+        pg.click(".top h1 a"); pg.wait_for_timeout(300)
+        check("제목 누르면 홈", pg.evaluate("location.hash") == "#home")
+        check("크게 보기는 원본 화질", "w_640" in card_src and big_v.endswith("/upload/pat1.mp4") and big_g.endswith("/upload/pat2.gif") and big_i.endswith("/upload/img3.png"), f"{card_src} | {big_v} | {big_g} | {big_i}")
+
         # 7-7) 영상 링크: 새 탭 대신 화면 위 재생
         pg.route("**/youtube-nocookie.com/**", lambda r: r.fulfill(body="<html></html>", content_type="text/html"))
         pg.route("**/i.ytimg.com/**", lambda r: r.abort())

@@ -932,6 +932,7 @@ span.mention{color:var(--t-sys);font-weight:600}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;font-size:13px;z-index:80}
 @media (prefers-reduced-motion:no-preference){.pop,.modal{animation:in .14s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}}}
 .themebtn{min-width:38px;padding-left:10px;padding-right:10px;font-size:15px;line-height:1}
+.homelink{color:inherit;text-decoration:none} .homelink:hover{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -960,7 +961,7 @@ span.mention{color:var(--t-sys);font-weight:600}
   <header class="top">
     <div class="ttl">
       <span class="eyebrow">Combat Design · Reference</span>
-      <h1>레퍼런스 아카이브</h1>
+      <h1><a href="#home" class="homelink" title="홈으로">레퍼런스 아카이브</a></h1>
     </div>
     <div class="actions">
       <span class="mode" id="mode"><i></i><span>불러오는 중</span></span>
@@ -1277,9 +1278,21 @@ function mediaUrls(md, w){
   return {kind:"img", src:`${base}f_auto,q_auto,${sz}/${id}`, orig:`${base}${id}.${md.fmt||"jpg"}`};
 }
 function origUrl(m){ return m.media ? mediaUrls(m.media,1).orig : (m.image||""); }
+/* 크게 볼 때는 변환본(640px) 대신 원본 파일 그대로: 원본 보기와 같은 화질, 새 변환 크레딧도 안 씀 */
+function fullMedia(md){
+  const base=`https://res.cloudinary.com/${encodeURIComponent(md.cloud)}/${md.rt}/upload/`, f=(md.fmt||"").toLowerCase();
+  if (md.orig && /\.(gif|webp|png|jpe?g)(\?|$)/i.test(md.orig)) return {kind:"img", src:md.orig};
+  if (md.rt==="video" && /^(mp4|webm|m4v)$/.test(f||"mp4")) return {kind:"video", src:`${base}${md.id}.${f||"mp4"}`};
+  if (md.rt==="image" && md.anim) return {kind:"img", src:`${base}${md.id}.${f||"gif"}`};
+  return null;
+}
 function mediaHTML(m, w, big){
   if (m.media){
     const u = mediaUrls(m.media, w);
+    const fm = big && u.kind==="video" ? fullMedia(m.media) : null;
+    if (fm && fm.kind==="img") return `<img src="${esc(fm.src)}" alt="" loading="lazy">`;
+    if (fm) return `<video src="${esc(fm.src)}" poster="${esc(u.poster)}" autoplay muted loop playsinline controls></video>`;
+    if (big && u.kind==="img" && u.orig) return `<img src="${esc(u.orig)}" alt="" loading="lazy">`;
     if (u.kind==="video") return big
       ? `<video src="${esc(u.src)}" poster="${esc(u.poster)}" autoplay muted loop playsinline controls></video>`
       : `<video class="lazyv" data-src="${esc(u.src)}" poster="${esc(u.poster)}" muted loop playsinline preload="none"></video>`;
