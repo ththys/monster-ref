@@ -439,6 +439,16 @@ def main():
         post = pg.locator(".gpost #gpDoc figure.gimg").count() == 2 and "여러 장 아이디어" in pg.inner_text(".gpost h1")
         pg.click("#gClose"); pg.wait_for_timeout(150)
         check("아이디어: 예전 여러 장 보기 → 블로그 글로 옮겨 쓰기·글 보기", badge and wide and step and form and kept and post, f"{badge},{wide},{step},{form},{kept},{post}")
+        # 사진 크기 1/2 → 옆으로 나란히
+        pg.locator('.icard[data-idea="idm"]').click(); pg.wait_for_timeout(300); pg.click("#gEdit"); pg.wait_for_timeout(300)
+        for k in range(2):
+            pg.locator("#gwEd figure.gimg .gim").nth(k).click(); pg.wait_for_timeout(100); pg.click('#gwFig [data-fz="m"]'); pg.wait_for_timeout(100)
+        pg.click("#fSave"); pg.wait_for_timeout(400)
+        pg.locator('.icard[data-idea="idm"]').click(); pg.wait_for_timeout(400)
+        bb = [pg.locator("#gpDoc figure.gimg").nth(k).bounding_box() for k in range(2)]
+        side = bb[0] and bb[1] and abs(bb[0]["y"] - bb[1]["y"]) < 3 and bb[1]["x"] > bb[0]["x"] + 50
+        pg.click("#gClose"); pg.wait_for_timeout(150)
+        check("글 속 사진 1/2 크기로 옆으로 나란히", side, str(bb))
         # 새 아이디어 글쓰기: 글 + 사진 섞어 쓰기
         pg.click("#addBtn"); pg.wait_for_timeout(300)
         nw = pg.locator("#gwEd").count() == 1 and pg.locator('input[name="i_type"]').count() == 2

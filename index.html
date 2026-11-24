@@ -768,10 +768,16 @@ tr:hover .rowact,.rowact:focus-within{opacity:1}
 .gpdoc hr{border:0;border-top:1px solid var(--line);margin:28px 0}
 .gpdoc a{color:var(--accent)}
 .gpdoc figure{margin:22px auto;display:flex;flex-direction:column;gap:6px}
-.gpdoc figure.sz-s{width:40%} .gpdoc figure.sz-m{width:70%} .gpdoc figure.sz-l{width:100%}
+/* 작은 사진은 옆으로 나란히(1/2·1/3·1/4), 글·제목이 오면 다음 줄 */
+.gpdoc figure.sz-l{width:100%;clear:both}
+.gpdoc figure.sz-m,.gpdoc figure.sz-s,.gpdoc figure.sz-xs{float:left;margin:8px 12px 12px 0}
+.gpdoc figure.sz-m{width:calc(50% - 12px)} .gpdoc figure.sz-s{width:calc(33.333% - 12px)} .gpdoc figure.sz-xs{width:calc(25% - 12px)}
+.gpdoc>:not(figure){clear:both}
+.gpdoc::after{content:"";display:block;clear:both}
+.gpdoc figure.sz-m img,.gpdoc figure.sz-m video,.gpdoc figure.sz-s img,.gpdoc figure.sz-s video,.gpdoc figure.sz-xs img,.gpdoc figure.sz-xs video{aspect-ratio:auto;max-height:420px;object-fit:cover}
 .gpdoc figure img,.gpdoc figure video{width:100%;border-radius:10px;display:block;background:var(--hover)}
 .gpdoc figcaption{font-size:13px;color:var(--muted);text-align:center}
-@media (max-width:640px){ .gwmeta{grid-template-columns:1fr} .gwed{padding:20px 14px 40vh} .gpdoc figure.sz-s{width:60%} .gpdoc figure.sz-m{width:85%} }
+@media (max-width:640px){ .gwmeta{grid-template-columns:1fr} .gwed{padding:20px 14px 40vh} .gpdoc figure.sz-xs{width:calc(50% - 12px)} .gpdoc figure.sz-s{width:calc(50% - 12px)} }
 /* 게임 정리: 블로그 글 보기 */
 .modal.gpost{width:min(900px,100%);padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
 .gpost>header{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line)}
@@ -3190,7 +3196,7 @@ function gwSanitize(html){
       if(GW_DROP.has(t)) return;
       if(t==="FIGURE"){
         const md=gwMediaOf(n); if(!md) return;
-        const size=((n.className||"").match(/\bsz-([sml])\b/)||[])[1]||"l";
+        const size=((n.className||"").match(/\bsz-(xs|[sml])\b/)||[])[1]||"l";
         const cap=(n.querySelector("figcaption")||{}).textContent||"";
         out.appendChild(gwFigure(doc, md, size, cap.trim())); return;
       }
@@ -3438,7 +3444,7 @@ ${IDEA?`      <div class="gwmeta">
         <button type="button" class="gwlink" id="fLinkAll" title="글 속 시스템 이름을 찾아 한 번에 연결">시스템 한 번에 연결</button></div>
       <div class="gwwrap" id="gwWrap">
         <div class="gwed gpdoc" id="gwEd" contenteditable="true" spellcheck="false" data-ph="여기에 이어서 쓰세요. 사진·움짤(jpg·png·gif·webp·mp4)은 붙여 넣기(Ctrl+V)·끌어 놓기·‘사진·움짤 넣기’로 커서 자리에 들어가요. ## 를 치고 띄우면 제목, - 는 목록, > 는 인용."></div>
-        <div class="gwfig" id="gwFig" hidden><button type="button" data-fz="s">작게</button><button type="button" data-fz="m">중간</button><button type="button" data-fz="l">크게</button><span class="gwsep"></span><button type="button" data-fm="-1">↑ 위로</button><button type="button" data-fm="1">↓ 아래로</button><span class="gwsep"></span><button type="button" data-fd>삭제</button></div>
+        <div class="gwfig" id="gwFig" hidden><button type="button" data-fz="xs" title="한 줄에 4장">1/4</button><button type="button" data-fz="s" title="한 줄에 3장">1/3</button><button type="button" data-fz="m" title="한 줄에 2장">1/2</button><button type="button" data-fz="l" title="한 줄 꽉">꽉</button><span class="gwsep"></span><button type="button" data-fm="-1">◀ 앞으로</button><button type="button" data-fm="1">뒤로 ▶</button><span class="gwsep"></span><button type="button" data-fd>삭제</button></div>
       </div>
       <input id="gwFile" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm" hidden>
       <div class="err" id="fErr" hidden></div>
@@ -3568,7 +3574,7 @@ ${IDEA?`      <div class="gwmeta">
   figBar.addEventListener("mousedown",e=>e.preventDefault());
   figBar.addEventListener("click",e=>{
     if(!selFig) return; const b=e.target.closest("button"); if(!b) return;
-    if(b.dataset.fz){ selFig.classList.remove("sz-s","sz-m","sz-l"); selFig.classList.add("sz-"+b.dataset.fz); }
+    if(b.dataset.fz){ selFig.classList.remove("sz-xs","sz-s","sz-m","sz-l"); selFig.classList.add("sz-"+b.dataset.fz); }
     else if(b.dataset.fm){ const d=+b.dataset.fm, sib=d<0?selFig.previousElementSibling:selFig.nextElementSibling; if(sib){ d<0?sib.before(selFig):sib.after(selFig); } }
     else if(b.hasAttribute("data-fd")){ selFig.remove(); selFig=null; figBar.hidden=true; markDirty(); return; }
     markDirty(); showBar(selFig); selFig.scrollIntoView({block:"nearest"});
