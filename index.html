@@ -843,6 +843,23 @@ span.mention{color:var(--t-sys);font-weight:600}
 .iempty{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:40px 20px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;color:var(--muted);font-size:13.5px}
 .iempty strong{color:var(--ink);font-size:15px}
 .ilb{position:relative;max-width:min(1200px,100%)}
+.imodal{width:min(860px,100%)}
+.igrow{min-height:200px;resize:vertical;line-height:1.6}
+.ipcnt{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 8px}
+.ipcnt.itxt{top:auto;bottom:8px}
+.lightbox .lb.ilbx{display:grid;flex-direction:initial;grid-template-columns:minmax(0,1fr) 340px;gap:18px;width:min(1400px,calc(100vw - 120px));align-items:start}
+.ixmed{display:flex;flex-direction:column;gap:10px;align-items:center;min-width:0}
+.lightbox .ilbx .ixmed>img,.lightbox .ilbx .ixmed>video{max-height:calc(100vh - 190px);max-width:100%;object-fit:contain}
+.ithumbs{display:flex;gap:6px;overflow-x:auto;max-width:100%;padding-bottom:2px}
+.ithumbs button{flex:none;width:64px;height:48px;border:2px solid transparent;border-radius:6px;padding:0;overflow:hidden;background:#000;cursor:pointer;opacity:.6}
+.ithumbs button.on{border-color:#fff;opacity:1}
+.ithumbs img,.ithumbs video{width:100%;height:100%;object-fit:cover}
+.ixtext{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 80px)}
+.ixtext .ihead{justify-content:flex-start}
+.ixmemo{max-height:none;flex:1;overflow:auto;font-size:14px;line-height:1.75}
+.ixmemo h3{font-size:15px;margin:14px 0 4px} .ixmemo p{margin:0 0 10px}
+.ixtext .lbbar{justify-content:flex-start}
+@media (max-width:800px){ .lightbox .lb.ilbx{grid-template-columns:1fr;width:calc(100vw - 24px)} .ixtext{max-height:none} }
 .lightbox .ilb img,.lightbox .ilb video{max-height:calc(100vh - 230px)}
 .ilb .ifoot{width:min(900px,100%);display:flex;flex-direction:column;gap:8px;align-items:center}
 .ihead{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;color:#fff}
@@ -3644,7 +3661,7 @@ function renderIdeas(list){
   else body=`<div class="iboard">${shown.map(m=>{
       const md=(m.media||m.image)?mediaHTML(m,640):`<div class="inoimg">${esc((m.guide||m.name||"").slice(0,80))}</div>`;
       return `<figure class="icard" data-idea="${esc(m.id)}" tabindex="0" role="button" aria-label="${esc(m.name||"아이디어")} 크게 보기">
-        <div class="imed">${md}<span class="itype ${ideaTypeOf(m)}">${ITYPES[ideaTypeOf(m)]}</span></div>
+        <div class="imed">${md}<span class="itype ${ideaTypeOf(m)}">${ITYPES[ideaTypeOf(m)]}</span>${ideaPics(m).length>1?`<span class="ipcnt">▦ ${ideaPics(m).length}</span>`:""}${(m.guide||"").trim().length>120?`<span class="ipcnt itxt">글</span>`:""}</div>
         ${(m.name||m.game||(m.keywords||[]).length)?`<figcaption>${m.name?`<b>${esc(m.name)}</b>`:""}<span class="imeta">${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}</span></figcaption>`:""}
       </figure>`; }).join("")}</div>`;
   gb.innerHTML = bar + `<div id="idrop">${body}</div>`;
@@ -3652,28 +3669,36 @@ function renderIdeas(list){
   ideaList = shown;
 }
 let ideaList=[], ideaBusy=0;
-function ideaLB(id){
+const ideaPics = m => [...((m.media||m.image)?[{media:m.media,image:m.image}]:[]), ...(m.gallery||[])];
+function ideaLB(id, pic){
   const i=ideaList.findIndex(x=>x.id===id); const m=ideaList[i] || allRefs.find(x=>x.id===id); if(!m) return;
-  const lb=$("#lightbox"), o=origUrl(m), n=ideaList.length, ed=canEdit();
-  lb.innerHTML=`<div class="lb ilb">
-      ${n>1?`<button type="button" class="inav prev" data-inav="-1" aria-label="이전">‹</button><button type="button" class="inav next" data-inav="1" aria-label="다음">›</button>`:""}
-      ${(m.media||m.image)?mediaHTML(m,1280,true):""}
-      <div class="ifoot">
-        <div class="ihead"><span class="itype ${ideaTypeOf(m)}">${ITYPES[ideaTypeOf(m)]}</span>${m.name?`<b>${esc(m.name)}</b>`:""}${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}${i>=0&&n>1?`<span class="icnt">${i+1} / ${n}</span>`:""}</div>
-        ${(m.guide||"").trim()?`<div class="imemo">${aboutHTML(m.guide)}</div>`:""}
-        <div class="lbbar">${m.link?`<a href="${esc(m.link)}" target="_blank" rel="noopener">링크 열기</a>`:""}${o&&!o.startsWith("data:")?`<a href="${esc(o)}" target="_blank" rel="noopener">원본 열기</a>`:""}
-          ${ed?`<button type="button" id="ibEdit">편집</button><button type="button" id="ibDel">삭제</button>`:""}<button type="button" id="lbClose">닫기</button></div>
-      </div></div>`;
-  lb.hidden=false; lb.dataset.idea=m.id; delete lb.dataset.gal;
+  const lb=$("#lightbox"), pics=ideaPics(m), np=pics.length, n=ideaList.length, ed=canEdit();
+  const k=Math.max(0,Math.min(np-1, pic==null?0:pic<0?np-1:pic)), cur=pics[k]||{}, o=np?origUrl(cur):"";
+  const text=(m.guide||"").trim(), wide=np>1 || text.length>160;
+  const head=`<div class="ihead"><span class="itype ${ideaTypeOf(m)}">${ITYPES[ideaTypeOf(m)]}</span>${m.name?`<b>${esc(m.name)}</b>`:""}${m.game?`<span class="tag c-game">${esc(m.game)}</span>`:""}${(m.keywords||[]).map(k=>`<span class="tag c-theme">${esc(k)}</span>`).join("")}${n>1&&i>=0?`<span class="icnt">${i+1} / ${n}</span>`:""}${np>1?`<span class="icnt ipicn">사진 ${k+1}/${np}</span>`:""}</div>`;
+  const bar=`<div class="lbbar">${m.link?`<a href="${esc(m.link)}" target="_blank" rel="noopener">링크 열기</a>`:""}${o&&!o.startsWith("data:")?`<a href="${esc(o)}" target="_blank" rel="noopener">원본 열기</a>`:""}
+          ${ed?`<button type="button" id="ibEdit">편집</button><button type="button" id="ibDel">삭제</button>`:""}<button type="button" id="lbClose">닫기</button></div>`;
+  const thumbs=np>1?`<div class="ithumbs">${pics.map((p,j)=>`<button type="button" class="${j===k?"on":""}" data-ipic="${j}" aria-label="${j+1}번째 이미지">${mediaHTML(p,240)}</button>`).join("")}</div>`:"";
+  const nav=(n>1||np>1)?`<button type="button" class="inav prev" data-inav="-1" aria-label="이전">‹</button><button type="button" class="inav next" data-inav="1" aria-label="다음">›</button>`:"";
+  lb.innerHTML = wide ? `<div class="lb ilb ilbx">${nav}
+      <div class="ixmed">${np?mediaHTML(cur,1280,true):""}${thumbs}</div>
+      <div class="ixtext">${head}${text?`<div class="imemo ixmemo">${aboutHTML(m.guide)}</div>`:""}${bar}</div></div>`
+    : `<div class="lb ilb">${nav}
+      ${np?mediaHTML(cur,1280,true):""}
+      <div class="ifoot">${head}${text?`<div class="imemo">${aboutHTML(m.guide)}</div>`:""}${bar}</div></div>`;
+  lb.hidden=false; lb.dataset.idea=m.id; lb.dataset.pic=k; delete lb.dataset.gal;
   lb.querySelectorAll("video").forEach(v=>{ v.muted=true; v.play().catch(()=>{}); });
   lb.querySelectorAll("[data-inav]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); ideaStep(+b.dataset.inav); });
+  lb.querySelectorAll("[data-ipic]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); ideaLB(m.id,+b.dataset.ipic); });
   if(ed){ $("#ibEdit").onclick=()=>{ ideaLBClose(); openIdeaForm(m); }; $("#ibDel").onclick=()=>{ ideaLBClose(); confirmDelete(m.id); }; }
 }
 function ideaLBClose(){ const lb=$("#lightbox"); lb.hidden=true; lb.innerHTML=""; delete lb.dataset.idea; }
 function ideaStep(d){
-  const lb=$("#lightbox"), n=ideaList.length; if(!n) return;
+  const lb=$("#lightbox"), n=ideaList.length, cur=allRefs.find(x=>x.id===lb.dataset.idea), k=+lb.dataset.pic||0;
+  if(cur){ const np=ideaPics(cur).length; if(k+d>=0 && k+d<np) return ideaLB(cur.id,k+d); }
+  if(!n) return;
   const i=ideaList.findIndex(x=>x.id===lb.dataset.idea);
-  ideaLB(ideaList[((i<0?0:i)+d+n)%n].id);
+  ideaLB(ideaList[((i<0?0:i)+d+n)%n].id, d<0?-1:0);
 }
 document.addEventListener("keydown",e=>{
   const lb=$("#lightbox"); if(lb.hidden || !lb.dataset.idea || !lb.querySelector(".ilb") || !$("#scrim").hidden) return;
@@ -3706,32 +3731,40 @@ function openIdeaForm(m){
   hidePop(true);
   const v=m||{}, type=m?ideaTypeOf(m):(ideaType()||"image");
   formImage = v.image||null; formMedia = v.media||null; uploading=false;
+  formGallery=(v.gallery||[]).map(g=>({...g})); galBusy=0;
   const sc=$("#scrim");
-  sc.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+  sc.innerHTML=`<div class="modal imodal" role="dialog" aria-modal="true" aria-labelledby="fTitle">
     <header><h2 id="fTitle">아이디어 ${m?"편집":"추가"}</h2><button type="button" class="iconbtn" id="fClose" aria-label="닫기">✕</button></header>
     <form id="form" novalidate>
       <div class="field full"><label>분류</label><div class="iradio" role="radiogroup" aria-label="분류">
         ${Object.entries(ITYPES).map(([k,l])=>`<label><input type="radio" name="i_type" value="${k}" ${k===type?"checked":""}><span>${l}</span></label>`).join("")}</div>
         <small>개별 패턴: 하나의 공격·연출 패턴 · 이미지: 전반적인 분위기·느낌</small></div>
-      ${mediaFieldHTML("큰 이미지")}
+      ${mediaFieldHTML("대표 이미지")}
+      ${galleryFieldHTML("이미지 여러 장","대표 이미지 다음에 차례로 넘겨 봐요 · 끌어 놓기·붙여 넣기(Ctrl+V)도 돼요",true)}
       <div class="field"><label for="f_name">제목 <small style="font-weight:400">· 없어도 돼요</small></label><input id="f_name" type="text" value="${esc(v.name)}" placeholder="${KINDS.idea.namePh}" autocomplete="off"></div>
       <div class="field"><label for="f_gameSel">게임 <small style="font-weight:400">· 없어도 돼요</small></label>${gameSelectHTML(v.game||"")}</div>
       <div class="field full"><label for="f_keywords"><i style="background:var(--t-theme)"></i>키워드</label><input id="f_keywords" type="text" value="${esc((v.keywords||[]).join(" / "))}" placeholder="웅장함 / 붉은 하늘 / 슬로우"><small>/ 로 구분</small></div>
       <div class="field full"><label for="f_link">링크</label><input id="f_link" type="url" value="${esc(v.link)}" placeholder="https://"></div>
-      <div class="field full"><label for="f_guide">메모</label><textarea id="f_guide" style="min-height:120px" placeholder="어떤 느낌을 살리고 싶은지, 어디에 쓸 수 있을지">${esc(v.guide||"")}</textarea></div>
+      <div class="field full"><label for="f_guide">글 <small style="font-weight:400">· 빈 줄로 문단 나누기 · ## 로 시작하면 소제목</small></label><textarea id="f_guide" class="igrow" placeholder="어떤 느낌을 살리고 싶은지, 어디에 쓸 수 있을지, 무엇을 참고했는지">${esc(v.guide||"")}</textarea></div>
       <div class="err" id="fErr" hidden></div>
       <div class="foot"><button type="button" class="btn" id="fCancel">취소</button><button type="submit" class="btn primary" id="fSave">${m?"저장":"추가"}</button></div>
     </form></div>`;
-  sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireMediaField();
+  sc.hidden=false; setThumb(); wireAC(); wireGameSelect(); wireMediaField(); wireGallery();
+  const ta=$("#f_guide"), grow=()=>{ ta.style.height="auto"; ta.style.height=Math.min(Math.max(ta.scrollHeight+2,200),window.innerHeight*0.6)+"px"; };
+  ta.addEventListener("input",grow); grow();
+  $("#form").addEventListener("paste",e=>{ const fs=[...((e.clipboardData&&e.clipboardData.files)||[])].filter(f=>/^(image|video)\//.test(f.type)); if(!fs.length) return;
+    e.preventDefault(); addGalleryFiles(fs); toast(`이미지 ${fs.length}장을 붙여 넣었어요`); });
   $("#fClose").onclick=$("#fCancel").onclick=closeForm;
   sc.onclick=e=>{ if(e.target===sc) closeForm(); };
   $("#form").onsubmit=async e=>{
     e.preventDefault();
     const err=$("#fErr");
+    if(galBusy>0){ err.hidden=false; err.textContent="이미지 올리기가 끝나면 저장할 수 있어요."; return; }
     if(uploading){ err.hidden=false; err.textContent="업로드가 끝나면 저장할 수 있어요."; return; }
     const data={ kind:"idea", type:(document.querySelector('input[name="i_type"]:checked')||{}).value||"image",
       name:fv("f_name").trim(), game:fv("f_game").trim(), keywords:splitTags(fv("f_keywords")), link:fv("f_link").trim(), guide:fv("f_guide"),
-      image:formImage||"", media:formMedia||null, updatedAt:Date.now() };
+      image:formImage||"", media:formMedia||null, gallery:formGallery.filter(g=>!g.busy).map(g=>({media:g.media||null,image:g.image||""})), updatedAt:Date.now() };
+    if(!data.image && !data.media && data.gallery.length){ const f=data.gallery.shift(); data.image=f.image; data.media=f.media; }
     if(!data.image && !data.media && !data.name && !data.guide.trim()){ err.hidden=false; err.textContent="이미지나 제목·메모 중 하나는 넣어 주세요."; return; }
     const b=$("#fSave"); b.disabled=true;
     try{

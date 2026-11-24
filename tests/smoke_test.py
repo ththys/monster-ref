@@ -419,6 +419,23 @@ def main():
         back = (pg.evaluate("document.documentElement.dataset.theme") == "dark") == before
         check("다크·라이트 전환", after == ("light" if before else "dark") and kept and back, f"{before},{after},{kept},{back}")
 
+        # 7-6e) 아이디어: 이미지 여러 장 + 긴 글
+        img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+        pg.evaluate("""(img)=>{ const a=JSON.parse(localStorage.getItem('monster-ref-v1'))||[];
+          a.push({id:'idm',kind:'idea',type:'image',name:'여러 장 아이디어',image:img,gallery:[{image:img},{image:img}],guide:'## 느낌\\n'+'붉은 하늘 아래 거대한 그림자. '.repeat(12),createdAt:Date.now()+9e9});
+          localStorage.setItem('monster-ref-v1',JSON.stringify(a)); }""", img)
+        pg.reload(); pg.wait_for_timeout(400); pg.goto(url + "#ideas"); pg.wait_for_timeout(400)
+        card = pg.locator('.icard[data-idea="idm"]'); badge = "3" in card.locator(".ipcnt").first.inner_text()
+        card.click(); pg.wait_for_timeout(300)
+        wide = pg.locator(".ilbx").count() == 1 and pg.locator(".ithumbs button").count() == 3 and pg.locator(".ixmemo h3").count() == 1
+        pg.keyboard.press("ArrowRight"); pg.wait_for_timeout(200)
+        step = pg.evaluate("document.querySelector('#lightbox').dataset.pic") == "1" and pg.evaluate("document.querySelector('#lightbox').dataset.idea") == "idm"
+        pg.click("#ibEdit"); pg.wait_for_timeout(300)
+        form = pg.locator("#galEdit .gi").count() == 2 and pg.locator("#f_guide.igrow").count() == 1
+        pg.click("#fSave"); pg.wait_for_timeout(300)
+        kept = pg.evaluate("(JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.id==='idm')||{}).gallery.length") == 2
+        check("아이디어: 여러 장·글 보기·넘기기·편집 유지", badge and wide and step and form and kept, f"{badge},{wide},{step},{form},{kept}")
+
         # 7-7) 영상 링크: 새 탭 대신 화면 위 재생
         pg.route("**/youtube-nocookie.com/**", lambda r: r.fulfill(body="<html></html>", content_type="text/html"))
         pg.route("**/i.ytimg.com/**", lambda r: r.abort())
