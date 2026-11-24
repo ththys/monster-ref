@@ -3122,7 +3122,7 @@ function renderHome(){
 function homeOpen(m){
   const k=kindOf(m);
   if(k==="game") return openGameNote(m);
-  if(k==="idea"){ ideaList=allRefs.filter(x=>kindOf(x)==="idea"&&(x.media||x.image)); return ideaLB(m.id); }
+  if(k==="idea"){ ideaList=allRefs.filter(x=>kindOf(x)==="idea"&&(x.media||x.image)); return ideaOpen(m.id); }
   openGuide(m);
 }
 $("#groupbox").addEventListener("click",e=>{ const b=e.target.closest("[data-hopen]"); if(!b) return; const m=allRefs.find(x=>x.id===b.dataset.hopen); if(m) homeOpen(m); });
@@ -3722,7 +3722,7 @@ function ideaPost(m){
   if(ed){ $("#gEdit").onclick=()=>{ closeForm(); openIdeaForm(m); }; $("#gDel").onclick=()=>{ closeForm(); confirmDelete(m.id); }; }
 }
 function ideaGo(id,d){ const n=ideaList.length, i=ideaList.findIndex(x=>x.id===id); if(!n) return; const nx=ideaList[((i<0?0:i)+d+n)%n]; closeForm(); ideaOpen(nx.id, d<0?-1:0); }
-function ideaOpen(id,pic){ const m=allRefs.find(x=>x.id===id); if(!m) return; if(m.html){ ideaLBClose(); ideaPost(m); } else ideaLB(id,pic); }
+function ideaOpen(id,pic){ const m=allRefs.find(x=>x.id===id); if(!m) return; if(m.html || (m.guide||"").trim() || (m.gallery||[]).length){ ideaLBClose(); ideaPost(m); } else ideaLB(id,pic); }
 document.addEventListener("keydown",e=>{ const sc=$("#scrim"); if(sc.hidden || !sc.dataset.ipost || !sc.querySelector(".gpost") || e.target.closest("input,textarea,[contenteditable]")) return;
   if(e.key==="ArrowLeft"){ e.preventDefault(); ideaGo(sc.dataset.ipost,-1); } else if(e.key==="ArrowRight"){ e.preventDefault(); ideaGo(sc.dataset.ipost,1); } });
 function ideaLB(id, pic){

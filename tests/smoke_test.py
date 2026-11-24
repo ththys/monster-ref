@@ -428,10 +428,9 @@ def main():
         pg.reload(); pg.wait_for_timeout(400); pg.goto(url + "#ideas"); pg.wait_for_timeout(400)
         card = pg.locator('.icard[data-idea="idm"]'); badge = "3" in card.locator(".ipcnt").first.inner_text()
         card.click(); pg.wait_for_timeout(300)
-        wide = pg.locator(".ilbx").count() == 1 and pg.locator(".ithumbs button").count() == 3 and pg.locator(".ixmemo h3").count() == 1
-        pg.keyboard.press("ArrowRight"); pg.wait_for_timeout(200)
-        step = pg.evaluate("document.querySelector('#lightbox').dataset.pic") == "1" and pg.evaluate("document.querySelector('#lightbox').dataset.idea") == "idm"
-        pg.click("#ibEdit"); pg.wait_for_timeout(300)
+        wide = pg.locator(".gpost").count() == 1 and pg.locator("#gpDoc figure.gimg").count() == 2 and pg.locator("#gpDoc h3").count() == 1
+        step = True
+        pg.click("#gEdit"); pg.wait_for_timeout(300)
         form = pg.locator("#gwEd figure.gimg").count() == 2 and pg.locator("#gwEd h3").count() == 1 and pg.input_value("#f_name") == "여러 장 아이디어"
         pg.click("#fSave"); pg.wait_for_timeout(400)
         sv = pg.evaluate("JSON.parse(localStorage.getItem('monster-ref-v1')).find(m=>m.id==='idm')||{}")
